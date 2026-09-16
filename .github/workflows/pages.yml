@@ -1,0 +1,49 @@
+# Publishes the report, the deck as PDF and both Office files to GitHub Pages.
+name: site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - reports/**
+      - deliverables/**
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Render the deck to PDF
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends libreoffice-impress
+          mkdir -p site
+          soffice --headless --convert-to pdf --outdir site deliverables/board_briefing.pptx
+
+      - name: Assemble the site
+        run: |
+          cp reports/index.html site/index.html
+          cp -r reports/figures site/figures
+          cp deliverables/pay_transparency_model.xlsx deliverables/board_briefing.pptx site/
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
