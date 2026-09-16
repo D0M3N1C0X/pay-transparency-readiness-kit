@@ -213,8 +213,7 @@ def build(w=None):
     s = new_slide()
     heading(s, "The answer", "Four employers report every year from June 2027, and none is ready yet")
     stat_row(s, Inches(2.3), [
-        (f"{first:%b %Y}", f"first report, due {day(first)}, for all four employers; then every year (Art. 9(2))",
-         NAVY),
+        (f"{first:%b %Y}", f"first report due {day(first)}, then every year (Art. 9(2))", NAVY),
         (pct(G["a_mean_gap_hourly"]), "gender pay gap on hourly pay across the group (Art. 9(1)(a))", ORANGE),
         (f"{len(flagged)} of {len(cats)}", "categories of workers at 5% or more: justify or remedy (Art. 10)", ORANGE),
         (f"€{flagged['remedy_cost'].sum() / 1e6:.1f}M", "a year, at most, to close those gaps outright", NAVY),
@@ -328,13 +327,15 @@ def build(w=None):
     s = new_slide()
     heading(s, "Article 9(1)(b), (d) and (e)", "Bonus, commission and allowances widen the gap")
     rate = f["sales_rate"]
-    fewer = (G["e_share_men_receiving"] - G["e_share_women_receiving"]) * 100
+    shown = lambda x: round(x * 100, 1)   # differences from the rounded figures the slide shows
+    fewer = shown(G["e_share_men_receiving"]) - shown(G["e_share_women_receiving"])
+    lower = shown(rate["M"]) - shown(rate["F"])
     stat_row(s, Inches(2.1), [
         (pct(G["b_mean_gap_components"]), "gap in average components, among workers who receive any", ORANGE),
-        (f"{fewer:.1f} pts", f"fewer women receive any component: {pct(G['e_share_women_receiving'], 0)} "
-                             f"against {pct(G['e_share_men_receiving'], 0)} of men", NAVY),
-        (f"{(rate['M'] - rate['F']) * 100:.1f} pts", f"lower commission rate for women in Sales: {pct(rate['F'])} "
-                                                   f"of base pay against {pct(rate['M'])}", ORANGE),
+        (f"{fewer:.1f} pts", f"fewer women receive any component: {pct(G['e_share_women_receiving'])} "
+                             f"against {pct(G['e_share_men_receiving'])} of men", NAVY),
+        (f"{lower:.1f} pts", f"lower commission rate for women in Sales: {pct(rate['F'])} "
+                             f"of base pay against {pct(rate['M'])}", ORANGE),
     ])
     rect(s, MARGIN, Inches(4.5), W - 2 * MARGIN, Inches(2.2), TINT)
     text(s, MARGIN + Inches(0.35), Inches(4.75), Inches(5.6), Inches(1.8), [
