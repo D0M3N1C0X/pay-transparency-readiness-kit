@@ -1,0 +1,101 @@
+employer,code,item_key,item,kind,value
+IT · Milan,IT,workers,Workers at the snapshot,count,1053.0
+PL · Kraków,PL,workers,Workers at the snapshot,count,1156.0
+DE · Munich,DE,workers,Workers at the snapshot,count,741.0
+ES · Barcelona,ES,workers,Workers at the snapshot,count,493.0
+Group,Group,workers,Workers at the snapshot,count,3443.0
+IT · Milan,IT,women,Women,count,523.0
+PL · Kraków,PL,women,Women,count,578.0
+DE · Munich,DE,women,Women,count,363.0
+ES · Barcelona,ES,women,Women,count,253.0
+Group,Group,women,Women,count,1717.0
+IT · Milan,IT,men,Men,count,530.0
+PL · Kraków,PL,men,Men,count,578.0
+DE · Munich,DE,men,Men,count,378.0
+ES · Barcelona,ES,men,Men,count,240.0
+Group,Group,men,Men,count,1726.0
+IT · Milan,IT,a_mean_gap_hourly,"(a) Gender pay gap, mean hourly pay",pct,0.196902
+PL · Kraków,PL,a_mean_gap_hourly,"(a) Gender pay gap, mean hourly pay",pct,0.151699
+DE · Munich,DE,a_mean_gap_hourly,"(a) Gender pay gap, mean hourly pay",pct,0.145427
+ES · Barcelona,ES,a_mean_gap_hourly,"(a) Gender pay gap, mean hourly pay",pct,0.215173
+Group,Group,a_mean_gap_hourly,"(a) Gender pay gap, mean hourly pay",pct,0.175595
+IT · Milan,IT,a_mean_gap_annual,"(a) Gender pay gap, mean annual pay",pct,0.203683
+PL · Kraków,PL,a_mean_gap_annual,"(a) Gender pay gap, mean annual pay",pct,0.150985
+DE · Munich,DE,a_mean_gap_annual,"(a) Gender pay gap, mean annual pay",pct,0.150427
+ES · Barcelona,ES,a_mean_gap_annual,"(a) Gender pay gap, mean annual pay",pct,0.216459
+Group,Group,a_mean_gap_annual,"(a) Gender pay gap, mean annual pay",pct,0.17915
+IT · Milan,IT,b_mean_gap_components,"(b) Gap in complementary or variable components, mean",pct,0.355081
+PL · Kraków,PL,b_mean_gap_components,"(b) Gap in complementary or variable components, mean",pct,0.209817
+DE · Munich,DE,b_mean_gap_components,"(b) Gap in complementary or variable components, mean",pct,0.258821
+ES · Barcelona,ES,b_mean_gap_components,"(b) Gap in complementary or variable components, mean",pct,0.462543
+Group,Group,b_mean_gap_components,"(b) Gap in complementary or variable components, mean",pct,0.310965
+IT · Milan,IT,c_median_gap_hourly,"(c) Median gender pay gap, hourly pay",pct,0.168512
+PL · Kraków,PL,c_median_gap_hourly,"(c) Median gender pay gap, hourly pay",pct,0.125058
+DE · Munich,DE,c_median_gap_hourly,"(c) Median gender pay gap, hourly pay",pct,0.113266
+ES · Barcelona,ES,c_median_gap_hourly,"(c) Median gender pay gap, hourly pay",pct,0.189017
+Group,Group,c_median_gap_hourly,"(c) Median gender pay gap, hourly pay",pct,0.155599
+IT · Milan,IT,c_median_gap_annual,"(c) Median gender pay gap, annual pay",pct,0.19719
+PL · Kraków,PL,c_median_gap_annual,"(c) Median gender pay gap, annual pay",pct,0.136683
+DE · Munich,DE,c_median_gap_annual,"(c) Median gender pay gap, annual pay",pct,0.132456
+ES · Barcelona,ES,c_median_gap_annual,"(c) Median gender pay gap, annual pay",pct,0.19383
+Group,Group,c_median_gap_annual,"(c) Median gender pay gap, annual pay",pct,0.167384
+IT · Milan,IT,d_median_gap_components,(d) Median gap in complementary or variable components,pct,0.259804
+PL · Kraków,PL,d_median_gap_components,(d) Median gap in complementary or variable components,pct,0.156997
+DE · Munich,DE,d_median_gap_components,(d) Median gap in complementary or variable components,pct,0.162016
+ES · Barcelona,ES,d_median_gap_components,(d) Median gap in complementary or variable components,pct,0.427252
+Group,Group,d_median_gap_components,(d) Median gap in complementary or variable components,pct,0.245902
+IT · Milan,IT,e_share_women_receiving,(e) Women receiving complementary or variable components,pct,0.560229
+PL · Kraków,PL,e_share_women_receiving,(e) Women receiving complementary or variable components,pct,0.555363
+DE · Munich,DE,e_share_women_receiving,(e) Women receiving complementary or variable components,pct,0.545455
+ES · Barcelona,ES,e_share_women_receiving,(e) Women receiving complementary or variable components,pct,0.549407
+Group,Group,e_share_women_receiving,(e) Women receiving complementary or variable components,pct,0.553873
+IT · Milan,IT,e_share_men_receiving,(e) Men receiving complementary or variable components,pct,0.620755
+PL · Kraków,PL,e_share_men_receiving,(e) Men receiving complementary or variable components,pct,0.641869
+DE · Munich,DE,e_share_men_receiving,(e) Men receiving complementary or variable components,pct,0.634921
+ES · Barcelona,ES,e_share_men_receiving,(e) Men receiving complementary or variable components,pct,0.658333
+Group,Group,e_share_men_receiving,(e) Men receiving complementary or variable components,pct,0.636153
+IT · Milan,IT,base_mean_gap_hourly,"Context: gap on base pay alone, mean hourly",pct,0.17466
+PL · Kraków,PL,base_mean_gap_hourly,"Context: gap on base pay alone, mean hourly",pct,0.136001
+DE · Munich,DE,base_mean_gap_hourly,"Context: gap on base pay alone, mean hourly",pct,0.125947
+ES · Barcelona,ES,base_mean_gap_hourly,"Context: gap on base pay alone, mean hourly",pct,0.17747
+Group,Group,base_mean_gap_hourly,"Context: gap on base pay alone, mean hourly",pct,0.153751
+IT · Milan,IT,f_q1_share_women,(f) Women in quartile pay band 1 (lowest),pct,0.628788
+PL · Kraków,PL,f_q1_share_women,(f) Women in quartile pay band 1 (lowest),pct,0.588235
+DE · Munich,DE,f_q1_share_women,(f) Women in quartile pay band 1 (lowest),pct,0.543011
+ES · Barcelona,ES,f_q1_share_women,(f) Women in quartile pay band 1 (lowest),pct,0.66129
+Group,Group,f_q1_share_women,(f) Women in quartile pay band 1 (lowest),pct,0.60139
+IT · Milan,IT,f_q1_share_men,(f) Men in quartile pay band 1 (lowest),pct,0.371212
+PL · Kraków,PL,f_q1_share_men,(f) Men in quartile pay band 1 (lowest),pct,0.411765
+DE · Munich,DE,f_q1_share_men,(f) Men in quartile pay band 1 (lowest),pct,0.456989
+ES · Barcelona,ES,f_q1_share_men,(f) Men in quartile pay band 1 (lowest),pct,0.33871
+Group,Group,f_q1_share_men,(f) Men in quartile pay band 1 (lowest),pct,0.39861
+IT · Milan,IT,f_q2_share_women,(f) Women in quartile pay band 2,pct,0.51711
+PL · Kraków,PL,f_q2_share_women,(f) Women in quartile pay band 2,pct,0.529412
+DE · Munich,DE,f_q2_share_women,(f) Women in quartile pay band 2,pct,0.535135
+ES · Barcelona,ES,f_q2_share_women,(f) Women in quartile pay band 2,pct,0.544715
+Group,Group,f_q2_share_women,(f) Women in quartile pay band 2,pct,0.52907
+IT · Milan,IT,f_q2_share_men,(f) Men in quartile pay band 2,pct,0.48289
+PL · Kraków,PL,f_q2_share_men,(f) Men in quartile pay band 2,pct,0.470588
+DE · Munich,DE,f_q2_share_men,(f) Men in quartile pay band 2,pct,0.464865
+ES · Barcelona,ES,f_q2_share_men,(f) Men in quartile pay band 2,pct,0.455285
+Group,Group,f_q2_share_men,(f) Men in quartile pay band 2,pct,0.47093
+IT · Milan,IT,f_q3_share_women,(f) Women in quartile pay band 3,pct,0.524715
+PL · Kraków,PL,f_q3_share_women,(f) Women in quartile pay band 3,pct,0.522491
+DE · Munich,DE,f_q3_share_women,(f) Women in quartile pay band 3,pct,0.508108
+ES · Barcelona,ES,f_q3_share_women,(f) Women in quartile pay band 3,pct,0.544715
+Group,Group,f_q3_share_women,(f) Women in quartile pay band 3,pct,0.523256
+IT · Milan,IT,f_q3_share_men,(f) Men in quartile pay band 3,pct,0.475285
+PL · Kraków,PL,f_q3_share_men,(f) Men in quartile pay band 3,pct,0.477509
+DE · Munich,DE,f_q3_share_men,(f) Men in quartile pay band 3,pct,0.491892
+ES · Barcelona,ES,f_q3_share_men,(f) Men in quartile pay band 3,pct,0.455285
+Group,Group,f_q3_share_men,(f) Men in quartile pay band 3,pct,0.476744
+IT · Milan,IT,f_q4_share_women,(f) Women in quartile pay band 4 (highest),pct,0.315589
+PL · Kraków,PL,f_q4_share_women,(f) Women in quartile pay band 4 (highest),pct,0.359862
+DE · Munich,DE,f_q4_share_women,(f) Women in quartile pay band 4 (highest),pct,0.372973
+ES · Barcelona,ES,f_q4_share_women,(f) Women in quartile pay band 4 (highest),pct,0.300813
+Group,Group,f_q4_share_women,(f) Women in quartile pay band 4 (highest),pct,0.340698
+IT · Milan,IT,f_q4_share_men,(f) Men in quartile pay band 4 (highest),pct,0.684411
+PL · Kraków,PL,f_q4_share_men,(f) Men in quartile pay band 4 (highest),pct,0.640138
+DE · Munich,DE,f_q4_share_men,(f) Men in quartile pay band 4 (highest),pct,0.627027
+ES · Barcelona,ES,f_q4_share_men,(f) Men in quartile pay band 4 (highest),pct,0.699187
+Group,Group,f_q4_share_men,(f) Men in quartile pay band 4 (highest),pct,0.659302
