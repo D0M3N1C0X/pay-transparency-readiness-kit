@@ -122,11 +122,23 @@ def footer(slide, n):
          color=MUTED, align=PP_ALIGN.RIGHT)
 
 
-def stat(slide, x, y, w, value, label, colour=NAVY):
-    rect(slide, x, y, w, Inches(2.0), TINT)
-    text(slide, x + Inches(0.3), y + Inches(0.25), w - Inches(0.6), Inches(0.9), value, size=40, bold=True,
-         color=colour, font=HEAD)
-    text(slide, x + Inches(0.3), y + Inches(1.15), w - Inches(0.6), Inches(0.8), label, size=14, color=INK)
+def fit(values, width):
+    """One font size for a row of big numbers, small enough for the longest to stay on one line."""
+    longest = max(len(v) for v in values)
+    return max(20, min(40, int(width / 12700 / longest / 0.68)))   # EMU -> pt; ~0.68 em per character
+
+
+def stat_row(slide, y, items, gap=Inches(0.3)):
+    """items: [(value, label, colour)] laid out as equal cards across the slide."""
+    w = (W - 2 * MARGIN - gap * (len(items) - 1)) / len(items)
+    pad = Inches(0.25)
+    size = fit([v for v, _, _ in items], w - 2 * pad)
+    for i, (value, label, colour) in enumerate(items):
+        x = MARGIN + i * (w + gap)
+        rect(slide, x, y, w, Inches(2.0), TINT)
+        text(slide, x + pad, y + Inches(0.25), w - 2 * pad, Inches(0.8), value, size=size, bold=True,
+             color=colour, font=HEAD, anchor=MSO_ANCHOR.BOTTOM)
+        text(slide, x + pad, y + Inches(1.15), w - 2 * pad, Inches(0.8), label, size=14, color=INK)
 
 
 def style_chart(chart, colours, fmt="0.0%", legend=True):
@@ -200,16 +212,13 @@ def build(w=None):
     # 2 - the answer -------------------------------------------------------------------------
     s = new_slide()
     heading(s, "The answer", "Four employers report every year from June 2027, and none is ready yet")
-    cw = (W - 2 * MARGIN - Inches(0.9)) / 4
-    y = Inches(2.3)
-    stats = [
-        (day(first, "%b"), "first report for all four employers, then every year (Art. 9(2))", NAVY),
+    stat_row(s, Inches(2.3), [
+        (f"{first:%b %Y}", f"first report, due {day(first)}, for all four employers; then every year (Art. 9(2))",
+         NAVY),
         (pct(G["a_mean_gap_hourly"]), "gender pay gap on hourly pay across the group (Art. 9(1)(a))", ORANGE),
         (f"{len(flagged)} of {len(cats)}", "categories of workers at 5% or more: justify or remedy (Art. 10)", ORANGE),
         (f"€{flagged['remedy_cost'].sum() / 1e6:.1f}M", "a year, at most, to close those gaps outright", NAVY),
-    ]
-    for i, (value, label, colour) in enumerate(stats):
-        stat(s, MARGIN + i * (cw + Inches(0.3)), y, cw, value, label, colour)
+    ])
     text(s, MARGIN, Inches(4.8), W - 2 * MARGIN, Inches(1.6), [
         (f"Readiness: {counts.get('Ready', 0)} of {len(ready)} obligations in place, {counts.get('Partial', 0)} partly, "
          f"{counts.get('Gap', 0)} missing.", {"bold": True, "size": 18}),
@@ -246,12 +255,12 @@ def build(w=None):
         text(s, x, Inches(3.25), sw, Inches(0.4), what, size=15, bold=True)
         text(s, x, Inches(3.65), sw, Inches(0.8), detail, size=13, color=MUTED)
     y = Inches(4.75)
-    text(s, MARGIN, y, Inches(4), Inches(0.4), "Status of national law, 16 September 2026", size=14, bold=True)
+    text(s, MARGIN, y, Inches(8), Inches(0.4), "Status of national law, 16 September 2026", size=14, bold=True)
     notes = {
-        "IT": "D.Lgs. 96/2026 in force since 7 June 2026; collective agreements anchor the categories",
-        "PL": "Recruitment rules in force; reporting act still in draft",
-        "DE": "No act adopted yet; Entgelttransparenzgesetz still applies",
-        "ES": "Draft Royal Decree under consultation (August 2026)",
+        "IT": "D.Lgs. 96/2026, in force 7 June 2026; collective agreements anchor the categories",
+        "PL": "Recruitment rules in force; the reporting act is a draft",
+        "DE": "No act yet; the 2017 pay transparency act still applies",
+        "ES": "Draft Royal Decree, consulted in August 2026",
     }
     for i, code in enumerate(codes):
         col, row = i % 2, i // 2
@@ -259,7 +268,7 @@ def build(w=None):
         yy = y + Inches(0.5) + row * Inches(0.75)
         text(s, x, yy + Inches(0.03), Inches(1.6), Inches(0.35), ENTITIES[code], size=14, bold=True)
         status_chip(s, x + Inches(1.65), yy, status[code], TRANSPOSITION_STATUS[status[code]])
-        text(s, x + Inches(3.5), yy - Inches(0.02), Inches(2.5), Inches(0.7), notes[code], size=11, color=MUTED)
+        text(s, x + Inches(3.5), yy - Inches(0.02), Inches(2.6), Inches(0.7), notes[code], size=11, color=MUTED)
     footer(s, 3)
     s.notes_slide.notes_text_frame.text = (
         "Only Italy has transposed in full among our four countries. The Directive's dates still frame the "
@@ -293,7 +302,7 @@ def build(w=None):
 
     # 5 - quartile bands -----------------------------------------------------------------------
     s = new_slide()
-    heading(s, "Article 9(1)(f)", "Women fill the lowest pay band and thin out at the top",
+    heading(s, "Article 9(1)(f)", "Women fill the lowest pay band, not the highest",
             "Share of women in the lowest and highest of four equal pay bands, by employer")
     data = CategoryChartData()
     data.categories = [ENTITIES[c] for c in codes]
@@ -318,16 +327,15 @@ def build(w=None):
     # 6 - components ----------------------------------------------------------------------------
     s = new_slide()
     heading(s, "Article 9(1)(b), (d) and (e)", "Bonus, commission and allowances widen the gap")
-    cw = (W - 2 * MARGIN - Inches(0.6)) / 3
     rate = f["sales_rate"]
-    stats = [
+    fewer = (G["e_share_men_receiving"] - G["e_share_women_receiving"]) * 100
+    stat_row(s, Inches(2.1), [
         (pct(G["b_mean_gap_components"]), "gap in average components, among workers who receive any", ORANGE),
-        (f"{pct(G['e_share_women_receiving'], 0)} vs {pct(G['e_share_men_receiving'], 0)}",
-         "of women and of men receive any component", NAVY),
-        (f"{pct(rate['F'])} vs {pct(rate['M'])}", "commission as a share of base pay in Sales, women vs men", ORANGE),
-    ]
-    for i, (value, label, colour) in enumerate(stats):
-        stat(s, MARGIN + i * (cw + Inches(0.3)), Inches(2.1), cw, value, label, colour)
+        (f"{fewer:.1f} pts", f"fewer women receive any component: {pct(G['e_share_women_receiving'], 0)} "
+                             f"against {pct(G['e_share_men_receiving'], 0)} of men", NAVY),
+        (f"{(rate['M'] - rate['F']) * 100:.1f} pts", f"lower commission rate for women in Sales: {pct(rate['F'])} "
+                                                   f"of base pay against {pct(rate['M'])}", ORANGE),
+    ])
     rect(s, MARGIN, Inches(4.5), W - 2 * MARGIN, Inches(2.2), TINT)
     text(s, MARGIN + Inches(0.35), Inches(4.75), Inches(5.6), Inches(1.8), [
         ("Eligibility follows seniority", {"bold": True, "size": 17}),
@@ -347,7 +355,7 @@ def build(w=None):
 
     # 7 - Article 10 screen ------------------------------------------------------------------------
     s = new_slide()
-    heading(s, "Article 10", f"{len(flagged)} categories need a justification or a remedy by {day(remedy_by, '%b')}")
+    heading(s, "Article 10", f"{len(flagged)} categories to justify or remedy by {day(remedy_by, '%b')}")
     top = flagged.sort_values("remedy_cost", ascending=False)
     rows, cols = len(top) + 1, 6
     table = s.shapes.add_table(rows, cols, MARGIN, Inches(1.95), W - 2 * MARGIN, Inches(0.36) * rows).table
@@ -394,15 +402,19 @@ def build(w=None):
         text(s, x, Inches(2.05), Inches(1.5), Inches(0.8), str(counts.get(level, 0)), size=40, bold=True, font=HEAD)
         status_chip(s, x, Inches(2.9), level, READINESS_STATUS[level], w=Inches(1.3))
     gaps = ready[ready["status"] == "Gap"]
-    gw = (W - 2 * MARGIN - Inches(0.6)) / 3
+    text(s, MARGIN + Inches(5.6), Inches(2.2), Inches(6.5), Inches(1.0),
+         "The missing pieces are the ones workers and applicants see first: pay ranges, published criteria, "
+         "an answer to their questions.", size=16, color=MUTED)
+    cols = 4
+    gw = (W - 2 * MARGIN - Inches(0.25) * (cols - 1)) / cols
     for i, r in enumerate(gaps.itertuples()):
-        col, row = i % 3, i // 3
-        x = MARGIN + col * (gw + Inches(0.3))
-        y = Inches(3.65) + row * Inches(1.05)
-        rect(s, x, y, gw, Inches(0.9), TINT)
-        text(s, x + Inches(0.2), y + Inches(0.12), gw - Inches(0.4), Inches(0.7), [
-            (f"{r.article} · {r.owner}", {"bold": True, "size": 11, "color": MUTED, "space": 2}),
-            (r.requirement, {"size": 12}),
+        col, row = i % cols, i // cols
+        x = MARGIN + col * (gw + Inches(0.25))
+        y = Inches(3.55) + row * Inches(1.7)
+        rect(s, x, y, gw, Inches(1.5), TINT)
+        text(s, x + Inches(0.18), y + Inches(0.14), gw - Inches(0.36), Inches(1.25), [
+            (f"{r.article} · {r.owner}", {"bold": True, "size": 11, "color": MUTED, "space": 3}),
+            (r.requirement, {"size": 11}),
         ])
     footer(s, 8)
     s.notes_slide.notes_text_frame.text = "Statuses are illustrative for the demonstration organisation."
@@ -411,11 +423,11 @@ def build(w=None):
     s = new_slide()
     heading(s, "The plan", "The next 90 days")
     plan = [
-        ("Agree the job evaluation", "With workers' representatives, starting from the Italian collective agreement."),
-        ("Justify or budget each flag", "Most expensive first; a documented, gender-neutral reason or a remedy."),
+        ("Agree job evaluation", "With workers' representatives, starting from the Italian collective agreement."),
+        ("Justify or budget flags", "Most expensive first: a documented, gender-neutral reason or a remedy."),
         ("Review Sales territories", "And every other rule that decides who can earn a component."),
         ("Fix recruitment now", "Pay ranges in vacancies, no pay-history questions, neutral titles."),
-        ("Open the information route", "Written answers within two months; an annual notice to workers."),
+        ("Open information route", "Written answers within two months; an annual notice to workers."),
         ("Rerun on 2026 payroll", "Once national rules are final; management sign-off after consultation."),
     ]
     pw = (W - 2 * MARGIN - Inches(0.6)) / 3
@@ -435,8 +447,8 @@ def build(w=None):
         run = p.add_run()
         run.text = str(i + 1)
         run.font.name, run.font.size, run.font.bold, run.font.color.rgb = BODY, Pt(16), True, WHITE
-        text(s, x + Inches(0.3), y + Inches(0.95), pw - Inches(0.6), Inches(0.4), what, size=17, bold=True)
-        text(s, x + Inches(0.3), y + Inches(1.35), pw - Inches(0.6), Inches(0.65), detail, size=13, color=MUTED)
+        text(s, x + Inches(0.3), y + Inches(0.9), pw - Inches(0.6), Inches(0.4), what, size=16, bold=True)
+        text(s, x + Inches(0.3), y + Inches(1.32), pw - Inches(0.6), Inches(0.7), detail, size=13, color=MUTED)
     footer(s, 9)
 
     # 10 - decisions -------------------------------------------------------------------------------
