@@ -1,0 +1,37 @@
+role,department,job_level,skills,effort,responsibility,working_conditions,rationale
+Customer Service L1,Customer Service,L1,1,4,1,3,"entry role, works to procedures; effort 4: sustained emotional and cognitive load; conditions 3: shifts, monitored contact"
+Customer Service L2,Customer Service,L2,2,4,1,3,"experienced individual contributor; effort 4: sustained emotional and cognitive load; conditions 3: shifts, monitored contact"
+Customer Service L3,Customer Service,L3,3,4,2,3,"senior individual contributor, handles exceptions; effort 4: sustained emotional and cognitive load; conditions 3: shifts, monitored contact"
+Customer Service L4,Customer Service,L4,4,3,3,2,team lead or specialist owning a process; supervisory role: less time on the floor than L1-L3
+Customer Service L5,Customer Service,L5,4,3,4,1,manager accountable for a function in the country; effort and working conditions scored at leadership level
+Customer Service L6,Customer Service,L6,5,3,5,1,country head of function; effort and working conditions scored at leadership level
+Operations L1,Operations,L1,1,4,1,4,"entry role, works to procedures; effort 4: physical work; conditions 4: on-site shifts"
+Operations L2,Operations,L2,2,4,1,4,experienced individual contributor; effort 4: physical work; conditions 4: on-site shifts
+Operations L3,Operations,L3,3,4,2,4,"senior individual contributor, handles exceptions; effort 4: physical work; conditions 4: on-site shifts"
+Operations L4,Operations,L4,4,3,3,3,team lead or specialist owning a process; supervisory role: less time on the floor than L1-L3
+Operations L5,Operations,L5,4,3,4,1,manager accountable for a function in the country; effort and working conditions scored at leadership level
+Operations L6,Operations,L6,5,3,5,1,country head of function; effort and working conditions scored at leadership level
+Tech L1,Tech,L1,2,2,1,1,"entry role, works to procedures; skills +1: specialist technical know-how"
+Tech L2,Tech,L2,3,2,1,1,experienced individual contributor; skills +1: specialist technical know-how
+Tech L3,Tech,L3,4,2,2,1,"senior individual contributor, handles exceptions; skills +1: specialist technical know-how"
+Tech L4,Tech,L4,5,2,3,1,team lead or specialist owning a process; skills +1: specialist technical know-how
+Tech L5,Tech,L5,4,3,4,1,manager accountable for a function in the country; effort and working conditions scored at leadership level
+Tech L6,Tech,L6,5,3,5,1,country head of function; effort and working conditions scored at leadership level
+Sales L1,Sales,L1,1,3,1,2,"entry role, works to procedures; effort 3: target pressure; conditions 2: travel"
+Sales L2,Sales,L2,2,3,2,2,experienced individual contributor; responsibility +1: owns revenue targets; effort 3: target pressure; conditions 2: travel
+Sales L3,Sales,L3,3,3,3,2,"senior individual contributor, handles exceptions; responsibility +1: owns revenue targets; effort 3: target pressure; conditions 2: travel"
+Sales L4,Sales,L4,4,3,3,2,team lead or specialist owning a process; effort 3: target pressure; conditions 2: travel
+Sales L5,Sales,L5,4,3,4,1,manager accountable for a function in the country; effort and working conditions scored at leadership level
+Sales L6,Sales,L6,5,3,5,1,country head of function; effort and working conditions scored at leadership level
+Finance L1,Finance,L1,1,2,1,1,"entry role, works to procedures"
+Finance L2,Finance,L2,2,2,2,1,experienced individual contributor; responsibility +1: financial controls or confidential employee data
+Finance L3,Finance,L3,3,2,3,1,"senior individual contributor, handles exceptions; responsibility +1: financial controls or confidential employee data"
+Finance L4,Finance,L4,4,2,4,1,team lead or specialist owning a process; responsibility +1: financial controls or confidential employee data
+Finance L5,Finance,L5,4,3,4,1,manager accountable for a function in the country; effort and working conditions scored at leadership level
+Finance L6,Finance,L6,5,3,5,1,country head of function; effort and working conditions scored at leadership level
+HR L1,HR,L1,1,2,1,1,"entry role, works to procedures"
+HR L2,HR,L2,2,2,2,1,experienced individual contributor; responsibility +1: confidential employee data and legal compliance
+HR L3,HR,L3,3,2,3,1,"senior individual contributor, handles exceptions; responsibility +1: confidential employee data and legal compliance"
+HR L4,HR,L4,4,2,4,1,team lead or specialist owning a process; responsibility +1: confidential employee data and legal compliance
+HR L5,HR,L5,4,3,4,1,manager accountable for a function in the country; effort and working conditions scored at leadership level
+HR L6,HR,L6,5,3,5,1,country head of function; effort and working conditions scored at leadership level

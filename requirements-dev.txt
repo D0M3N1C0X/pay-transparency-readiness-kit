@@ -1,0 +1,4 @@
+-r requirements.txt
+pytest==9.1.1
+# Pure-Python spreadsheet engine: evaluates the workbook's formulas in the test suite.
+formulas==1.3.4

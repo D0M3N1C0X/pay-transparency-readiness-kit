@@ -1,0 +1,6 @@
+# Generated outputs: keep them out of the language bar and out of review diffs.
+data/payroll_extract.csv linguist-generated
+reports/** linguist-generated
+tableau/*.csv linguist-generated
+*.xlsx binary
+*.pptx binary
