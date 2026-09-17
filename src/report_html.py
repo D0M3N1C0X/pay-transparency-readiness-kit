@@ -158,9 +158,23 @@ PILLS = {"Justify or remedy": "flag", "Gap": "flag", "Not transposed": "flag",
 # Inline markdown
 # --------------------------------------------------------------------------
 
+REPO = "https://github.com/D0M3N1C0X/pay-transparency-readiness-kit"
+
+
+def href(target: str) -> str:
+    """Links written for the repository, rewritten for the published page: the site serves the
+    deliverables next to index.html; everything else is read on GitHub."""
+    if not target.startswith("../"):
+        return target
+    path = target[3:]
+    if path.startswith("deliverables/"):
+        return path.split("/", 1)[1]
+    return f"{REPO}/blob/main/{path}"
+
+
 def inline(text: str) -> str:
     out = html.escape(text, quote=False)
-    out = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', out)
+    out = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", lambda m: f'<a href="{href(m.group(2))}">{m.group(1)}</a>', out)
     out = re.sub(r"`([^`]+)`", r"<code>\1</code>", out)
     out = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", out)
     out = re.sub(r"(?<![\w*])\*([^*]+)\*(?![\w*])", r"<em>\1</em>", out)
