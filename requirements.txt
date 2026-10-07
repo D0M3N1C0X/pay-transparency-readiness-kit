@@ -3,3 +3,5 @@ pandas==3.0.5
 numpy==2.5.3
 openpyxl==3.1.5
 python-pptx==1.0.2
+# Reconciliation, LibreOffice recalculation and byte-stable workbooks, shared by the portfolio
+excel-twin[formulas] @ git+https://github.com/D0M3N1C0X/excel-twin@v0.1.0

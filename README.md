@@ -84,6 +84,8 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
+The reconciliation check, the LibreOffice recalculation and the byte-stable workbook come from [excel-twin](https://github.com/D0M3N1C0X/excel-twin), a small library shared by the portfolio.
+
 The full workbook is recalculated by LibreOffice in CI:
 
 ```bash
