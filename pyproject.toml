@@ -27,4 +27,6 @@ source = ["src"]
 
 [tool.coverage.report]
 show_missing = true
+# Two points under the coverage measured in CI on 9 October 2026: it may rise, it may not fall.
+fail_under = 48
 skip_covered = true
