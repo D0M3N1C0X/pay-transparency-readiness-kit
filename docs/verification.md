@@ -1,7 +1,7 @@
 # Verification register
 
 Every legal statement the kit relies on, where it comes from, and how far it has been checked.
-Checked on **16 September 2026**.
+Checked on **16 September 2026**; national transposition rechecked on **9 October 2026**.
 
 **Status key**
 
@@ -48,6 +48,15 @@ Office ([CELEX 32023L0970](https://eur-lex.europa.eu/eli/dir/2023/970/oj)).
 | N08 | Germany: the Entgelttransparenzgesetz (2017) remains in force until replaced | - | Background |
 | N09 | **Spain**: draft Royal Decree published 3 August 2026, open for consultation until 24 August 2026 | Ius Laboris tracker | Single source · **to verify** |
 | N10 | Spain: existing pay-register and pay-audit duties (Royal Decree 902/2020) | - | Background |
+
+### Rechecked on 9 October 2026
+
+No change found for Poland, Germany or Spain: none has adopted its transposing act since 16 September 2026.
+New since the first check: Germany is reported to target entry into force on 1 January 2027, with the right to
+information delayed to 2028 (single sources, **to verify** on the Bundesgesetzblatt). Sources:
+[Lockton implementation tracker](https://global.lockton.com/us/en/news-insights/eu-pay-transparency-directive-implementation-status),
+[Trusaic, August 2026 update](https://trusaic.com/blog/eu-pay-transparency-directive-august-2026-transposition-update/).
+Italy's status (N01) is unchanged.
 
 ## What this kit is not
 

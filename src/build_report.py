@@ -16,23 +16,23 @@ from workers import load_workers
 FIG = REPORTS / "figures"
 
 
-def pct(x, d=1):
+def pct(x, d=1) -> str:
     return "n/a" if pd.isna(x) else f"{x * 100:.{d}f}%"
 
 
-def eur(x):
+def eur(x) -> str:
     return f"€{x:,.0f}"
 
 
-def eur_m(x):
+def eur_m(x) -> str:
     return f"€{x / 1e6:.1f} million"
 
 
-def day(d, month="%B"):
+def day(d, month="%B") -> str:
     return f"{d.day} {d:{month} %Y}"
 
 
-def md_table(head, rows, align):
+def md_table(head, rows, align) -> str:
     out = ["| " + " | ".join(head) + " |",
            "|" + "|".join("---:" if a == "r" else "---" for a in align) + "|"]
     out += ["| " + " | ".join(str(c) for c in r) + " |" for r in rows]
@@ -139,11 +139,11 @@ def write(w: pd.DataFrame) -> dict:
         "before a joint pay assessment is due. National status as checked on 16 September 2026; "
         "sources in [docs/verification.md](../docs/verification.md).*")
     add("")
-    add(f"For Italy, applying a national collective agreement signed by representative unions is presumed to "
-        f"comply, classification included, so the categories of workers should start from the agreement's "
-        f"levels and use job evaluation to complement them, not replace them. The categories in this dry run "
-        f"come from job evaluation alone, because the synthetic organisation has no collective agreement. "
-        f"*[to verify on the decree text]*")
+    add("For Italy, applying a national collective agreement signed by representative unions is presumed to "
+        "comply, classification included, so the categories of workers should start from the agreement's "
+        "levels and use job evaluation to complement them, not replace them. The categories in this dry run "
+        "come from job evaluation alone, because the synthetic organisation has no collective agreement. "
+        "*[to verify on the decree text]*")
     add("")
 
     add("## 2. The seven reporting items")

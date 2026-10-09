@@ -6,6 +6,17 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    # Style, likely bugs and return types; the rules are in pyproject.toml.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff==0.16.10
+      - run: ruff check .
+
   pipeline:
     runs-on: ubuntu-latest
     strategy:
@@ -33,8 +44,12 @@ jobs:
       - name: Office files have the same content
         run: python src/deterministic.py --check deliverables/pay_transparency_model.xlsx deliverables/board_briefing.pptx
 
-      - name: Tests
-        run: pytest -q
+      - name: Tests, with coverage
+        run: pytest -q --cov --cov-report=term
+
+      - name: Coverage in the run summary
+        if: matrix.python-version == '3.12'
+        run: coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
 
   workbook:
     # The full model, recalculated by a real spreadsheet engine and checked against pandas.

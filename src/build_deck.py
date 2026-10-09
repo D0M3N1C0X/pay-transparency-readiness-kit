@@ -5,6 +5,7 @@ Charts are native PowerPoint charts, so every number can be inspected and restyl
 deck. Figures come from the same functions as the report and the workbook.
 """
 from datetime import datetime
+from pathlib import Path
 
 from pptx import Presentation
 from pptx.chart.data import CategoryChartData
@@ -12,6 +13,8 @@ from pptx.dml.color import RGBColor
 from pptx.enum.chart import XL_CHART_TYPE, XL_LABEL_POSITION, XL_LEGEND_POSITION
 from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.shapes.autoshape import Shape
+from pptx.slide import Slide
 from pptx.util import Emu, Inches, Pt
 
 import build_report
@@ -20,6 +23,8 @@ from deterministic import normalise
 from workers import load_workers
 
 OUTPUT = DELIVERABLES / "board_briefing.pptx"
+CHIP_W = Inches(1.7)        # default width of a status chip
+ROW_GAP = Inches(0.3)       # default gap between stat cards
 
 NAVY = RGBColor(0x1F, 0x3A, 0x5F)
 NAVY_SOFT = RGBColor(0xCA, 0xD6, 0xE6)
@@ -42,12 +47,12 @@ W, H = Inches(13.333), Inches(7.5)
 MARGIN = Inches(0.6)
 
 
-def pct(x, d=1):
+def pct(x, d=1) -> str:
     return f"{x * 100:.{d}f}%"
 
 
 def text(slide, x, y, w, h, content, size=14, color=INK, bold=False, font=BODY, align=PP_ALIGN.LEFT,
-         anchor=MSO_ANCHOR.TOP, italic=False):
+         anchor=MSO_ANCHOR.TOP, italic=False) -> Shape:
     """A text box; `content` is a string or a list of (text, overrides) paragraphs."""
     box = slide.shapes.add_textbox(x, y, w, h)
     tf = box.text_frame
@@ -71,7 +76,7 @@ def text(slide, x, y, w, h, content, size=14, color=INK, bold=False, font=BODY, 
     return box
 
 
-def rect(slide, x, y, w, h, fill, rounded=True, line=None):
+def rect(slide, x, y, w, h, fill, rounded=True, line=None) -> Shape:
     shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE if rounded else MSO_SHAPE.RECTANGLE, x, y, w, h)
     if rounded:
         shape.adjustments[0] = 0.08
@@ -86,7 +91,7 @@ def rect(slide, x, y, w, h, fill, rounded=True, line=None):
     return shape
 
 
-def chip(slide, x, y, label, fill, color=WHITE, w=None):
+def chip(slide, x, y, label, fill, color=WHITE, w=None) -> Shape:
     """The deck's motif: a small rounded label naming the article a slide rests on."""
     width = w or Inches(0.12 * len(label) + 0.35)
     shape = rect(slide, x, y, width, Inches(0.34), fill)
@@ -103,32 +108,32 @@ def chip(slide, x, y, label, fill, color=WHITE, w=None):
     return shape
 
 
-def status_chip(slide, x, y, label, level, w=Inches(1.7)):
+def status_chip(slide, x, y, label, level, w=CHIP_W) -> Shape:
     dark_text = level in ("warning", "serious")
     return chip(slide, x, y, label, STATUS[level], color=INK if dark_text else WHITE, w=w)
 
 
-def heading(slide, kicker, title, subtitle=None):
+def heading(slide, kicker, title, subtitle=None) -> None:
     chip(slide, MARGIN, Inches(0.45), kicker, NAVY)
     text(slide, MARGIN, Inches(0.95), W - 2 * MARGIN, Inches(0.9), title, size=30, bold=True, font=HEAD)
     if subtitle:
         text(slide, MARGIN, Inches(1.75), W - 2 * MARGIN, Inches(0.5), subtitle, size=14, color=MUTED)
 
 
-def footer(slide, n):
+def footer(slide, n) -> None:
     text(slide, MARGIN, H - Inches(0.45), Inches(9), Inches(0.3),
          "Pay transparency readiness · dry run on synthetic data · not legal advice", size=10, color=MUTED)
     text(slide, W - MARGIN - Inches(1), H - Inches(0.45), Inches(1), Inches(0.3), str(n), size=10,
          color=MUTED, align=PP_ALIGN.RIGHT)
 
 
-def fit(values, width):
+def fit(values, width) -> int:
     """One font size for a row of big numbers, small enough for the longest to stay on one line."""
     longest = max(len(v) for v in values)
     return max(20, min(40, int(width / 12700 / longest / 0.68)))   # EMU -> pt; ~0.68 em per character
 
 
-def stat_row(slide, y, items, gap=Inches(0.3)):
+def stat_row(slide, y, items, gap=ROW_GAP) -> None:
     """items: [(value, label, colour)] laid out as equal cards across the slide."""
     w = (W - 2 * MARGIN - gap * (len(items) - 1)) / len(items)
     pad = Inches(0.25)
@@ -141,7 +146,7 @@ def stat_row(slide, y, items, gap=Inches(0.3)):
         text(slide, x + pad, y + Inches(1.15), w - 2 * pad, Inches(0.8), label, size=14, color=INK)
 
 
-def style_chart(chart, colours, fmt="0.0%", legend=True):
+def style_chart(chart, colours, fmt="0.0%", legend=True) -> None:
     chart.font.name = BODY
     chart.font.size = Pt(12)
     chart.font.color.rgb = INK
@@ -155,7 +160,7 @@ def style_chart(chart, colours, fmt="0.0%", legend=True):
     labels.position = XL_LABEL_POSITION.OUTSIDE_END
     labels.font.size = Pt(11)
     labels.font.color.rgb = INK
-    for series, colour in zip(plot.series, colours):
+    for series, colour in zip(plot.series, colours, strict=True):
         series.format.fill.solid()
         series.format.fill.fore_color.rgb = colour
     value_axis = chart.value_axis
@@ -172,7 +177,7 @@ def style_chart(chart, colours, fmt="0.0%", legend=True):
         chart.legend.font.size = Pt(12)
 
 
-def build(w=None):
+def build(w=None) -> Path:
     w = load_workers() if w is None else w
     f = build_report.facts(w)
     codes, ind, cats, obl, ready, flagged = (f[k] for k in ("codes", "ind", "cats", "obl", "ready", "flagged"))
@@ -187,7 +192,7 @@ def build(w=None):
     prs.slide_width, prs.slide_height = W, H
     blank = prs.slide_layouts[6]
 
-    def new_slide(dark=False):
+    def new_slide(dark=False) -> Slide:
         s = prs.slides.add_slide(blank)
         s.background.fill.solid()
         s.background.fill.fore_color.rgb = NAVY if dark else WHITE
@@ -468,7 +473,7 @@ def build(w=None):
     dw = (W - 2 * MARGIN - Inches(0.6)) / 3
     for i, (what, detail) in enumerate(decisions):
         x = MARGIN + i * (dw + Inches(0.3))
-        box = rect(s, x, Inches(2.5), dw, Inches(3.1), RGBColor(0x2A, 0x4B, 0x74))
+        rect(s, x, Inches(2.5), dw, Inches(3.1), RGBColor(0x2A, 0x4B, 0x74))
         text(s, x + Inches(0.35), Inches(2.8), dw - Inches(0.7), Inches(0.6), str(i + 1), size=36, bold=True,
              color=ORANGE, font=HEAD)
         text(s, x + Inches(0.35), Inches(3.6), dw - Inches(0.7), Inches(0.9), what, size=20, bold=True, color=WHITE)

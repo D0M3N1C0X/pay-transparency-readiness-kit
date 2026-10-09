@@ -23,17 +23,17 @@ STYLE = """<style>
 </style>"""
 
 
-def _svg(width, height, body, label):
+def _svg(width, height, body, label) -> str:
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" '
             f'height="{height}" role="img" aria-label="{escape(label)}">{STYLE}'
             f'<rect width="{width}" height="{height}" rx="8" fill="var(--surface)"/>{body}</svg>\n')
 
 
-def pct(x, digits=1):
+def pct(x, digits=1) -> str:
     return f"{x * 100:.{digits}f}%"
 
 
-def _bar(x, y, w, h, colour, tip):
+def _bar(x, y, w, h, colour, tip) -> str:
     """Horizontal bar: square at the baseline, 4px rounded data-end."""
     r = min(4, w / 2, h / 2)
     if w <= 0:
@@ -43,7 +43,7 @@ def _bar(x, y, w, h, colour, tip):
     return f'<path d="{path}" fill="var({colour})"><title>{escape(tip)}</title></path>'
 
 
-def gap_by_employer(rows):
+def gap_by_employer(rows) -> str:
     """rows: [(label, mean gap, median gap)] -> grouped horizontal bars."""
     W, left, right, top = 720, 150, 70, 92
     band, bar = 56, 18
@@ -78,7 +78,7 @@ def gap_by_employer(rows):
     return _svg(W, H, "".join(body), "Gender pay gap by employer, mean and median hourly pay")
 
 
-def quartile_dumbbell(rows):
+def quartile_dumbbell(rows) -> str:
     """rows: [(label, share of women in lowest band, share in highest band)]."""
     W, left, right, top = 720, 150, 60, 96
     band = 44
@@ -115,7 +115,7 @@ WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "
          "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen", "Twenty"]
 
 
-def category_grid(entities, categories, cells, threshold):
+def category_grid(entities, categories, cells, threshold) -> str:
     """cells[(entity, category)] = (hourly gap, annual gap, flagged, small cell) or None."""
     flagged_n = sum(1 for c in cells.values() if c and c[2])
     count = WORDS[flagged_n] if flagged_n < len(WORDS) else str(flagged_n)

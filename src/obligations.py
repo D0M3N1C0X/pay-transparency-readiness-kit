@@ -2,6 +2,8 @@
 What each employer owes, and when: Article 9(2)-(4) size bands, the national status of
 transposition, and the illustrative readiness checklist.
 """
+from datetime import date
+
 import pandas as pd
 
 from config import DATA, ENTITIES, REMEDY_MONTHS, SIZE_BANDS
@@ -14,7 +16,7 @@ def size_band(workers: int) -> tuple[str, str, object]:
     raise ValueError(workers)
 
 
-def add_months(d, months: int):
+def add_months(d: date, months: int) -> date:
     y, m = divmod(d.month - 1 + months, 12)
     return d.replace(year=d.year + y, month=m + 1)
 

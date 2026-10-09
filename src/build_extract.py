@@ -12,9 +12,19 @@ import csv
 import hashlib
 import random
 
-from config import (BONUS_PAYOUT, BONUS_TARGET, CAR_ALLOWANCE_ANNUAL, COMMISSION_RATE, ENTITIES,
-                    FULL_TIME_WEEKLY_HOURS, PAYROLL_EXTRACT, SEED, SHIFT_ALLOWANCE_MONTHLY,
-                    SOURCE_EMPLOYEES, SOURCE_SHA256)
+from config import (
+    BONUS_PAYOUT,
+    BONUS_TARGET,
+    CAR_ALLOWANCE_ANNUAL,
+    COMMISSION_RATE,
+    ENTITIES,
+    FULL_TIME_WEEKLY_HOURS,
+    PAYROLL_EXTRACT,
+    SEED,
+    SHIFT_ALLOWANCE_MONTHLY,
+    SOURCE_EMPLOYEES,
+    SOURCE_SHA256,
+)
 
 COLUMNS = ["worker_id", "entity", "country", "site", "department", "job_level", "role", "gender",
            "contract_type", "work_model", "fte", "weekly_hours", "performance_rating",

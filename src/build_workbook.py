@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pandas as pd
 from openpyxl import Workbook
+from openpyxl.cell.cell import Cell
 from openpyxl.chart import BarChart, Reference
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -28,9 +29,21 @@ import article9
 import article10
 import obligations
 from build_extract import COLUMNS as INPUT_COLUMNS
-from config import (ASSESSMENT_DATE, BANDS, DELIVERABLES, ENTITIES, FACTOR_WEIGHTS, FACTORS,
-                    FULL_TIME_WEEKLY_HOURS, JPA_THRESHOLD, MIN_CELL, REMEDY_MONTHS, SIZE_BANDS,
-                    SNAPSHOT, WEEKS_PER_YEAR)
+from config import (
+    ASSESSMENT_DATE,
+    BANDS,
+    DELIVERABLES,
+    ENTITIES,
+    FACTOR_WEIGHTS,
+    FACTORS,
+    FULL_TIME_WEEKLY_HOURS,
+    JPA_THRESHOLD,
+    MIN_CELL,
+    REMEDY_MONTHS,
+    SIZE_BANDS,
+    SNAPSHOT,
+    WEEKS_PER_YEAR,
+)
 from deterministic import normalise
 from workers import load_job_evaluation, load_workers
 
@@ -58,12 +71,12 @@ STATUS_FILLS = {
 }
 
 
-def font(color=INK, bold=False, italic=False, size=10):
+def font(color=INK, bold=False, italic=False, size=10) -> Font:
     return Font(name=FONT, color=color, bold=bold, italic=italic, size=size)
 
 
 def put(ws, ref, value, *, color=INK, bold=False, italic=False, size=10, fmt=None, fill=None,
-        wrap=False, align=None):
+        wrap=False, align=None) -> Cell:
     cell = ws[ref]
     cell.value = value
     cell.font = font(color, bold, italic, size)
@@ -76,14 +89,14 @@ def put(ws, ref, value, *, color=INK, bold=False, italic=False, size=10, fmt=Non
     return cell
 
 
-def array(ws, ref, formula, fmt=None):
+def array(ws, ref, formula, fmt=None) -> None:
     ws[ref] = ArrayFormula(ref, formula)
     ws[ref].font = font()
     if fmt:
         ws[ref].number_format = fmt
 
 
-def header(ws, row, labels, start_col=1, height=30):
+def header(ws, row, labels, start_col=1, height=30) -> None:
     for i, label in enumerate(labels):
         c = ws.cell(row=row, column=start_col + i, value=label)
         c.font = font(WHITE, bold=True)
@@ -92,24 +105,24 @@ def header(ws, row, labels, start_col=1, height=30):
     ws.row_dimensions[row].height = height
 
 
-def title(ws, text, subtitle=None):
+def title(ws, text, subtitle=None) -> None:
     put(ws, "A1", text, bold=True, size=14)
     if subtitle:
         put(ws, "A2", subtitle, color=MUTED, italic=True)
 
 
-def widths(ws, spec: dict):
+def widths(ws, spec: dict) -> None:
     for col, width in spec.items():
         ws.column_dimensions[col].width = width
 
 
-def status_colours(ws, rng):
+def status_colours(ws, rng) -> None:
     for text, colour in STATUS_FILLS.items():
         ws.conditional_formatting.add(rng, CellIsRule(operator="equal", formula=[f'"{text}"'],
                                                       fill=PatternFill("solid", fgColor=colour)))
 
 
-def blank(x):
+def blank(x) -> object:
     """pandas NaN -> empty cell, so the reconciliation compares like with like."""
     if x is None:
         return None
@@ -128,16 +141,16 @@ class Model:
         self.checks = []        # (area, entity, item, python value, workbook ref)
 
     # -- helpers --------------------------------------------------------------------------
-    def col(self, name):
+    def col(self, name) -> str:
         """Absolute range of a Payroll column."""
         letter = self.payroll_cols[name]
         return f"Payroll!${letter}$2:${letter}${self.last}"
 
-    def check(self, area, entity, item, value, ref):
+    def check(self, area, entity, item, value, ref) -> None:
         self.checks.append((area, entity, item, blank(value), ref))
 
     # -- sheets ---------------------------------------------------------------------------
-    def build(self, path: Path):
+    def build(self, path: Path) -> None:
         wb = self.wb
         names = ["Cover", "Summary", "Article 9", "Categories", "Obligations", "Readiness",
                  "Job Evaluation", "Payroll", "Settings", "Reconciliation"]
@@ -172,7 +185,7 @@ class Model:
         wb.save(path)
         normalise(path)
 
-    def settings(self, ws):
+    def settings(self, ws) -> None:
         title(ws, "Settings", "Every assumption the model uses. Blue cells can be changed; "
                                "the yellow ones move the results most.")
         widths(ws, {"A": 3, "B": 46, "C": 16, "D": 22, "E": 16, "F": 70})
@@ -253,7 +266,7 @@ class Model:
             put(ws, f"C{r}", name, color=BLUE)
             r += 1
 
-    def job_evaluation(self, ws):
+    def job_evaluation(self, ws) -> None:
         title(ws, "Job evaluation: gender-neutral scoring of every role",
               "Scores 1-5 on the four criteria of Article 4(4). Agree them with workers' representatives; "
               "roles with similar points form one category of workers, whatever the department.")
@@ -265,9 +278,9 @@ class Model:
             put(ws, f"A{i}", g.role, color=BLUE)
             put(ws, f"B{i}", g.department, color=BLUE)
             put(ws, f"C{i}", g.job_level, color=BLUE)
-            for letter, f in zip("DEFG", FACTORS):
+            for letter, f in zip("DEFG", FACTORS, strict=True):
                 put(ws, f"{letter}{i}", int(getattr(g, f)), color=BLUE, fmt="0", align="center")
-            put(ws, f"H{i}", "=" + "+".join(f"{l}{i}*{w}" for l, w in zip("DEFG", weights)), fmt="0")
+            put(ws, f"H{i}", "=" + "+".join(f"{ltr}{i}*{w}" for ltr, w in zip("DEFG", weights, strict=True)), fmt="0")
             put(ws, f"I{i}", f"=INDEX({self.refs['band_name']},MATCH(H{i},{self.refs['band_floor']},1))")
             put(ws, f"J{i}", g.rationale, color=BLUE, wrap=False)
             self.check("Job evaluation", "", f"{g.role}: points", int(g.points), f"'Job Evaluation'!H{i}")
@@ -278,7 +291,7 @@ class Model:
         ws.freeze_panes = "B5"
         ws.auto_filter.ref = f"A4:J{last}"
 
-    def payroll(self, ws):
+    def payroll(self, ws) -> None:
         w = self.w
         n = len(w)
         self.last = n + 1
@@ -297,7 +310,7 @@ class Model:
         black = font()
         last = self.last
         for r, row in enumerate(values, start=2):
-            for name, value in zip(INPUT_COLUMNS, row):
+            for name, value in zip(INPUT_COLUMNS, row, strict=True):
                 cell = ws[f"{c[name]}{r}"]
                 cell.value = value.item() if hasattr(value, "item") else value
                 cell.font = blue
@@ -331,14 +344,14 @@ class Model:
                 cell.font = black
                 if name in fmts:
                     cell.number_format = fmts[name]
-        for name, letter in c.items():
+        for letter in c.values():
             ws.column_dimensions[letter].width = 13
         for name in ("entity", "department", "role"):
             ws.column_dimensions[c[name]].width = 20
         ws.freeze_panes = "B2"
         ws.auto_filter.ref = f"A1:{get_column_letter(len(names))}{last}"
 
-    def article9(self, ws):
+    def article9(self, ws) -> None:
         c = self.col
         codes = self.countries
         cols = {code: get_column_letter(3 + i) for i, code in enumerate(codes)}
@@ -379,7 +392,6 @@ class Model:
         for q in (1, 2, 3, 4):
             specs.append((f"q{q}_n", f"Workers in quartile pay band {q}", "q", q, None))
             specs.append((f"q{q}_f", f"Women in quartile pay band {q}", "q", q, "F"))
-        fmts = {"count": COUNT, "recv": COUNT, "q": COUNT}
         for spec in specs:
             key, label, kind = spec[:3]
             work[key] = r
@@ -445,8 +457,9 @@ class Model:
             "base_mean_gap_hourly": lambda L: f'=IFERROR(({L}{W["mb_m"]}-{L}{W["mb_f"]})/{L}{W["mb_m"]},"")',
         }
         for q in (1, 2, 3, 4):
-            formulas[f"f_q{q}_share_women"] = (lambda q: lambda L: f'=IFERROR({L}{W[f"q{q}_f"]}/{L}{W[f"q{q}_n"]},"")')(q)
-            formulas[f"f_q{q}_share_men"] = (lambda q: lambda L: f'=IFERROR(({L}{W[f"q{q}_n"]}-{L}{W[f"q{q}_f"]})/{L}{W[f"q{q}_n"]},"")')(q)
+            formulas[f"f_q{q}_share_women"] = lambda L, q=q: f'=IFERROR({L}{W[f"q{q}_f"]}/{L}{W[f"q{q}_n"]},"")'
+            formulas[f"f_q{q}_share_men"] = (
+                lambda L, q=q: f'=IFERROR(({L}{W[f"q{q}_n"]}-{L}{W[f"q{q}_f"]})/{L}{W[f"q{q}_n"]},"")')
 
         python = article9.by_entity(self.w, codes)
         r = 6
@@ -471,7 +484,7 @@ class Model:
         ws.freeze_panes = "C6"
         self.cols9 = cols
 
-    def categories(self, ws):
+    def categories(self, ws) -> None:
         c = self.col
         title(ws, "Article 9(1)(g) by category of workers, and the Article 10 screen",
               "A category at or above the threshold on hourly or annual pay needs an objective, gender-neutral "
@@ -552,7 +565,7 @@ class Model:
         ws.freeze_panes = "C5"
         ws.auto_filter.ref = f"A4:V{last}"
 
-    def obligations(self, ws):
+    def obligations(self, ws) -> None:
         c = self.col
         title(ws, "What each employer owes, and when",
               f"Legal status as checked on {ASSESSMENT_DATE:%d %B %Y}. Items marked [to verify] need the final national text.")
@@ -577,7 +590,7 @@ class Model:
             put(ws, f"G{r}", f'=IFERROR(EDATE(F{r},{self.refs["months"]}),"n/a")', fmt=DATE)
             s = status.loc[code]
             put(ws, f"H{r}", s["status"], color=BLUE, bold=True)
-            for col_, field in zip("IJKL", ["instrument", "reporting", "notes", "sources"]):
+            for col_, field in zip("IJKL", ["instrument", "reporting", "notes", "sources"], strict=True):
                 put(ws, f"{col_}{r}", s[field], color=BLUE, wrap=True)
             put(ws, f"M{r}", s["checked_on"], color=BLUE)
             ws.row_dimensions[r].height = 92
@@ -591,7 +604,7 @@ class Model:
         put(ws, "A11", "Not legal advice. The national act, and any ministry guidance on method, decide how the "
                        "report is finally computed and filed.", color=MUTED, italic=True)
 
-    def readiness(self, ws):
+    def readiness(self, ws) -> None:
         title(ws, "Readiness: what has to be in place, and how far along it is",
               "Statuses are illustrative for the demonstration organisation. Change them with the drop-down.")
         widths(ws, {"A": 6, "B": 16, "C": 62, "D": 44, "E": 11, "F": 18, "G": 52})
@@ -609,7 +622,7 @@ class Model:
         ws.add_data_validation(dv)
         for r, it in enumerate(items.itertuples(index=False), start=first):
             for col_, value in zip("ABCDEFG", [it.ref, it.article, it.requirement, it.evidence, it.status,
-                                               it.owner, it.note]):
+                                               it.owner, it.note], strict=True):
                 put(ws, f"{col_}{r}", value, color=BLUE, wrap=True)
             dv.add(f"E{r}")
             ws.row_dimensions[r].height = 44
@@ -619,7 +632,7 @@ class Model:
             self.check("Readiness", "", f"{s} count", int(counts.get(s, 0)), f"Readiness!C{4 + i}")
         ws.freeze_panes = "C8"
 
-    def summary(self, ws):
+    def summary(self, ws) -> None:
         title(ws, "Pay transparency readiness: summary",
               f"Dry run on synthetic data for workers active on {SNAPSHOT:%d %B %Y}. Not a statutory submission.")
         widths(ws, {"A": 3, "B": 50, "C": 14, "D": 14, "E": 14, "F": 14, "G": 14})
@@ -640,7 +653,7 @@ class Model:
         r = 6
         for label, key, fmt in rows:
             put(ws, f"B{r}", label, bold=key.startswith("a_"))
-            for code, L in cols.items():
+            for L in cols.values():
                 put(ws, f"{L}{r}", f"='Article 9'!{L}{self.item_rows[key]}", color=GREEN, fmt=fmt,
                     bold=key.startswith("a_"))
             r += 1
@@ -703,7 +716,7 @@ class Model:
         chart2.height, chart2.width = 7.5, 16
         ws.add_chart(chart2, "I20")
 
-    def reconciliation(self, ws):
+    def reconciliation(self, ws) -> None:
         title(ws, "Reconciliation: workbook formulas against the Python pipeline",
               "Column D was written by src/build_workbook.py from the pandas results; column E is the live formula. "
               "Numbers must agree to one part in a billion. After pasting a new extract, rerun the pipeline to refresh D.")
@@ -729,7 +742,7 @@ class Model:
         ws.freeze_panes = "A7"
         self.recon_result = "Reconciliation!C3"
 
-    def cover(self, ws, names):
+    def cover(self, ws, names) -> None:
         widths(ws, {"A": 3, "B": 30, "C": 100})
         put(ws, "B2", "Pay Transparency Readiness Model", bold=True, size=18)
         put(ws, "B3", "Directive (EU) 2023/970 - a dry run for an employer in four Member States", color=MUTED, size=12)

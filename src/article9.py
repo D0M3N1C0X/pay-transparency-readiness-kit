@@ -59,6 +59,8 @@ def indicators(w: pd.DataFrame) -> dict:
     return out
 
 
+_EDGE = {1: " (lowest)", 4: " (highest)"}   # labels for the first and last quartile band
+
 # Labels in reporting order, shared by the workbook, the report and the deck.
 ITEMS = [
     ("workers", "Workers at the snapshot", "count"),
@@ -72,10 +74,8 @@ ITEMS = [
     ("d_median_gap_components", "(d) Median gap in complementary or variable components", "pct"),
     ("e_share_women_receiving", "(e) Women receiving complementary or variable components", "pct"),
     ("e_share_men_receiving", "(e) Men receiving complementary or variable components", "pct"),
-    *[(f"f_q{q}_share_women", f"(f) Women in quartile pay band {q}{' (lowest)' if q == 1 else ' (highest)' if q == 4 else ''}", "pct")
-      for q in (1, 2, 3, 4)],
-    *[(f"f_q{q}_share_men", f"(f) Men in quartile pay band {q}{' (lowest)' if q == 1 else ' (highest)' if q == 4 else ''}", "pct")
-      for q in (1, 2, 3, 4)],
+    *[(f"f_q{q}_share_women", f"(f) Women in quartile pay band {q}{_EDGE.get(q, '')}", "pct") for q in (1, 2, 3, 4)],
+    *[(f"f_q{q}_share_men", f"(f) Men in quartile pay band {q}{_EDGE.get(q, '')}", "pct") for q in (1, 2, 3, 4)],
     ("base_mean_gap_hourly", "Context: gap on base pay alone, mean hourly", "pct"),
 ]
 

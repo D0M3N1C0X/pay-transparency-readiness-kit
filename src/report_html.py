@@ -228,7 +228,7 @@ def paragraph(lines: list[str]) -> str:
     if re.match(r"^\*\*[^*]+:\*\*", text) and text.count("**") >= 4:
         parts = re.split(r"\*\*([^*]+):\*\*", text)
         items = [f"<dt>{inline(label)}</dt><dd>{inline(' '.join(value.split()))}</dd>"
-                 for label, value in zip(parts[1::2], parts[2::2])]
+                 for label, value in zip(parts[1::2], parts[2::2], strict=True)]
         return '<dl class="meta">' + "".join(items) + "</dl>"
     if text.startswith("*") and text.endswith("*") and not text.startswith("**"):
         return f'<p class="note">{inline(text.strip("*"))}</p>'

@@ -35,6 +35,42 @@ kit adds them, and its test suite checks that the base-pay gap still comes out a
 
 Every amount is in EUR, the Polish entity included; a real Polish extract would be in PLN.
 
+## `job_evaluation.csv`, one row per role
+
+The four Article 4(4) criteria, scored 1 to 5; the weights and the point bands that turn scores into
+categories of workers are in `src/config.py`.
+
+| Column | Description |
+|---|---|
+| `skills` | Knowledge, qualifications and problem solving the role needs, 1-5 |
+| `effort` | Physical, mental and emotional effort, 1-5 (2-4 used) |
+| `responsibility` | For people, money, outcomes and data, 1-5 |
+| `working_conditions` | Physical environment, hours and strain, 1-5 (1-4 used) |
+| `rationale` | Why the role scores as it does, in one line, so a reviewer can challenge it |
+
+## `transposition.csv`, one row per Member State
+
+| Column | Description |
+|---|---|
+| `status` | `Transposed`, `Partly transposed`, `Draft` or `Not transposed` |
+| `instrument` | The act, or the draft, with its date |
+| `reporting` | What national law says on thresholds, frequency and first deadlines |
+| `notes` | What else matters for the employer, with open points marked [to verify] |
+| `sources` | Where each statement comes from; the full register is in [docs/verification.md](../docs/verification.md) |
+| `checked_on` | The date the sources were read |
+
+## `readiness_checklist.csv`, one row per obligation
+
+| Column | Description |
+|---|---|
+| `ref` | `R01`-`R14` |
+| `article` | The Directive's article the obligation comes from |
+| `requirement` | What the employer has to be able to do |
+| `evidence` | What would show it is in place |
+| `status` | `Ready`, `Partial` or `Gap`: illustrative, as the organisation is synthetic |
+| `owner` | The function that would own it |
+| `note` | What is missing, or what is assumed |
+
 ## How the components are generated
 
 | Component | Rule | Parameters |

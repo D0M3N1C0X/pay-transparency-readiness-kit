@@ -16,7 +16,8 @@ pipeline and reconciled figure by figure.
 > [hr-people-analytics](https://github.com/D0M3N1C0X/hr-people-analytics); the pay components and
 > one discriminatory mechanism were added here and are
 > [declared openly](data/README.md#what-is-planted-stated-openly). Legal status as of
-> 16 September 2026, with every source in the [verification register](docs/verification.md).
+> 16 September 2026, transposition rechecked on 9 October 2026, with every source in the
+> [verification register](docs/verification.md).
 
 ### ▶ [Read the report online](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/) · [Board briefing (PDF)](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/board_briefing.pdf) · [Download the Excel model](https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/raw/main/deliverables/pay_transparency_model.xlsx)
 
@@ -82,7 +83,11 @@ Tests, including a sample workbook recalculated in pure Python and checked again
 ```bash
 pip install -r requirements-dev.txt
 pytest
+ruff check .                 # the lint CI runs; rules in pyproject.toml
 ```
+
+Every function in `src/` declares what it returns, CI lints the code and measures test coverage, and a test
+keeps [data/README.md](data/README.md) describing every column of every data file.
 
 The reconciliation check, the LibreOffice recalculation and the byte-stable workbook come from [excel-twin](https://github.com/D0M3N1C0X/excel-twin), a small library shared by the portfolio.
 

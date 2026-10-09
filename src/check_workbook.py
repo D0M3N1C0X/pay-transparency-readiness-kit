@@ -35,14 +35,18 @@ def check(values: dict, sheet_names: list[str], n_checks: int) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("workbook", nargs="?", type=Path, help="a workbook already recalculated by LibreOffice or Excel")
-    ap.add_argument("--sample", type=int, help="build a sample workbook of this many workers and evaluate it with `formulas`")
+    ap.add_argument("workbook", nargs="?", type=Path,
+                    help="a workbook already recalculated by LibreOffice or Excel")
+    ap.add_argument("--sample", type=int,
+                    help="build a sample workbook of this many workers and evaluate it with `formulas`")
     ap.add_argument("--seed", type=int, default=7)
-    ap.add_argument("--formulas", action="store_true", help="calculate the given workbook with `formulas` (slow at full size)")
+    ap.add_argument("--formulas", action="store_true",
+                    help="calculate the given workbook with `formulas` (slow at full size)")
     args = ap.parse_args()
 
     if args.sample:
         import pandas as pd
+
         import build_workbook
         from config import PAYROLL_EXTRACT, ROOT
         from workers import derive
