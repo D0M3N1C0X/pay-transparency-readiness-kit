@@ -8,6 +8,7 @@ payroll extract -> job evaluation -> Article 9 and 10 -> report and figures -> E
 """
 import time
 
+import build_catalogue
 import build_deck
 import build_extract
 import build_report
@@ -30,6 +31,8 @@ def main() -> None:
     print("deck -> deliverables/board_briefing.pptx")
     build_tableau.write(workers)
     print("tableau -> tableau/*.csv")
+    build_catalogue.write()
+    print("catalogue -> docs/catalogue.md")
     print(f"done in {time.perf_counter() - start:.1f}s")
 
 

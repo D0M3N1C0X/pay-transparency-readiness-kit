@@ -44,6 +44,9 @@ pipeline and reconciled figure by figure.
 | [`readiness_report.md`](reports/readiness_report.md) | HR and Legal | The written read-out: obligations, the seven items, where the gap comes from, flagged categories with their main driver and cost, a 90-day plan. |
 | [`tableau/`](tableau/) | a live dashboard | Tidy extracts and a build sheet for Tableau Public. |
 | [`docs/method.md`](docs/method.md) · [`docs/verification.md`](docs/verification.md) | reviewers | Every choice the Directive leaves open, and the source and status of every legal statement. |
+| [`docs/catalogue.md`](docs/catalogue.md) | reviewers | One card per reporting item: result per employer, the workbook formula, the choice made, what a statutory report adds. |
+| [`docs/engagement-playbook.md`](docs/engagement-playbook.md) | the client's HR and reward team | How the assessment runs, step by step: who does what, what each step hands over, the gate before the next. |
+| [`docs/architecture.md`](docs/architecture.md) · [`docs/roadmap.md`](docs/roadmap.md) · [`CHANGELOG.md`](CHANGELOG.md) | whoever maintains or extends it | How the engines stay equal and how to run it on real data; what comes next; what changed. |
 
 ## What this project demonstrates
 
@@ -125,7 +128,7 @@ python src/check_workbook.py build/pay_transparency_model.xlsx
 ├── deliverables/                the workbook and the deck
 ├── reports/                     the read-out, its HTML page and figures
 ├── tableau/                     extracts and the dashboard build sheet
-├── docs/                        method and verification register
+├── docs/                        method, verification register, catalogue, playbook, architecture, roadmap
 └── tests/
 ```
 

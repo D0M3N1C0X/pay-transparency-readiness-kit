@@ -16,3 +16,14 @@ def test_every_column_is_documented() -> None:
         if gaps:
             missing[name] = gaps
     assert missing == {}
+
+
+def test_catalogue_is_current_and_complete() -> None:
+    """docs/catalogue.md is generated from the code and the workbook: if either changes, it must be rebuilt."""
+    import article9
+    import build_catalogue
+    text = build_catalogue.text()
+    assert (DATA.parent / "docs" / "catalogue.md").read_text(encoding="utf-8") == text
+    covered = {k for card in build_catalogue.CARDS for k in card["keys"]}
+    statutory = {k for k, _, _ in article9.ITEMS if k[:2] in ("a_", "b_", "c_", "d_", "e_") or "share_women" in k}
+    assert statutory <= covered
