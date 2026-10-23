@@ -1,24 +1,24 @@
 """
 Three SVG charts for the report, written by hand so the kit needs no plotting library.
 
-Colours are the validated reference palette (slot 1 blue, slot 2 orange; blue and red as the
-diverging poles), with dark-mode steps inside each file. Every mark carries a <title>, so a
+Colours follow the portfolio identity (brand/tokens.css in d0m3n1c0x.github.io): Apple blue and orange in light,
+the same hues lifted for dark; blue and red as the diverging poles. Every mark carries a <title>, so a
 browser shows its value on hover.
 """
 from html import escape
 
 STYLE = """<style>
-  svg { --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781; --grid:#e1e0d9;
-        --axis:#c3c2b7; --s1:#2a78d6; --s2:#eb6834; --pos:#e34948; --neg:#2a78d6; --mid:#f0efec; }
+  svg { --surface:#ffffff; --ink:#1d1d1f; --ink2:#424245; --muted:#6e6e73; --grid:#e8e8ed;
+        --axis:#d2d2d7; --s1:#0071e3; --s2:#ff9500; --pos:#d70015; --neg:#0071e3; --mid:#f5f5f7; }
   @media (prefers-color-scheme: dark) {
-    svg { --surface:#1a1a19; --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781; --grid:#2c2c2a;
-          --axis:#383835; --s1:#3987e5; --s2:#d95926; --pos:#e66767; --neg:#3987e5; --mid:#383835; }
+    svg { --surface:#15171c; --ink:#f5f5f7; --ink2:#c7c9d1; --muted:#8b8f9a; --grid:#23262e;
+          --axis:#343844; --s1:#4f8cff; --s2:#ff9f0a; --pos:#ff6961; --neg:#4f8cff; --mid:#23262e; }
   }
-  text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--ink2); font-size: 12px; }
-  .title { fill: var(--ink); font-size: 15px; font-weight: 600; }
-  .sub { fill: var(--ink2); font-size: 12px; }
+  text { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif; fill: var(--ink2); font-size: 12px; }
+  .title { fill: var(--ink); font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+  .sub { fill: var(--muted); font-size: 12.5px; }
   .muted { fill: var(--muted); font-size: 11px; }
-  .val { fill: var(--ink); font-variant-numeric: tabular-nums; }
+  .val { fill: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
   .num { font-variant-numeric: tabular-nums; }
 </style>"""
 
@@ -26,7 +26,7 @@ STYLE = """<style>
 def _svg(width, height, body, label) -> str:
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" '
             f'height="{height}" role="img" aria-label="{escape(label)}">{STYLE}'
-            f'<rect width="{width}" height="{height}" rx="8" fill="var(--surface)"/>{body}</svg>\n')
+            f'<rect width="{width}" height="{height}" rx="16" fill="var(--surface)"/>{body}</svg>\n')
 
 
 def pct(x, digits=1) -> str:

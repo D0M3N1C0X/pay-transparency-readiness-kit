@@ -1,27 +1,37 @@
-# Pay Transparency Readiness Kit
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="site-assets/cover-dark.png">
+  <img alt="Ready for the EU Pay Transparency Directive? 17.6% hourly gender pay gap, 12 of 28 categories to justify or remedy, at most €1.9M a year to close them." src="site-assets/cover-light.png">
+</picture>
 
-The EU Pay Transparency Directive makes employers with 250 or more workers publish their gender
-pay gap every year from **7 June 2027**, and makes them justify, fix or jointly assess any gap of
-5% or more between women and men doing work of equal value. This kit runs that exercise on a
-four-country employer, end to end, **as a consulting team would deliver it**: a live Excel model,
-a board briefing, a written read-out and a readiness checklist, all produced by one reproducible
-pipeline and reconciled figure by figure.
+<p align="center">
+  <a href="https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/"><b>Run it on your own payroll</b></a> ·
+  <a href="https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/">Read the report</a> ·
+  <a href="https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/board_briefing.pdf">Board briefing (PDF)</a> ·
+  <a href="https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/raw/main/deliverables/pay_transparency_model.xlsx">Excel model</a>
+</p>
 
-[![CI](https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/actions/workflows/ci.yml)
-![python](https://img.shields.io/badge/python-3.12%2B-blue)
-![stack](https://img.shields.io/badge/pandas%20%C2%B7%20openpyxl%20%C2%B7%20python--pptx-informational)
-![license](https://img.shields.io/badge/license-MIT-lightgrey)
+<p align="center">
+  <a href="https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="Python 3.12+" src="https://img.shields.io/badge/python-3.12%2B-0071e3">
+  <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-6e6e73">
+</p>
+
+## Why this matters
+
+From **7 June 2027**, every employer in the EU with 150 or more workers has to report its gender pay gap, and
+any category of workers with a gap of **5% or more** has to be justified on gender-neutral grounds or fixed within
+six months, or a joint pay assessment with workers' representatives follows. Most HR teams have never computed
+these figures the way the Directive defines them.
+
+This kit answers the four questions a board will ask, for an employer with entities in Italy, Poland, Germany and
+Spain, **as a reward consulting team would deliver it**: when do we report, what will the numbers say, where are the
+gaps and why, and what would closing them cost.
 
 > **Synthetic data, not legal advice.** The organisation is the one analysed in
-> [hr-people-analytics](https://github.com/D0M3N1C0X/hr-people-analytics); the pay components and
-> one discriminatory mechanism were added here and are
-> [declared openly](data/README.md#what-is-planted-stated-openly). Legal status as of
-> 16 September 2026, transposition rechecked on 23 October 2026, with every source in the
+> [hr-people-analytics](https://github.com/D0M3N1C0X/hr-people-analytics); pay components and one discriminatory
+> mechanism were added here and are [declared openly](data/README.md#what-is-planted-stated-openly). Legal status as
+> of 16 September 2026, transposition rechecked on 23 October 2026, every source in the
 > [verification register](docs/verification.md).
-
-### ▶ [Run it on your own payroll](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/) · [Read the report online](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/) · [Board briefing (PDF)](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/board_briefing.pdf) · [Download the Excel model](https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/raw/main/deliverables/pay_transparency_model.xlsx)
-
----
 
 ## The answer, for the board
 
@@ -31,9 +41,17 @@ pipeline and reconciled figure by figure.
 | **Base pay alone gives 15.4%** - the same figure hr-people-analytics found. Bonus, commission and allowances add 2.2 points. | **12 of 28 categories of workers** are at 5% or more: each needs a gender-neutral justification or a remedy by **7 December 2027**, or a joint pay assessment follows. |
 | In Sales, commission is **12.6% of base pay for women and 15.1% for men** under identical rules: territories are allocated unequally. | Closing every flagged gap outright would cost **at most €1.9 million a year**. Of 14 obligations, **1 is in place, 6 partly, 7 missing**. |
 
-![Hourly pay gap by employer and category](reports/figures/03_category_screen.svg)
+<img alt="Hourly pay gap by employer and category" src="reports/figures/03_category_screen.svg" width="100%">
 
----
+## Run it on a client's payroll
+
+The same assessment runs in the browser on any payroll export, Excel or CSV. Columns are matched by name, gender
+codes are confirmed by the user, roles are scored on the four Article 4 criteria (or categories come from the file),
+and the result downloads as an Excel workbook with, for every flag, the justification written on the page and
+columns for an owner and a due date.
+**The file never leaves the computer.**
+
+<p align="center"><a href="https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/"><img alt="The browser tool on the sample employer: obligations by country, the seven reporting items and the category screen." src="site-assets/tool.webp" width="100%"></a></p>
 
 ## What you get
 
@@ -49,16 +67,37 @@ pipeline and reconciled figure by figure.
 | [`docs/engagement-playbook.md`](docs/engagement-playbook.md) | the client's HR and reward team | How the assessment runs, step by step: who does what, what each step hands over, the gate before the next. |
 | [`docs/architecture.md`](docs/architecture.md) · [`docs/roadmap.md`](docs/roadmap.md) · [`CHANGELOG.md`](CHANGELOG.md) | whoever maintains or extends it | How the engines stay equal and how to run it on real data; what comes next; what changed. |
 
-## What this project demonstrates
+## The judgement calls
 
-| Employment law and HR | Analytics | Consulting delivery and engineering |
-|---|---|---|
-| Directive (EU) 2023/970 read article by article: Articles 3, 4, 5-7, 9, 10, 12 and 18 | Mean and median gaps on hourly and annual pay, component gaps among recipients, quartile pay bands with explicit tie-breaking | A client-ready Excel model: inputs in blue, formulas in black, assumptions in one Settings sheet, no hard-coded results |
-| Gender-neutral job evaluation on skills, effort, responsibility and working conditions, with a rationale for every score | Categories of equal value that cross departments, and a screen that flags gaps in either direction | A board deck that leads with the answer and ends with decisions |
-| National transposition tracked for Italy, Poland, Germany and Spain, including the Italian collective-agreement presumption | A remediation cost ceiling per category - the finance question every board asks | **Three engines, one answer:** pandas and Excel formulas reconciled on 460 checks, recalculated in CI by LibreOffice; the browser tool checked against pandas on 3,177 values |
-| Disclosure control for small categories (Article 12(3)) | A planted, indirect mechanism the screen has to find | Deterministic outputs, a test suite, and a verification register for every legal claim |
+Where the Directive leaves room, the kit makes a choice and says why. The ones that change the answer:
 
-## How it fits together
+- **Pay level means hourly and annual pay.** Items (a) and (c) are reported both ways, because Article 3 defines pay
+  level as both; a part-time-heavy workforce can look fair on one and not on the other.
+- **A category is flagged in either direction**, on hourly or annual pay. A gap against men is still a gap.
+- **Categories come from a gender-neutral job evaluation** on skills, effort, responsibility and working conditions,
+  with a rationale for every score. In Italy they should start from the collective agreement, which D.Lgs. 96/2026
+  presumes compliant.
+- **The cost is a ceiling, not a budget.** Lifting the lower-paid group's average to the other's, before any part of
+  the gap is justified: the number a CFO needs before the justifications come in.
+- **Small categories are protected.** Below five women or men, averages are kept back (Article 12(3) leaves the
+  threshold to Member States).
+- **This is a dry run** on a 30 June 2026 snapshot; the statutory report covers pay paid in the previous calendar
+  year.
+
+The full reasoning is in [docs/method.md](docs/method.md); how an engagement runs, week by week, in the
+[engagement playbook](docs/engagement-playbook.md).
+
+## Built to be checked
+
+| | |
+|---|---|
+| **Three engines, one answer** | pandas, the Excel model's live formulas (reconciled on 460 checks, recalculated by LibreOffice in CI) and the browser tool (checked against pandas on 3,177 values) |
+| **Every legal statement sourced** | a [verification register](docs/verification.md) with the source, its status and the date each one was read |
+| **Reproducible** | one command rebuilds every output; CI fails if a rebuilt file differs from the committed one |
+| **Documented like a deliverable** | a [catalogue](docs/catalogue.md) of the reporting items, a [data dictionary](data/README.md) kept complete by a test, an [architecture](docs/architecture.md) note, a [roadmap](docs/roadmap.md) and a [changelog](CHANGELOG.md) |
+
+<details>
+<summary><b>For engineers: how it fits together, how to run it</b></summary>
 
 ```mermaid
 flowchart LR
@@ -74,35 +113,18 @@ flowchart LR
     X --> K{check_workbook.py<br/>formulas = pandas?}
 ```
 
-## Run it
-
 ```bash
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
-python src/run_all.py        # about 15 seconds
-```
-
-Tests, including a sample workbook recalculated in pure Python and checked against pandas:
-
-```bash
+python src/run_all.py        # about 10 seconds
 pip install -r requirements-dev.txt
-pytest
-ruff check .                 # the lint CI runs; rules in pyproject.toml
+pytest                       # includes a sample workbook recalculated in pure Python
+ruff check .
+node tests/js/check_engine.mjs   # the browser engine against pandas
 ```
 
-Every function in `src/` declares what it returns, CI lints the code and measures test coverage, and a test
-keeps [data/README.md](data/README.md) describing every column of every data file.
-
-The reconciliation check, the LibreOffice recalculation and the byte-stable workbook come from [excel-twin](https://github.com/D0M3N1C0X/excel-twin), a small library shared by the portfolio.
-
-The full workbook is recalculated by LibreOffice in CI:
-
-```bash
-python src/recalc_libreoffice.py deliverables/pay_transparency_model.xlsx build/
-python src/check_workbook.py build/pay_transparency_model.xlsx
-```
-
-## What's inside
+The reconciliation check, the LibreOffice recalculation and the byte-stable workbook come from
+[excel-twin](https://github.com/D0M3N1C0X/excel-twin), a small library shared by the portfolio.
 
 ```
 ├── data/
@@ -133,24 +155,12 @@ python src/check_workbook.py build/pay_transparency_model.xlsx
 └── tests/
 ```
 
-## Choices worth knowing
-
-- **Pay** is base plus bonus, commission, shift and car allowances; **hourly pay** divides by
-  contractual hours. Items (a) and (c) are reported on hourly and annual pay, because the
-  Directive defines pay level as both.
-- **Component gaps (b) and (d) are computed among recipients**; item (e) says how many receive one.
-- **A category is flagged** at a 5% difference in either direction, on hourly or annual pay.
-- **Categories come from job evaluation.** In Italy they should start from the collective
-  agreement, which D.Lgs. 96/2026 presumes compliant.
-- **This is a dry run** on a 30 June 2026 snapshot; the statutory report covers pay in the
-  previous calendar year.
-
-Full reasoning in [docs/method.md](docs/method.md).
+</details>
 
 ## About
 
-Built by **Domenico Perroni** — HR advisory, people analytics and media education, based in Kraków.
-[GitHub profile](https://github.com/D0M3N1C0X) · [LinkedIn](https://www.linkedin.com/in/domenico-perroni)
+Built by **Domenico Perroni**: HR advisory for the Italian market, people analytics and reward, based in Kraków.
+[GitHub](https://github.com/D0M3N1C0X) · [LinkedIn](https://www.linkedin.com/in/domenico-perroni) · [Portfolio](https://d0m3n1c0x.github.io/)
 
 **More from the same portfolio**
 
