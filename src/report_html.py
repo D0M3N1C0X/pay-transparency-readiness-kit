@@ -24,8 +24,8 @@ STYLE = """
    Revolut manner. System fonts only, so the page loads nothing from other sites. */
 :root{
   --paper:#ffffff; --paper-2:#f5f5f7; --surface:#ffffff; --ink:#1d1d1f; --ink-soft:#424245; --muted:#6e6e73;
-  --line:#e8e8ed; --line-strong:#d2d2d7; --accent:#0071e3; --accent-2:#5e5ce6; --accent-wash:#eef5fd;
-  --flag:#d70015; --flag-wash:#fdeceb; --ok:#1a7f37; --ok-wash:#e6f4ea; --warn:#b25000; --warn-wash:#fff4e5;
+  --line:#e8e8ed; --line-strong:#d2d2d7; --accent:#0066cc; --accent-2:#5e5ce6; --accent-wash:#eef5fd;
+  --flag:#d70015; --flag-wash:#fdeceb; --ok:#17783a; --ok-wash:#e6f4ea; --warn:#b25000; --warn-wash:#fff4e5;
   --plate:#ffffff; --plate-edge:#e8e8ed; --shadow:0 1px 2px rgba(0,0,0,.04),0 12px 32px rgba(0,0,0,.06); --glow:none;
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -65,8 +65,8 @@ h2 .num{font:600 .8rem/1 var(--font); color:var(--accent); background:var(--acce
 h3{font-size:1.2rem; font-weight:600; letter-spacing:-.01em; padding-top:1rem}
 p{margin:0; color:var(--ink-soft)}
 strong{color:var(--ink); font-weight:600}
-a{color:var(--accent); text-decoration:none}
-a:hover{text-decoration:underline; text-underline-offset:3px}
+a{color:var(--accent); text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:3px}
+a:hover{text-decoration-thickness:2px}
 a:focus-visible{outline:3px solid var(--accent); outline-offset:3px; border-radius:6px}
 
 .masthead{position:relative; padding:clamp(2.5rem,7vw,5rem) 0 2rem; margin:0 0 .5rem}
@@ -178,7 +178,9 @@ def parse_table(rows: list[str]) -> str:
     head = "".join(
         '<th{}>{}</th>'.format(' class="r"' if aligns[i] == "r" else "", inline(h))
         for i, h in enumerate(headers))
-    return ('<div class="table-wrap"><table><thead><tr>' + head + "</tr></thead><tbody>"
+    label = re.sub(r"<[^>]+>", "", inline(headers[0])) if headers else ""
+    return ('<div class="table-wrap" tabindex="0" role="region" aria-label="Table: ' + label.replace('"', "") + '">'
+            + '<table><thead><tr>' + head + "</tr></thead><tbody>"
             + "".join(body) + "</tbody></table></div>")
 
 

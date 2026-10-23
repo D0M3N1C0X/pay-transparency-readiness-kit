@@ -1,4 +1,4 @@
-// strumenti-design 1.1.0 · i18n.js
+// strumenti-design 1.1.1 · i18n.js
 // Italian and English in the same page. Text lives in two dictionaries; elements carry data-i18n="key" (text) or
 // data-i18n-attr="attribute:key" (for aria-label, placeholder, title). The choice is remembered on this device.
 //

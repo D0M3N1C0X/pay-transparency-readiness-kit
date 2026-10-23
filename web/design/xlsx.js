@@ -1,4 +1,4 @@
-// strumenti-design 1.1.0 · xlsx.js
+// strumenti-design 1.1.1 · xlsx.js
 // Reads and writes .xlsx files in the browser with no library: an .xlsx is a zip of XML files, and the browser
 // already knows how to inflate zip entries (DecompressionStream "deflate-raw"). Nothing is sent anywhere.
 //

@@ -1,4 +1,4 @@
-// strumenti-design 1.1.0 · table.js
+// strumenti-design 1.1.1 · table.js
 // Turns a file the user picked (CSV or Excel) into rows of objects, and matches its columns to the ones a tool
 // needs. Everything runs in the page: the file is read with the browser's own File API and never uploaded.
 //
