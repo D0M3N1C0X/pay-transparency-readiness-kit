@@ -20,10 +20,10 @@ are a plan for a mid-sized group, to be fitted to the client.
 | Week | Step | Who leads | Hands over | Gate before the next step |
 |---|---|---|---|---|
 | 0 | **Scope.** Legal entities, headcount by entity, size band and first reporting date, transposition status per country | Consultant, employment law | The obligations table (sheet Obligations) | Every entity has a size band and a date |
-| 1 | **Data request.** The payroll extract in the format of [data/README.md](../data/README.md); every pay code mapped to base pay or to a component | Payroll, reward lead | `payroll_extract.csv` and a pay-code map | Headcount and total pay match the payroll's own totals |
+| 1 | **Data request.** The payroll extract in the format of [data/README.md](../data/README.md); every pay code mapped to base pay or to a component | Payroll, reward lead | `payroll_extract.csv` and a pay-code map | Headcount and total pay match the payroll's own totals. A first read can run in the [browser tool](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/) on the client's own machine, before any file is shared |
 | 2 | **Job evaluation.** Every role scored on the four Article 4(4) criteria, with a rationale per role, then banded into categories | Reward lead, with workers' representatives | `job_evaluation.csv` and the bands in `src/config.py` | No role without a score and a rationale |
 | 3 | **Compute.** The Article 9 items and the Article 10 screen, in Python and in the Excel model | Consultant | The report, the workbook, the [catalogue](catalogue.md) | Every reconciliation row matches; small cells marked |
-| 4 | **Justify or price.** For each flagged category, an objective, gender-neutral reason or a cost to close; the readiness checklist | Reward lead, employment law | The Categories sheet filled in; sheet Readiness | Each flag has a reason, a cost, or an owner |
+| 4 | **Justify or price.** For each flagged category, an objective, gender-neutral reason or a cost to close; the readiness checklist | Reward lead, employment law | The Categories sheet filled in (the browser tool's download has a justification, owner and due date per flag); sheet Readiness | Each flag has a reason, a cost, or an owner |
 | 5 | **Brief the board.** The answer, the cost ceiling, the 90-day plan | Consultant, board sponsor | `board_briefing.pptx` | A decision on budget and owners |
 
 ## What a step must never do

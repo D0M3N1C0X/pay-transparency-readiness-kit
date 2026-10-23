@@ -19,7 +19,7 @@ pipeline and reconciled figure by figure.
 > 16 September 2026, transposition rechecked on 9 October 2026, with every source in the
 > [verification register](docs/verification.md).
 
-### ▶ [Read the report online](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/) · [Board briefing (PDF)](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/board_briefing.pdf) · [Download the Excel model](https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/raw/main/deliverables/pay_transparency_model.xlsx)
+### ▶ [Run it on your own payroll](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/) · [Read the report online](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/) · [Board briefing (PDF)](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/board_briefing.pdf) · [Download the Excel model](https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/raw/main/deliverables/pay_transparency_model.xlsx)
 
 ---
 
@@ -40,6 +40,7 @@ pipeline and reconciled figure by figure.
 | Deliverable | For | What is in it |
 |---|---|---|
 | [`pay_transparency_model.xlsx`](deliverables/pay_transparency_model.xlsx) | the client team | Ten sheets: summary, the seven Article 9 items per employer, the Article 10 screen with space for justifications, obligations and deadlines, readiness checklist, job evaluation, payroll, settings, and a reconciliation sheet. **Every figure is a live formula**: change a salary, a score or a threshold and the model recalculates. |
+| [Browser tool](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/) | the consultant, on the client's own file | The assessment on any payroll export, Excel or CSV, in the page: columns matched by name, roles scored on the four Article 4 criteria (or categories taken from the file), the seven items per employer, the category screen with a justification per flag, the cost ceiling, the reporting dates per country. Downloads an Excel workbook; **the file never leaves the computer**. English and Italian. |
 | [`board_briefing.pptx`](deliverables/board_briefing.pptx) | the board | Ten slides, answer first, native charts, three decisions to take. |
 | [`readiness_report.md`](reports/readiness_report.md) | HR and Legal | The written read-out: obligations, the seven items, where the gap comes from, flagged categories with their main driver and cost, a 90-day plan. |
 | [`tableau/`](tableau/) | a live dashboard | Tidy extracts and a build sheet for Tableau Public. |
@@ -54,7 +55,7 @@ pipeline and reconciled figure by figure.
 |---|---|---|
 | Directive (EU) 2023/970 read article by article: Articles 3, 4, 5-7, 9, 10, 12 and 18 | Mean and median gaps on hourly and annual pay, component gaps among recipients, quartile pay bands with explicit tie-breaking | A client-ready Excel model: inputs in blue, formulas in black, assumptions in one Settings sheet, no hard-coded results |
 | Gender-neutral job evaluation on skills, effort, responsibility and working conditions, with a rationale for every score | Categories of equal value that cross departments, and a screen that flags gaps in either direction | A board deck that leads with the answer and ends with decisions |
-| National transposition tracked for Italy, Poland, Germany and Spain, including the Italian collective-agreement presumption | A remediation cost ceiling per category - the finance question every board asks | **Two engines, one answer:** pandas and Excel formulas reconciled on 460 checks, recalculated in CI by LibreOffice |
+| National transposition tracked for Italy, Poland, Germany and Spain, including the Italian collective-agreement presumption | A remediation cost ceiling per category - the finance question every board asks | **Three engines, one answer:** pandas and Excel formulas reconciled on 460 checks, recalculated in CI by LibreOffice; the browser tool checked against pandas on 3,170 values |
 | Disclosure control for small categories (Article 12(3)) | A planted, indirect mechanism the screen has to find | Deterministic outputs, a test suite, and a verification register for every legal claim |
 
 ## How it fits together

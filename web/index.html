@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pay gap assessment</title>
+<meta name="description" content="The EU Pay Transparency Directive's pay gap assessment on your client's payroll, in the browser: the file never leaves the computer.">
+<link rel="stylesheet" href="design/strumenti.css">
+<style>
+  :root { --women: #0066cc; --men: #a1a1a6; }
+  @media (prefers-color-scheme: dark) { :root { --women: #4da3ff; --men: #636366; } }
+  .print-only { display: none; }
+  #risultati, #passo-colonne, #passo-categorie, #riepilogo-colonne, #griglia-wrap, #scelta-categorie { display: none; }
+  .s-drop .file { font-weight: 600; color: var(--good); }
+  .comps { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 8px; }
+  .comps label { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; font-size: 15px; }
+  .comps input, .scelta input { width: 20px; height: 20px; accent-color: var(--accent); }
+  .scelta { display: grid; gap: 8px; margin: 8px 0 16px; }
+  .scelta label { display: flex; gap: 10px; align-items: center; min-height: 44px; font-size: 16px; }
+  .grid-table select { min-height: 36px; font: 400 15px var(--font); border: 1px solid var(--line); border-radius: 8px;
+    background: var(--surface); color: var(--ink); padding: 2px 6px; }
+  .grid-table tr.todo td:first-child { color: var(--bad); font-weight: 600; }
+  .seg { display: inline-flex; flex-wrap: wrap; gap: 4px; background: var(--line-soft); border-radius: 14px; padding: 4px; margin-bottom: 18px; }
+  .seg button { font: 600 15px var(--font); border: 0; background: transparent; color: var(--ink-2); min-height: 40px;
+    padding: 0 16px; border-radius: 10px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .chart { width: 100%; height: auto; display: block; margin: 8px 0 4px; font-family: var(--font); }
+  .chart text { fill: var(--ink-2); font-size: 13px; }
+  .chart .lab { fill: var(--ink); font-weight: 600; }
+  .legend { display: flex; gap: 16px; font-size: 14px; color: var(--muted); margin: 4px 0 12px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  tr.giust-row td { padding-top: 0; }
+  tr:has(+ tr.giust-row) td { border-bottom: 0; }
+  textarea.giust { width: 100%; min-width: 200px; min-height: 52px; margin-top: 4px; font: 400 14px var(--font); color: var(--ink);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; resize: vertical; }
+  .note { color: var(--muted); font-size: 13px; }
+  .lock { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  details.naz summary { cursor: pointer; color: var(--accent); font-size: 14px; }
+  details.naz p { font-size: 14px; color: var(--ink-2); margin: 6px 0 0; max-width: 46em; }
+  @media print { .print-only { display: block; margin-bottom: 16px; } #risultati { display: block !important; }
+    .seg, textarea.giust { display: none; } .giust-print { display: block !important; } }
+  .giust-print { display: none; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="s-page">
+  <div class="s-top">
+    <a class="s-brand" href="../" data-i18n="brand">Pay Transparency Readiness Kit</a>
+    <div class="s-lang" data-lang-switch role="group" aria-label="Language · Lingua">
+      <button type="button" data-lang="en">EN</button><button type="button" data-lang="it">IT</button>
+    </div>
+  </div>
+
+  <header class="s-hero">
+    <p class="s-eyebrow" data-i18n="eyebrow">EU Pay Transparency Directive · Articles 9 and 10</p>
+    <h1 data-i18n="title">Run the pay gap assessment on your client's payroll</h1>
+    <p data-i18n="lead">Load a payroll export: the seven reporting items, the categories of workers with a gap of 5% or more, what closing them would cost, and when each employer has to report.</p>
+  </header>
+
+  <div class="s-privacy" role="note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+    <span data-i18n="privacy">The payroll file stays on this computer: the calculations run in this page and nothing is sent anywhere. You can check by going offline once the page has loaded.</span>
+  </div>
+
+  <section class="s-card" aria-labelledby="h-file">
+    <h2 id="h-file"><span class="s-step">1</span><span data-i18n="step1">The payroll file</span></h2>
+    <p class="s-sub" data-i18n="step1sub">Excel (.xlsx) or CSV, one row per worker, with annual pay.</p>
+    <div class="s-drops">
+      <label class="s-drop" id="drop-paghe">
+        <input type="file" id="file-paghe" accept=".xlsx,.csv,text/csv">
+        <strong data-i18n="dropPaghe">Payroll extract</strong>
+        <span data-i18n="dropPagheSub">Required · drag it here or tap to choose it</span>
+        <span class="file" id="nome-paghe"></span>
+      </label>
+      <label class="s-drop" id="drop-griglia">
+        <input type="file" id="file-griglia" accept=".xlsx,.csv,text/csv">
+        <strong data-i18n="dropGriglia">Job evaluation grid</strong>
+        <span data-i18n="dropGrigliaSub">Optional · roles scored on skills, effort, responsibility and working conditions</span>
+        <span class="file" id="nome-griglia"></span>
+      </label>
+    </div>
+    <div class="s-actions">
+      <button type="button" class="s-btn" id="esempio" data-i18n="esempio">Try it with the sample employer</button>
+      <span class="s-why"><span data-i18n="modelli">Templates:</span>
+        <a href="template_payroll.csv" download data-i18n="modelloPaghe">payroll</a> ·
+        <a href="template_job_evaluation.csv" download data-i18n="modelloGriglia">job evaluation</a></span>
+    </div>
+    <div class="s-msg is-error" id="errore" role="alert"></div>
+  </section>
+
+  <section class="s-card" id="passo-colonne" aria-labelledby="h-colonne">
+    <h2 id="h-colonne"><span class="s-step">2</span><span data-i18n="step2">The columns</span></h2>
+    <p class="s-sub" id="colonne-sub"></p>
+    <div id="riepilogo-colonne"><span class="s-pill is-ok" id="colonne-ok"></span>
+      <button type="button" class="s-btn is-small" id="mostra-colonne" data-i18n="modifica">Change</button></div>
+    <div class="s-map" id="mappa"></div>
+    <h3 style="margin:22px 0 0;font-size:17px" data-i18n="componenti">Complementary or variable pay</h3>
+    <p class="s-why" data-i18n="componentiSub">Tick every column paid on top of base pay, as annual amounts: bonus, commission, allowances.</p>
+    <div class="comps" id="componenti"></div>
+  </section>
+
+  <section class="s-card" id="passo-categorie" aria-labelledby="h-cat">
+    <h2 id="h-cat"><span class="s-step">3</span><span data-i18n="step3">Work of equal value</span></h2>
+    <p class="s-sub" id="cat-sub"></p>
+    <div class="scelta" id="scelta-categorie" role="radiogroup">
+      <label><input type="radio" name="fonte" value="file" checked> <span data-i18n="usaFile">Use the categories in the file</span></label>
+      <label><input type="radio" name="fonte" value="griglia"> <span data-i18n="usaGriglia">Score the roles here, on the four criteria of Article 4</span></label>
+    </div>
+    <div id="griglia-wrap">
+      <p class="s-why" data-i18n="grigliaSub">Score each role from 1 to 5. Points = skills × 35 + effort × 15 + responsibility × 35 + working conditions × 15; the points set the category. Your scores are remembered on this computer.</p>
+      <div class="s-table-wrap"><table class="s-table grid-table" id="griglia"></table></div>
+      <div class="s-actions"><button type="button" class="s-btn is-small" id="scarica-griglia" data-i18n="scaricaGriglia">Download the grid</button></div>
+    </div>
+  </section>
+
+  <section class="s-card" aria-labelledby="h-imp">
+    <h2 id="h-imp"><span class="s-step">4</span><span data-i18n="step4">The settings</span></h2>
+    <div class="s-fields">
+      <div class="s-field" id="campo-paese"><label for="paese" data-i18n="paese">Country of the employer</label>
+        <select id="paese"></select><small data-i18n="paeseSub">Used when the file has no country column.</small></div>
+      <div class="s-field"><label for="periodo" data-i18n="periodo">Base pay in the file is</label>
+        <select id="periodo"></select><small data-i18n="periodoSub">Complementary and variable pay is read as annual.</small></div>
+      <div class="s-field"><label for="ore" data-i18n="ore">Full-time weekly hours</label>
+        <input type="number" id="ore" min="1" max="60" step="0.5"><small data-i18n="oreSub">Used when the file has no weekly hours: full-time share × these hours.</small></div>
+    </div>
+    <div class="s-actions">
+      <button type="button" class="s-btn is-primary" id="esegui" disabled data-i18n="esegui">Run the assessment</button>
+    </div>
+  </section>
+
+  <section id="risultati" aria-live="polite">
+    <div class="print-only"><h2 data-i18n="stampaTitolo">Pay gap assessment</h2><p id="stampa-meta"></p></div>
+    <div class="seg" id="entita" role="group" data-i18n-attr="aria-label:entitaLabel"></div>
+    <div class="s-kpis" id="kpis"></div>
+
+    <section class="s-card" aria-labelledby="h-obblighi">
+      <h2 id="h-obblighi" data-i18n="obblighi">What each employer owes, and when</h2>
+      <p class="s-sub" data-i18n="obblighiSub">Article 9(2)-(4): the size of the employer sets how often it reports and from when. A gap of 5% or more in a category has to be justified or remedied within six months of the report (Article 10).</p>
+      <div class="s-table-wrap"><table class="s-table" id="tab-obblighi"></table></div>
+    </section>
+
+    <section class="s-card" aria-labelledby="h-voci">
+      <h2 id="h-voci" data-i18n="voci">The seven reporting items</h2>
+      <p class="s-sub" id="voci-sub"></p>
+      <div class="s-table-wrap"><table class="s-table" id="tab-voci"></table></div>
+      <h3 style="margin:22px 0 0;font-size:17px" data-i18n="quartili">Women and men in each quartile pay band, item (f)</h3>
+      <div class="legend"><span><i style="background:var(--women)"></i><span data-i18n="donne">Women</span></span><span><i style="background:var(--men)"></i><span data-i18n="uomini">Men</span></span></div>
+      <div id="grafico-quartili"></div>
+    </section>
+
+    <section class="s-card" aria-labelledby="h-cat-ris">
+      <h2 id="h-cat-ris" data-i18n="categorie">Categories of workers, item (g) and Article 10</h2>
+      <p class="s-sub" data-i18n="categorieSub">Gap in mean hourly pay, by category of equal value. Right of zero, women are paid less; past the dashed lines the gap reaches 5% and needs a justification or a remedy.</p>
+      <div id="grafico-categorie"></div>
+      <div class="s-filters">
+        <button type="button" class="s-btn is-small" id="scarica-xlsx" data-i18n="scaricaXlsx">Download in Excel</button>
+        <button type="button" class="s-btn is-small" id="stampa" data-i18n="stampa">Print for the client</button>
+      </div>
+      <div class="s-table-wrap"><table class="s-table" id="tab-categorie"></table></div>
+      <p class="note" id="nota-piccole"></p>
+    </section>
+  </section>
+
+  <footer class="s-foot"><span data-i18n="footer">The same calculations as the kit's Python pipeline and Excel model, checked against each other on every change. Not legal advice.</span>
+    <a href="../" data-i18n="rapporto">Report</a> · <a href="https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/blob/main/docs/method.md" data-i18n="metodo">Method</a> ·
+    <a href="https://github.com/D0M3N1C0X/pay-transparency-readiness-kit" data-i18n="codice">Code</a></footer>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

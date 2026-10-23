@@ -5,8 +5,16 @@ in [docs/roadmap.md](docs/roadmap.md).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-23
+
 ### Added
 
+- **[Browser tool](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/)**: the assessment on a client's own payroll file, Excel or CSV, without Python and
+  without the file leaving the computer. Columns matched by name; categories from the file or from roles scored on
+  the four Article 4(4) criteria; the seven items per employer; the category screen with a justification per flag
+  and the cost ceiling; reporting dates by size and national status; small categories' averages kept back
+  (Article 12(3)); an Excel download; English and Italian. `web/engine.js` is checked against pandas on 3,170
+  values in CI (`tests/js/check_engine.mjs`).
 - [Catalogue of reporting items](docs/catalogue.md): one card per Article 9(1) item and one for the Article 10
   screen, with results, workbook formulas, choices and what a statutory report adds. Generated from the code and
   the workbook, kept current by a test.
@@ -32,6 +40,7 @@ in [docs/roadmap.md](docs/roadmap.md).
 First complete release: Article 9 reporting items, the Article 10 screen, a live Excel model reconciled with
 pandas on 460 checks, a board briefing, a written report and a verification register.
 
-[Unreleased]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/releases/tag/v1.2.0
 [1.1.0]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/releases/tag/v1.1.0
 [1.0.0]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/releases/tag/v1.0.0

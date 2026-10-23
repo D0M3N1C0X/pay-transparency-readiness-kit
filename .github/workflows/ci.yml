@@ -38,7 +38,7 @@ jobs:
 
       - name: Text outputs are unchanged
         run: |
-          git diff --exit-code --stat -- data reports tableau \
+          git diff --exit-code --stat -- data reports tableau web tests/fixtures \
             || (echo "::error::Rebuilding changed a committed output - the pipeline is not deterministic" && exit 1)
 
       - name: Office files have the same content
@@ -46,6 +46,9 @@ jobs:
 
       - name: Tests, with coverage
         run: pytest -q --cov --cov-report=term
+
+      - name: The browser tool gives the same results as pandas
+        run: node tests/js/check_engine.mjs
 
       - name: Coverage in the run summary
         if: matrix.python-version == '3.12'

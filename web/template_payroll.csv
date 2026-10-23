@@ -1,0 +1,4 @@
+worker_id,country,role,gender,weekly_hours,base_pay,bonus,commission,shift_allowance,car_allowance
+W00001,PL,Customer Service L2,F,40,24050,0,0,0,0
+W00002,PL,Sales L1,M,40,21800,0,3760,0,0
+W00003,ES,Customer Service L2,M,40,29450,0,0,0,0

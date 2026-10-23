@@ -9,6 +9,9 @@ on:
       - deliverables/**
       - .github/workflows/pages.yml
       - site-assets/**
+      - web/**
+      - data/payroll_extract.csv
+      - data/job_evaluation.csv
   workflow_dispatch:
 
 permissions:
@@ -41,6 +44,10 @@ jobs:
           cp reports/index.html site/index.html
           cp -r reports/figures site/figures
           cp deliverables/pay_transparency_model.xlsx deliverables/board_briefing.pptx site/
+          # the browser tool, with the sample employer it offers to try; no visit counter on this page
+          mkdir -p site/tool
+          cp -R web/* site/tool/
+          cp data/payroll_extract.csv data/job_evaluation.csv site/tool/
 
       - name: Add the link preview
         run: |

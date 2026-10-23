@@ -13,6 +13,7 @@ import build_deck
 import build_extract
 import build_report
 import build_tableau
+import build_web
 import build_workbook
 import report_html
 from workers import load_workers
@@ -33,6 +34,8 @@ def main() -> None:
     print("tableau -> tableau/*.csv")
     build_catalogue.write()
     print("catalogue -> docs/catalogue.md")
+    build_web.write_inputs()
+    print(f"tool -> web/inputs.json; {build_web.write_vectors()} cases for the JavaScript check")
     print(f"done in {time.perf_counter() - start:.1f}s")
 
 
