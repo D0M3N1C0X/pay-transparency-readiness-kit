@@ -17,6 +17,7 @@ from pptx.shapes.autoshape import Shape
 from pptx.slide import Slide
 from pptx.util import Emu, Inches, Pt
 
+import article10
 import build_report
 from config import DELIVERABLES, ENTITIES, SNAPSHOT
 from deterministic import normalise
@@ -400,7 +401,47 @@ def build(w=None) -> Path:
         "categories have fewer than five workers of one sex; their figures go only to workers' representatives, "
         "the labour inspectorate or the equality body.")
 
-    # 8 - readiness --------------------------------------------------------------------------------
+    # 8 - Italy's narrower measure ---------------------------------------------------------------
+    nat, ncats = f["nat"], f["ncats"]
+    if "IT" in nat:
+        s = new_slide()
+        heading(s, "D.lgs. 96/2026", "In Italy the gap is measured on fixed pay, and Milan's figures change")
+        d = cats[cats["country"] == "IT"].set_index("category")
+        n = ncats[ncats["country"] == "IT"].set_index("category")
+        same = all(n.loc[c, "status"] == d.loc[c, "status"] for c in n.index)
+        flag_n = int((n["status"] == article10.STATUS_FLAG).sum())
+        stat_row(s, Inches(2.1), [
+            (pct(nat.loc["a_mean_gap_hourly", "IT"]), "Milan's gap on livello retributivo: fixed and continuing pay, "
+                                                       "the measure the Italian report uses", ORANGE),
+            (pct(ind.loc["a_mean_gap_hourly", "IT"]), "the same employer on total pay, the Directive's measure", NAVY),
+            (f"{flag_n} of {len(n)}", "Milan categories to justify or remedy"
+             + (", the same under both measures" if same else ", not the same ones as on total pay"), ORANGE),
+        ])
+        shift = n["gap_hourly"] - d["gap_hourly"]
+        boxes = []
+        down, up = shift.idxmin(), shift.idxmax()
+        if shift[down] < 0:
+            boxes.append((f"{down}: {pct(d.loc[down, 'gap_hourly'])} → {pct(n.loc[down, 'gap_hourly'])}",
+                          "Bonus and commission leave the Italian 5% test. They stay in items (b) and (d), and in "
+                          "any equal-pay claim."))
+        if shift[up] > 0:
+            boxes.append((f"{up}: {pct(d.loc[up, 'gap_hourly'])} → {pct(n.loc[up, 'gap_hourly'])}",
+                          "Components were offsetting a gap in fixed pay. Without them, the justification has to "
+                          "be about base pay and allowances."))
+        for i, (head, body) in enumerate(boxes):
+            x = MARGIN + i * Inches(6.28)
+            rect(s, x, Inches(4.5), Inches(5.85), Inches(2.2), TINT)
+            text(s, x + Inches(0.35), Inches(4.75), Inches(5.15), Inches(1.8),
+                 [(head, {"bold": True, "size": 17}), (body, {"color": MUTED})], size=14)
+        footer(s, 8)
+        s.notes_slide.notes_text_frame.text = (
+            "Italy's decree defines livello retributivo as fixed and continuing pay, without individual components "
+            "granted on a personal, discretionary or temporary basis (art. 3(1)(b)); items (a), (c), (f) and the "
+            "5% test use it (art. 9, art. 10). Read here as base pay plus shift and car allowances, paid by a "
+            "general rule. Keep the total-pay figures too: the Directive is the floor, and the Commission's "
+            "conformity check may settle the definition differently.")
+
+    # 9 - readiness --------------------------------------------------------------------------------
     s = new_slide()
     heading(s, "Articles 4 to 12", "Most of what workers will see is not built yet")
     for i, level in enumerate(["Ready", "Partial", "Gap"]):
@@ -422,10 +463,10 @@ def build(w=None) -> Path:
             (f"{r.article} · {r.owner}", {"bold": True, "size": 11, "color": MUTED, "space": 3}),
             (r.requirement, {"size": 11}),
         ])
-    footer(s, 8)
+    footer(s, 9)
     s.notes_slide.notes_text_frame.text = "Statuses are illustrative for the demonstration organisation."
 
-    # 9 - next 90 days -----------------------------------------------------------------------------
+    # 10 - next 90 days -----------------------------------------------------------------------------
     s = new_slide()
     heading(s, "The plan", "The next 90 days")
     plan = [
@@ -455,9 +496,9 @@ def build(w=None) -> Path:
         run.font.name, run.font.size, run.font.bold, run.font.color.rgb = BODY, Pt(16), True, WHITE
         text(s, x + Inches(0.3), y + Inches(0.9), pw - Inches(0.6), Inches(0.4), what, size=16, bold=True)
         text(s, x + Inches(0.3), y + Inches(1.32), pw - Inches(0.6), Inches(0.7), detail, size=13, color=MUTED)
-    footer(s, 9)
+    footer(s, 10)
 
-    # 10 - decisions -------------------------------------------------------------------------------
+    # 11 - decisions -------------------------------------------------------------------------------
     s = new_slide(dark=True)
     chip(s, MARGIN, Inches(0.6), "For decision today", ORANGE)
     text(s, MARGIN, Inches(1.15), Inches(12), Inches(0.9), "Three decisions for the board", size=36, bold=True,

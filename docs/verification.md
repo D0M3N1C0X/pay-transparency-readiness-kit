@@ -1,11 +1,13 @@
 # Verification register
 
 Every legal statement the kit relies on, where it comes from, and how far it has been checked.
-Checked on **16 September 2026**; national transposition rechecked on **9 October** and **23 October 2026**.
+Checked on **16 September 2026**; national transposition rechecked on **9 October** and **23 October 2026**; the
+Italian decree read in the Gazzetta Ufficiale on **24 October 2026**.
 
 **Status key**
 
-- **Verified** - read in the Directive as published in the Official Journal.
+- **Verified** - read in the Directive as published in the Official Journal, or in the national act as published
+  in its official gazette.
 - **Sources agree** - two or more independent secondary sources, read in full, say the same.
 - **Single source** - one secondary source, read in full.
 - **Sources diverge** - sources disagree; the entry says which reading the kit follows and why.
@@ -38,10 +40,14 @@ Office ([CELEX 32023L0970](https://eur-lex.europa.eu/eli/dir/2023/970/oj)).
 
 | # | Statement | Sources | Status |
 |---|---|---|---|
-| N01 | **Italy** transposed with Legislative Decree No. 96 of 7 May 2026, published in Gazzetta Ufficiale No. 125 of 1 June 2026, in force 7 June 2026 | [Littler](https://www.littler.com/news-analysis/asap/italy-implements-eu-pay-transparency-directive-guide-final-decree); [Cocuzza & Associati, 6 July 2026](https://www.cocuzza.it/en/2026/07/06/italy-implements-the-eu-pay-transparency-directive/); [PwC Italia blog](https://blog.pwc.it/trasparenza-retributiva-le-novita-del-d-lgs-96-2026/); INAPP normative record (search result, not opened) | Sources agree · **to verify** on the Gazzetta Ufficiale text |
-| N02 | Italy keeps the Directive's size bands, frequencies and first deadlines | Littler; Cocuzza; PwC Italia | Sources diverge · a March 2026 note on the *draft* ([WTW](https://www.wtwco.com/en-kw/insights/2026/03/italy-draft-legislation-to-transpose-the-eu-pay-transparency-directive), seen as a search summary only) and several summaries speak of reporting "from 100 employees". The three sources on the final decree give the Directive's bands; the kit follows them. **To verify** |
-| N03 | Italy: applying a collective agreement signed by representative unions creates a presumption of conformity, classification included; internal job evaluation complements it | PwC Italia ("presunzione di conformità"); Littler ("primary framework") | Sources agree · **to verify** |
-| N04 | Italy: the monitoring body sits at the Ministry of Labour | PwC Italia | Single source · **to verify** |
+| N01 | **Italy** transposed with Legislative Decree No. 96 of 7 May 2026, published in Gazzetta Ufficiale No. 125 of 1 June 2026, in force 7 June 2026 | [Gazzetta Ufficiale No. 125, 1 June 2026](https://www.gazzettaufficiale.it/eli/gu/2026/06/01/125/sg/pdf), art. 17; also [Littler](https://www.littler.com/news-analysis/asap/italy-implements-eu-pay-transparency-directive-guide-final-decree), [Cocuzza & Associati](https://www.cocuzza.it/en/2026/07/06/italy-implements-the-eu-pay-transparency-directive/), [PwC Italia](https://blog.pwc.it/trasparenza-retributiva-le-novita-del-d-lgs-96-2026/) | Verified |
+| N02 | Italy keeps the Directive's size bands, frequencies and first deadlines: 100 workers or more report; 250+ by 7 June 2027 and every year, 150-249 by 7 June 2027 and every three years, 100-149 by 7 June 2031 and every three years | D.lgs. 96/2026, art. 9(8)-(9) | Verified. The "from 100 employees" in several summaries is the scope of art. 9(8), not a different band |
+| N03 | Italy: applying a national collective agreement signed by the most representative unions creates a presumption of conformity, classification included; the agreement's levels are the reference for comparing work of equal value, and an employer's own objective, gender-neutral system may complement them | D.lgs. 96/2026, art. 4(1), (2), (4) | Verified |
+| N04 | Italy: the monitoring body sits at the Ministry of Labour, collects the reports and publishes items (a)-(f) | D.lgs. 96/2026, art. 14(1)(c); art. 9(5) | Verified |
+| N11 | Italy measures pay level as **livello retributivo**: gross annual and hourly pay made of the fixed and continuing elements, without individual non-structural components granted on a personal, discretionary or temporary basis. The gender pay gap, median gap and quartile bands are defined on it; "retribuzione" (all pay, components included) is defined separately and follows the Directive | D.lgs. 96/2026, art. 3(1)(a)-(f) | Verified. The Directive has no such notion; [A&O Shearman](https://www.aoshearman.com/it-it/insights/pay-transparency-italy-among-the-first-countries-to-comply-with-eu-obligations) and [Bernoni Grant Thornton](https://www.bgt-grantthornton.it/insights/articoli/2026/pay-trasparency-directive/) make the same reading |
+| N12 | Italy's joint pay assessment is owed when the difference in **average livello retributivo** in a category is at least 5%, not justified and not remedied within six months | D.lgs. 96/2026, art. 10(1) | Verified |
+| N13 | Italy: an employer with a group-wide pay policy may report data aggregated at national level | D.lgs. 96/2026, art. 9(3) | Verified · not modelled: the kit has one employer per country |
+| N14 | Italy: ministerial decrees on data collection were due within 90 days of 7 June 2026; ministry guidance on equal value may be adopted by 31 December 2026 | D.lgs. 96/2026, art. 9(4), art. 4(6) | Verified on the decree · whether the decrees have been adopted is **to verify** |
 | N05 | **Poland**: recruitment transparency rules in the Labour Code in force since December 2025 | [Garrigues](https://www.garrigues.com/en_GB/new/poland-takes-another-step-toward-pay-transparency-partial-implementation-pay-transparency) and [IBA](https://www.ibanet.org/pay-transparency-in-Polish-recruitment) (search results); [paygap.com](https://www.paygap.com/articles/polands-first-step-toward-pay-transparency) (search summary) | Sources diverge on the day: 23 or 24 December 2025. The kit says "December 2025" |
 | N06 | Poland: draft act on reporting and information rights published 29 April 2026; in force six months after publication; 250+ yearly, 100-249 every three years; later reports by 31 March | [DLA Piper, 18 May 2026](https://knowledge.dlapiper.com/dlapiperknowledge/globalemploymentlatestdevelopments/2026/Poland-publishes-new-draft-legislation-implementing-the-Gender-Pay-Transparency-Directive) | Single source · adoption after May 2026 **to verify** |
 | N07 | **Germany**: no transposing act adopted; Bundestag press notice of 16 July 2026 | [Ius Laboris tracker, updated 26 August 2026](https://iuslaboris.com/insights/eu-pay-transparency-directive-which-countries-have-transposed/) | Single source · **to verify** |
@@ -66,6 +72,12 @@ date on the draft), and calls Spain's 3 August 2026 text a draft law. `checked_o
 the 9 October recheck; it now carries this date. Source:
 [Lockton implementation tracker](https://global.lockton.com/us/en/news-insights/eu-pay-transparency-directive-implementation-status).
 
+## Job evaluation guidance
+
+| # | Statement | Source | Status |
+|---|---|---|---|
+| G01 | The European Commission and EIGE published EU-wide guidelines on gender-neutral job evaluation and classification as a step-by-step toolkit (March 2026): voluntary, three pathways by size (micro, small and medium, standard point-factor for 250+), four factors split into 14 subfactors scored 0-5, preset weights of 40/35/15/10 given as illustrative | [EC and EIGE (2026), doi:10.2839/7400453](https://eige.europa.eu/sites/default/files/documents/gender-neutral-job-evaluation-and-classification-step-by-step-toolkit.pdf), sections 1.2 and 4, Table 5 | Verified |
+
 ## What this kit is not
 
 - **Not legal advice**, and not a statutory report: it is a dry run on synthetic data.
@@ -76,7 +88,8 @@ the 9 October recheck; it now carries this date. Source:
 
 ## Known gaps
 
-- National texts have not been read in the original for Italy, Poland, Germany or Spain.
+- National texts have not been read in the original for Poland, Germany or Spain. Italy's decree was read in the
+  Gazzetta Ufficiale on 24 October 2026.
 - Ministry guidance on the calculation method has not been looked for in any of the four
   countries; where it exists, it overrides the choices in [method.md](method.md).
 - The kit does not model leavers, pay actually paid in a calendar year, overtime, pay in kind

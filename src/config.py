@@ -40,6 +40,13 @@ WEEKS_PER_YEAR = 52
 
 # Article 10(1)(a): a difference of at least 5% in any category of workers.
 JPA_THRESHOLD = 0.05
+# Italy measures the gaps on "livello retributivo" (D.lgs. 96/2026, art. 3(1)(b)): the fixed and continuing
+# elements of pay, without individual components granted on a personal, discretionary or temporary basis. Items
+# (a) and (c), the quartile bands of item (f) and the Article 10 screen use it there; the Directive's own measure
+# is total pay. Read here as base pay plus the allowances this employer pays by a general rule (shift and car);
+# bonus and commission are left out. docs/method.md gives the reasoning and the question it leaves open.
+NATIONAL_MEASURE = {"IT": "livello retributivo, D.lgs. 96/2026 art. 3(1)(b)"}
+FIXED_COMPONENTS = ["shift_allowance", "car_allowance"]
 # Article 10(1)(c): six months from submission to remedy an unjustified difference.
 REMEDY_MONTHS = 6
 # Disclosure control (Article 12(3)): below this many workers of one sex in a category,
@@ -60,6 +67,9 @@ FACTORS = ["skills", "effort", "responsibility", "working_conditions"]
 # Whole-number weights that sum to 100, so points are exact integers in Python and Excel
 # alike: a role scores between 100 and 500.
 FACTOR_WEIGHTS = {"skills": 35, "effort": 15, "responsibility": 35, "working_conditions": 15}
+# The default factor weights of the EU-wide guidelines on gender-neutral job evaluation (EC and EIGE, March 2026,
+# Table 5): a sensitivity test, since the categories of workers depend on the weights.
+EIGE_WEIGHTS = {"skills": 40, "effort": 15, "responsibility": 35, "working_conditions": 10}
 
 # Categories of workers: point bands. Lower limit inclusive.
 BANDS = [

@@ -92,3 +92,34 @@ def test_remedy_cost_lifts_the_lower_paid_sex_for_all_their_hours():
     # Women 20/h, men 25/h, two women on 2,080 hours: 5 x 4,160 = 20,800.
     w = frame([("IT", "F", 41600, 0, 40, "A"), ("IT", "F", 41600, 0, 40, "A"), ("IT", "M", 52000, 0, 40, "A")])
     assert article10.category_row(w)["remedy_cost"] == pytest.approx(20800)
+
+
+def test_italy_measures_fixed_pay_only():
+    # D.lgs. 96/2026 art. 3(1)(b): bonus and commission leave the measure, an allowance paid by rule stays
+    rows = pd.DataFrame([
+        {"worker_id": 1, "country": "IT", "gender": "F", "base_pay": 41600, "bonus": 0, "commission": 0,
+         "shift_allowance": 1000, "car_allowance": 0, "weekly_hours": 40, "category": "A"},
+        {"worker_id": 2, "country": "IT", "gender": "M", "base_pay": 41600, "bonus": 8000, "commission": 0,
+         "shift_allowance": 1000, "car_allowance": 0, "weekly_hours": 40, "category": "A"},
+    ])
+    rows["annual_hours"] = rows["weekly_hours"] * 52
+    rows["components"] = rows[["bonus", "commission", "shift_allowance", "car_allowance"]].sum(axis=1)
+    rows["total_pay"] = rows["base_pay"] + rows["components"]
+    rows["fixed_pay"] = rows["base_pay"] + rows["shift_allowance"] + rows["car_allowance"]
+    pays = {"base": "base_pay", "components": "components", "total": "total_pay", "fixed": "fixed_pay"}
+    for name, pay in pays.items():
+        rows[f"hourly_{name}"] = rows[pay] / rows["annual_hours"]
+    rows["receives_components"] = (rows["components"] > 0).astype(int)
+    rows["quartile"] = rows["quartile_fixed"] = 1
+    out = article9.indicators(rows, "national")
+    assert out["a_mean_gap_hourly"] == pytest.approx(0.0)      # the bonus gap is not on the Italian measure
+    row = article10.national_row(rows)
+    assert row["status"] == article10.STATUS_OK and row["remedy_cost"] == 0
+
+
+def test_national_screen_only_where_the_law_defines_a_measure():
+    from config import BANDS
+    w = derive(pd.read_csv(__import__("config").PAYROLL_EXTRACT))
+    s = article10.national_screen(w, ["IT", "PL", "DE", "ES"], [b for _, b in BANDS])
+    assert set(s["country"]) == {"IT"}
+    assert list(article9.national(w, ["IT", "PL"]).columns) == ["IT"]

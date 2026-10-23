@@ -13,6 +13,7 @@
 - **12 of 28 categories of workers show a difference of 5% or more.** Each needs an objective, gender-neutral justification or a remedy within six months of the report (7 December 2027); otherwise a joint pay assessment with workers' representatives follows (Article 10).
 - **Closing those gaps outright would cost at most €1.9 million a year**, before any part of them is justified.
 - **The organisation is not ready yet:** of 14 obligations, 1 is in place, 6 are partly in place and 7 are missing - pay ranges in vacancies, published progression criteria and a route for workers' information requests among them.
+- **Italy measures the gap on fixed pay, and the Milan figures change.** The decree counts only fixed and continuing pay (livello retributivo): the Milan gap is 18.0% on that measure against 19.7% on total pay. The same categories are flagged; what each one has to justify is not the same (section 5).
 - **The law is settled in one country of four.** Legislative Decree No. 96 of 7 May 2026 transposes the Directive in Italy; Poland has transposed the recruitment rules only, and Germany and Spain have not finished.
 
 ## 1. What each employer owes, and when
@@ -24,9 +25,9 @@
 | DE · Munich | 741 | Every year | 7 Jun 2027 | 7 Dec 2027 | Not transposed |
 | ES · Barcelona | 493 | Every year | 7 Jun 2027 | 7 Dec 2027 | Draft |
 
-*Remedy by: six months after the first report, the latest date to justify or close a category gap before a joint pay assessment is due. National status as checked on 16 September 2026; sources in [docs/verification.md](../docs/verification.md).*
+*Remedy by: six months after the first report, the latest date to justify or close a category gap before a joint pay assessment is due. National status as checked on 24 October 2026; sources in [docs/verification.md](../docs/verification.md).*
 
-For Italy, applying a national collective agreement signed by representative unions is presumed to comply, classification included, so the categories of workers should start from the agreement's levels and use job evaluation to complement them, not replace them. The categories in this dry run come from job evaluation alone, because the synthetic organisation has no collective agreement. *[to verify on the decree text]*
+For Italy, applying a national collective agreement signed by the most representative unions is presumed to comply, classification included (D.lgs. 96/2026, art. 4(1)), and the agreement's levels are the reference for comparing work of equal value; an employer's own job evaluation may complement them if its criteria are objective and gender-neutral (art. 4(4)). So the categories of workers should start from the agreement's levels and use job evaluation to refine them, not replace them. The categories in this dry run come from job evaluation alone, because the synthetic organisation has no collective agreement.
 
 ## 2. The seven reporting items
 
@@ -92,7 +93,35 @@ How to read the list:
 - **A flag on annual pay only points to hours worked.** Part-time work is a legitimate reason for a lower annual total; the hourly figure is the one to defend.
 - **Gaps in either direction count.** A category where men are paid less is flagged the same way.
 
-## 5. Readiness: what has to be in place
+**How much the categories depend on the weights.** The EU-wide guidelines on gender-neutral job evaluation (European Commission and EIGE, March 2026) come with preset, illustrative weights of 40% skills, 35% responsibility, 15% effort and 10% working conditions; this kit uses 35/35/15/15. With the guidelines' weights, 4 of 36 roles change category (Operations L4, Tech L4, Finance L4, HR L4), moving 260 workers; 11 categories are flagged instead of 12 (DE · Munich Cat E, PL · Kraków Cat F drop out; DE · Munich Cat F comes in), and the cost ceiling is €1.5 million instead of €1.9 million. The weights are a negotiated choice, not a technical one: agree them with workers' representatives before anyone sees the pay figures, and test them on women- and men-dominated roles, as the guidelines ask. The comparison with the guidelines' method is in [docs/job-evaluation-eige.md](../docs/job-evaluation-eige.md).
+
+## 5. Italy measures the gap on fixed pay
+
+The Italian decree does not compute the gaps on total pay. Its items (a) and (c), its quartile bands and its 5% test for a joint pay assessment all use *livello retributivo*: annual and hourly pay made of the fixed and continuing elements, leaving out individual components granted on a personal, discretionary or temporary basis (D.lgs. 96/2026, art. 3(1)(b), art. 9(1), art. 10(1)(a)). The Directive has no such notion. Here it is read as base pay plus the shift allowances and car allowances this employer pays by a general rule; bonus and commission are left out.
+
+| Milan | Directive: total pay | Italy: livello retributivo | Difference |
+|---|---:|---:|---:|
+| (a) Gender pay gap, mean hourly pay | 19.7% | 18.0% | −1.7 pts |
+| (a) Gender pay gap, mean annual pay | 20.4% | 18.7% | −1.7 pts |
+| (c) Median gender pay gap, hourly pay | 16.9% | 14.4% | −2.5 pts |
+| (c) Median gender pay gap, annual pay | 19.7% | 16.6% | −3.1 pts |
+| (f) Women in the highest quartile pay band | 31.6% | 32.7% | +1.1 pts |
+
+| Category | Hourly gap, total pay | Hourly gap, livello retributivo | Annual gap, livello retributivo | Status, Italy | Cost to close, Italy |
+|---|---:|---:|---:|---|---:|
+| Cat A | 4.1% | 6.1% | 7.4% | Justify or remedy | €125,465 |
+| Cat B | 7.4% | 7.4% | 8.4% | Justify or remedy | €331,912 |
+| Cat G | 10.5% | 6.1% | 6.1% | Justify or remedy | €45,865 |
+
+What changes, and why it matters for the justification:
+
+- **The same categories are flagged under both measures**, so the Milan employer's to-do list does not change. What has to be justified does.
+- **In Cat G, the hourly gap falls from 10.5% to 6.1%** once bonus and commission are left out: 4.4 of its points sit outside the Italian 5% test, but they stay in items (b) and (d) and in any equal-pay claim.
+- **In Cat A, the hourly gap rises from 4.1% to 6.1%**: bonus and commission partly offset a gap in fixed pay, and the decree takes that offset away. The justification has to be about fixed pay.
+- **The cost ceiling for Milan moves from €512,477 to €503,242 a year.**
+- **Keep both measures on file.** The Directive sets the floor and the Commission is checking national laws for conformity; if the narrower definition does not survive, the total-pay figures are the ones that count. Whether an individual superminimo or a role allowance is "fixed and continuing" is the open question; ministry guidance on art. 4 may come by 31 December 2026 (art. 4(6)).
+
+## 6. Readiness: what has to be in place
 
 | Ref | Article | Requirement | Status | Owner |
 |---|---|---|---|---|
@@ -113,7 +142,7 @@ How to read the list:
 
 *Statuses are illustrative for the demonstration organisation. Evidence expected for each item is in the workbook's Readiness sheet.*
 
-## 6. The next 90 days
+## 7. The next 90 days
 
 1. **Agree the job evaluation with workers' representatives** in each country, starting from the Italian collective agreement's classification. Categories decide every later number.
 2. **Write or rule out a justification for each flagged category**, beginning with the most expensive, and budget the remedy for the rest before the first report is filed.
@@ -122,7 +151,7 @@ How to read the list:
 5. **Build the information-request route** (two-month answer) and the annual notice to workers.
 6. **Rerun this model on calendar-year 2026 payroll** once each country's rules are final, and have management confirm the figures after consulting workers' representatives (Article 9(6)).
 
-## 7. Method, choices and limits
+## 8. Method, choices and limits
 
 - **Two engines, one answer.** Every figure is computed in pandas and again by live formulas in [the workbook](../deliverables/pay_transparency_model.xlsx); its Reconciliation sheet checks each pair, and CI recalculates the workbook with LibreOffice and fails on any mismatch.
 - **Where the Directive leaves a choice, the choice is stated.** Pay includes base, bonus, commission and allowances; hourly pay uses contractual hours; components gaps (b) and (d) are among recipients; quartile bands are four equal groups by hourly pay with ties broken by row order; a category is flagged at 5% in either direction on hourly or annual pay. Full list in [docs/method.md](../docs/method.md).

@@ -36,9 +36,11 @@ from config import (
     ENTITIES,
     FACTOR_WEIGHTS,
     FACTORS,
+    FIXED_COMPONENTS,
     FULL_TIME_WEEKLY_HOURS,
     JPA_THRESHOLD,
     MIN_CELL,
+    NATIONAL_MEASURE,
     REMEDY_MONTHS,
     SIZE_BANDS,
     SNAPSHOT,
@@ -152,8 +154,9 @@ class Model:
     # -- sheets ---------------------------------------------------------------------------
     def build(self, path: Path) -> None:
         wb = self.wb
-        names = ["Cover", "Summary", "Article 9", "Categories", "Obligations", "Readiness",
-                 "Job Evaluation", "Payroll", "Settings", "Reconciliation"]
+        self.italy = "IT" in self.countries and "IT" in NATIONAL_MEASURE
+        names = ["Cover", "Summary", "Article 9", "Categories", *(["Italy"] if self.italy else []), "Obligations",
+                 "Readiness", "Job Evaluation", "Payroll", "Settings", "Reconciliation"]
         wb.active.title = names[0]
         for n in names[1:]:
             wb.create_sheet(n)
@@ -163,6 +166,8 @@ class Model:
         self.payroll(wb["Payroll"])
         self.article9(wb["Article 9"])
         self.categories(wb["Categories"])
+        if self.italy:
+            self.italy_sheet(wb["Italy"])
         self.obligations(wb["Obligations"])
         self.readiness(wb["Readiness"])
         self.summary(wb["Summary"])
@@ -296,7 +301,8 @@ class Model:
         n = len(w)
         self.last = n + 1
         derived = ["annual_hours", "components", "total_pay", "hourly_base", "hourly_components",
-                   "hourly_total", "receives_components", "category", "rank_in_entity", "quartile"]
+                   "hourly_total", "receives_components", "category", "rank_in_entity", "quartile",
+                   "fixed_pay", "hourly_fixed", "rank_fixed_in_entity", "quartile_fixed"]
         names = INPUT_COLUMNS + derived
         self.payroll_cols = {name: get_column_letter(i) for i, name in enumerate(names, start=1)}
         c = self.payroll_cols
@@ -335,9 +341,18 @@ class Model:
                                    f"*(${c['hourly_total']}$2:{L['hourly_total']}={L['hourly_total']}))"),
                 "quartile": (f"=MIN(4,INT(({L['rank_in_entity']}-1)*4"
                              f"/COUNTIF(${c['country']}$2:${c['country']}${last},{L['country']}))+1)"),
+                # Italy's "livello retributivo": base pay plus the components paid by a general rule
+                "fixed_pay": "=" + "+".join([L["base_pay"], *(L[x] for x in FIXED_COMPONENTS)]),
+                "hourly_fixed": f"={L['fixed_pay']}/{L['annual_hours']}",
+                "rank_fixed_in_entity": (f"=SUMPRODUCT((${c['country']}$2:${c['country']}${last}={L['country']})"
+                                         f"*(${c['hourly_fixed']}$2:${c['hourly_fixed']}${last}<{L['hourly_fixed']}))"
+                                         f"+SUMPRODUCT((${c['country']}$2:{L['country']}={L['country']})"
+                                         f"*(${c['hourly_fixed']}$2:{L['hourly_fixed']}={L['hourly_fixed']}))"),
+                "quartile_fixed": (f"=MIN(4,INT(({L['rank_fixed_in_entity']}-1)*4"
+                                   f"/COUNTIF(${c['country']}$2:${c['country']}${last},{L['country']}))+1)"),
             }
             fmts = {"annual_hours": COUNT, "components": EUR, "total_pay": EUR, "hourly_base": EUR_H,
-                    "hourly_components": EUR_H, "hourly_total": EUR_H}
+                    "hourly_components": EUR_H, "hourly_total": EUR_H, "fixed_pay": EUR, "hourly_fixed": EUR_H}
             for name, formula in formulas.items():
                 cell = ws[f"{c[name]}{r}"]
                 cell.value = formula
@@ -507,8 +522,10 @@ class Model:
         dv = DataValidation(type="list", formula1='"Yes,No"', allow_blank=True)
         ws.add_data_validation(dv)
         first = r
+        self.cat_rows = {}
         for code in self.countries:
             for _, cat in BANDS:
+                self.cat_rows[(code, cat)] = r
                 put(ws, f"A{r}", code, color=BLUE)
                 put(ws, f"B{r}", cat, color=BLUE)
                 put(ws, f"C{r}", f"=COUNTIFS({crit(r, 'F')})", fmt=COUNT)
@@ -564,6 +581,116 @@ class Model:
             r += 1
         ws.freeze_panes = "C5"
         ws.auto_filter.ref = f"A4:V{last}"
+
+    def italy_sheet(self, ws) -> None:
+        """Items (a), (c), (f) and the Article 10 screen again on Italy's narrower measure of pay level."""
+        c = self.col
+        title(ws, "Italy: the same report on livello retributivo (D.lgs. 96/2026)",
+              "Italy measures the gaps of items (a) and (c), the quartile bands (f) and the 5% test on fixed and continuing "
+              "pay (art. 3(1)(b), art. 9, art. 10): base pay plus the components paid by a general rule. Bonus and "
+              "commission are left out. The Directive's measure is total pay.")
+        widths(ws, {"A": 3, "B": 52, **{get_column_letter(i): 13 for i in range(3, 15)}})
+        it_col, rows9 = self.cols9["IT"], self.item_rows
+        ctry, sex = f'{c("country")},"IT"', lambda s: f'{c("gender")},"{s}"'
+        cond = f'({c("country")}="IT")*'
+
+        # Workings first (rows 40+), so the items can refer to them.
+        work, r = {}, 40
+        header(ws, r - 1, ["", "Workings, Milan entity, livello retributivo", "Value"], height=18)
+        specs = [("mh", "Mean hourly", "avg", "hourly_fixed"), ("ma", "Mean annual", "avg", "fixed_pay"),
+                 ("dh", "Median hourly", "med", "hourly_fixed"), ("da", "Median annual", "med", "fixed_pay")]
+        for key, label, kind, field in specs:
+            for s, who in (("F", "women"), ("M", "men")):
+                work[f"{key}_{s}"] = r
+                put(ws, f"B{r}", f"{label} livello retributivo, {who}")
+                fmt = EUR_H if field.startswith("hourly") else EUR
+                if kind == "avg":
+                    put(ws, f"C{r}", f'=IFERROR(AVERAGEIFS({c(field)},{ctry},{sex(s)}),"")', fmt=fmt)
+                else:
+                    array(ws, f"C{r}", f'=IFERROR(MEDIAN(IF({cond}({c("gender")}="{s}"),{c(field)})),"")', fmt)
+                r += 1
+        for q in (1, 2, 3, 4):
+            work[f"q{q}_n"], work[f"q{q}_f"] = r, r + 1
+            put(ws, f"B{r}", f"Workers in quartile pay band {q}, on livello retributivo")
+            put(ws, f"C{r}", f"=COUNTIFS({ctry},{c('quartile_fixed')},{q})", fmt=COUNT)
+            put(ws, f"B{r + 1}", f"Women in quartile pay band {q}, on livello retributivo")
+            put(ws, f"C{r + 1}", f"=COUNTIFS({ctry},{c('quartile_fixed')},{q},{sex('F')})", fmt=COUNT)
+            r += 2
+        W = work
+
+        header(ws, 4, ["", "Reporting item, Milan entity", "Directive: total pay", "Italy: livello retributivo",
+                       "Difference, points"], height=32)
+        python = article9.national(self.w, self.countries)["IT"]
+        items = [("a_mean_gap_hourly", f'=IFERROR((C{W["mh_M"]}-C{W["mh_F"]})/C{W["mh_M"]},"")'),
+                 ("a_mean_gap_annual", f'=IFERROR((C{W["ma_M"]}-C{W["ma_F"]})/C{W["ma_M"]},"")'),
+                 ("c_median_gap_hourly", f'=IFERROR((C{W["dh_M"]}-C{W["dh_F"]})/C{W["dh_M"]},"")'),
+                 ("c_median_gap_annual", f'=IFERROR((C{W["da_M"]}-C{W["da_F"]})/C{W["da_M"]},"")'),
+                 *[(f"f_q{q}_share_women", f'=IFERROR(C{W[f"q{q}_f"]}/C{W[f"q{q}_n"]},"")') for q in (1, 2, 3, 4)]]
+        labels = {k: label for k, label, _ in article9.ITEMS}
+        r = 5
+        self.italy_rows = {}
+        for key, formula in items:
+            self.italy_rows[key] = r
+            put(ws, f"B{r}", labels[key], bold=key.startswith(("a_", "c_")))
+            put(ws, f"C{r}", f"='Article 9'!{it_col}{rows9[key]}", color=GREEN, fmt=PCT)
+            put(ws, f"D{r}", formula, fmt=PCT, bold=key.startswith(("a_", "c_")))
+            put(ws, f"E{r}", f'=IFERROR((D{r}-C{r})*100,"")', fmt='+0.0;-0.0;0.0')
+            self.check("Italy", "IT", f"{labels[key]}, livello retributivo", python[key], f"Italy!D{r}")
+            r += 1
+        put(ws, f"B{r}", "Items (b), (d) and (e) are on the components alone, so they are the same under both measures.",
+            color=MUTED, italic=True)
+
+        r += 3
+        put(ws, f"B{r - 1}", "Article 10 screen on livello retributivo, Milan entity", bold=True, size=11)
+        header(ws, r, ["", "Category", "Women", "Men", "Hourly, women", "Hourly, men", "Gap: hourly",
+                       "Annual, women", "Annual, men", "Gap: annual", "Fewer than the minimum of one sex",
+                       "Screen on livello retributivo", "Screen on total pay (Categories)",
+                       "Cost to close the hourly gap, upper bound (€ a year)"], height=58)
+        r += 1
+        screen = article10.national_screen(self.w, ["IT"], [b for _, b in BANDS]).set_index("category")
+        thr, mincell = self.refs["threshold"], self.refs["min_cell"]
+        crit = lambda r_, s: f'{ctry},{c("category")},$B{r_},{sex(s)}'
+        first = r
+        for _, cat in BANDS:
+            put(ws, f"B{r}", cat, color=BLUE)
+            put(ws, f"C{r}", f"=COUNTIFS({crit(r, 'F')})", fmt=COUNT)
+            put(ws, f"D{r}", f"=COUNTIFS({crit(r, 'M')})", fmt=COUNT)
+            for fcol, mcol, gcol, field, fmt in (("E", "F", "G", "hourly_fixed", EUR_H), ("H", "I", "J", "fixed_pay", EUR)):
+                put(ws, f"{fcol}{r}", f'=IFERROR(AVERAGEIFS({c(field)},{crit(r, "F")}),"")', fmt=fmt)
+                put(ws, f"{mcol}{r}", f'=IFERROR(AVERAGEIFS({c(field)},{crit(r, "M")}),"")', fmt=fmt)
+                put(ws, f"{gcol}{r}", f'=IFERROR(({mcol}{r}-{fcol}{r})/{mcol}{r},"")', fmt=PCT, bold=gcol == "G")
+            put(ws, f"K{r}", f'=IF(MIN(C{r},D{r})<{mincell},"Yes","No")')
+            put(ws, f"L{r}", (f'=IF(C{r}+D{r}=0,"No workers",IF(OR(C{r}=0,D{r}=0),"{article10.STATUS_ONE_SEX}",'
+                              f'IF(OR(ABS(G{r})>={thr},ABS(J{r})>={thr}),"{article10.STATUS_FLAG}","{article10.STATUS_OK}")))'))
+            put(ws, f"M{r}", f"=Categories!R{self.cat_rows[('IT', cat)]}", color=GREEN)
+            put(ws, f"N{r}", (f'=IF(L{r}="{article10.STATUS_FLAG}",IF(G{r}>0,(F{r}-E{r})*SUMIFS({c("annual_hours")},{crit(r, "F")}),'
+                              f'(E{r}-F{r})*SUMIFS({c("annual_hours")},{crit(r, "M")})),0)'), fmt=EUR)
+            if cat in screen.index:
+                p_ = screen.loc[cat]
+                for item, col_ in [("women", "C"), ("men", "D"), ("gap_hourly", "G"), ("gap_annual", "J"),
+                                   ("status", "L"), ("remedy_cost", "N")]:
+                    v = p_[item]
+                    self.check("Italy", "IT", f"{cat}: {item.replace('_', ' ')}, livello retributivo",
+                               v.item() if hasattr(v, "item") else v, f"Italy!{col_}{r}")
+            r += 1
+        last = r - 1
+        status_colours(ws, f"L{first}:M{last}")
+        put(ws, f"B{r}", "Total", bold=True)
+        put(ws, f"L{r}", f'=COUNTIF(L{first}:L{last},"{article10.STATUS_FLAG}")&" to justify or remedy"', bold=True)
+        put(ws, f"N{r}", f"=SUM(N{first}:N{last})", bold=True, fmt=EUR)
+        self.check("Italy", "IT", "Total cost to close, livello retributivo", float(screen["remedy_cost"].sum()), f"Italy!N{r}")
+        self.italy_total = f"Italy!N{r}"
+        r += 2
+        for note in [
+            "Fixed and continuing pay here = base pay + " + " + ".join(x.replace("_", " ") for x in FIXED_COMPONENTS)
+            + ": both are paid by a general rule (role, level, shift pattern), not on a personal or discretionary basis.",
+            "Whether an individual superminimo or a role allowance counts as fixed is the open question of the decree; "
+            "ministry guidance on art. 4 is due by 31 December 2026.",
+            "The Directive is the floor: keep both measures on file until the Commission's conformity check settles the definition.",
+        ]:
+            put(ws, f"B{r}", note, color=MUTED, italic=True)
+            r += 1
+        ws.freeze_panes = "C5"
 
     def obligations(self, ws) -> None:
         c = self.col
@@ -658,6 +785,10 @@ class Model:
                     bold=key.startswith("a_"))
             r += 1
         self.summary_gap_rows = (7, 8)
+        if self.italy:
+            put(ws, f"B{r}", "Italy: gender pay gap on livello retributivo, mean hourly (D.lgs. 96/2026)", bold=True)
+            put(ws, f"{cols['IT']}{r}", f"=Italy!D{self.italy_rows['a_mean_gap_hourly']}", color=GREEN, fmt=PCT, bold=True)
+            r += 1
         put(ws, f"B{r}", "First report due")
         for code in codes:
             put(ws, f"{cols[code]}{r}", f"=Obligations!F{self.obl_rows[code]}", color=GREEN, fmt=DATE)
@@ -770,6 +901,7 @@ class Model:
             "Summary": "The page for the board: headline gaps, flagged categories, cost, readiness.",
             "Article 9": "The seven reporting items for each employer, with the workings underneath.",
             "Categories": "Pay gaps by category of workers and the Article 10 screen, with space for justifications.",
+            "Italy": "Italy's narrower measure (livello retributivo): the gaps and the Article 10 screen again.",
             "Obligations": "Size band, deadlines and national transposition status for each employer.",
             "Readiness": "Fourteen obligations from Articles 4 to 12, with evidence, owner and status.",
             "Job Evaluation": "The scored role grid that defines the categories of workers.",

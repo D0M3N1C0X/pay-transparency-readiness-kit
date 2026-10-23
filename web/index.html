@@ -99,6 +99,9 @@
     <h3 style="margin:22px 0 0;font-size:17px" data-i18n="componenti">Complementary or variable pay</h3>
     <p class="s-why" data-i18n="componentiSub">Tick every column paid on top of base pay, as annual amounts: bonus, commission, allowances.</p>
     <div class="comps" id="componenti"></div>
+    <h3 style="margin:22px 0 0;font-size:17px" data-i18n="fisse">Fixed and continuing pay (Italy)</h3>
+    <p class="s-why" data-i18n="fisseSub">Italy measures the gaps on “livello retributivo” (D.lgs. 96/2026): base pay plus the components paid by a general rule. Tick those. Used only for Italian employers.</p>
+    <div class="comps" id="fisse"></div>
     <h3 style="margin:22px 0 0;font-size:17px" data-i18n="generi">How gender is written in the file</h3>
     <p class="s-why" data-i18n="generiSub">Check each code. Exports differ: in Spanish files M can mean mujer, in German files d means divers. Workers marked "not compared" still count for the employer's size.</p>
     <div class="s-map" id="generi"></div>
@@ -165,6 +168,14 @@
       </div>
       <div class="s-table-wrap"><table class="s-table" id="tab-categorie"></table></div>
       <p class="note" id="nota-piccole"></p>
+    </section>
+
+    <section class="s-card" id="sez-italia" aria-labelledby="h-italia">
+      <h2 id="h-italia" data-i18n="italia">Italy measures it differently</h2>
+      <p class="s-sub" data-i18n="italiaSub">D.lgs. 96/2026 computes items (a), (c) and (f) and the 5% test on livello retributivo, fixed and continuing pay.</p>
+      <div class="s-table-wrap"><table class="s-table" id="tab-italia-voci"></table></div>
+      <div class="s-table-wrap" style="margin-top:18px"><table class="s-table" id="tab-italia-cat"></table></div>
+      <p class="note" id="nota-italia"></p>
     </section>
   </section>
 

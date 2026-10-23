@@ -5,6 +5,26 @@ in [docs/roadmap.md](docs/roadmap.md).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-24
+
+### Added
+
+- **Italy's narrower measure.** D.lgs. 96/2026 computes the gaps, the quartile bands and the 5% test on
+  *livello retributivo*, fixed and continuing pay, not on total pay. The Milan employer now gets both: an Italy sheet
+  in the workbook (live formulas, reconciled), section 5 of the report, slide 8 of the deck, and an Italy panel in
+  the browser tool, which asks which of the client's components are fixed. Reconciliation checks: 460 → 511; values
+  the browser tool is checked on: 3,177 → 3,821.
+- **The weights tested against the EU guidelines.** The categories and the screen rerun with the illustrative
+  weights of the European Commission and EIGE guidelines on gender-neutral job evaluation (March 2026), and a note
+  setting the kit's grid against their method: [docs/job-evaluation-eige.md](docs/job-evaluation-eige.md).
+
+### Changed
+
+- The Italian decree read in the Gazzetta Ufficiale: size bands, the collective-agreement presumption and the
+  monitoring body move from "to verify" to verified, with article numbers ([verification register](docs/verification.md),
+  N01-N04, N11-N14).
+- The report dates the legal status from `data/transposition.csv` instead of a fixed 16 September.
+
 ## [1.2.1] - 2026-10-23
 
 ### Fixed

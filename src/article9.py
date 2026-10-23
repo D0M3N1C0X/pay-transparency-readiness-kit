@@ -5,10 +5,21 @@ Definitions follow Article 3(1): a gap is the difference between men's and women
 expressed as a share of men's, and "pay level" is both gross annual pay and the corresponding
 gross hourly pay, so items (a) and (c) are reported both ways. Where the Directive leaves a
 choice open, the choice is named in docs/method.md.
+
+Where national law measures pay level more narrowly (Italy: fixed and continuing pay only), the
+same items are computed again on that measure, so the two can be read side by side.
 """
 import math
 
 import pandas as pd
+
+from config import NATIONAL_MEASURE
+
+# The pay each measure compares: hourly, annual, and the quartile bands built on it.
+MEASURES = {
+    "directive": ("hourly_total", "total_pay", "quartile"),
+    "national": ("hourly_fixed", "fixed_pay", "quartile_fixed"),
+}
 
 
 def gap(women: float, men: float) -> float:
@@ -24,22 +35,23 @@ def _stat(s: pd.Series, how: str) -> float:
     return float(s.mean() if how == "mean" else s.median())
 
 
-def indicators(w: pd.DataFrame) -> dict:
-    """The Article 9(1) items (a)-(f) for one employer (or for the group view)."""
+def indicators(w: pd.DataFrame, measure: str = "directive") -> dict:
+    """The Article 9(1) items (a)-(f) for one employer (or for the group view), on one measure of pay level."""
+    hourly, annual, quartile = MEASURES[measure]
     f, m = w[w["gender"] == "F"], w[w["gender"] == "M"]
     fr, mr = f[f["receives_components"] == 1], m[m["receives_components"] == 1]
     out = {
         "workers": len(w),
         "women": len(f),
         "men": len(m),
-        # (a) gender pay gap, on total pay
-        "a_mean_gap_hourly": gap(_stat(f["hourly_total"], "mean"), _stat(m["hourly_total"], "mean")),
-        "a_mean_gap_annual": gap(_stat(f["total_pay"], "mean"), _stat(m["total_pay"], "mean")),
+        # (a) gender pay gap, on the measure's pay level
+        "a_mean_gap_hourly": gap(_stat(f[hourly], "mean"), _stat(m[hourly], "mean")),
+        "a_mean_gap_annual": gap(_stat(f[annual], "mean"), _stat(m[annual], "mean")),
         # (b) gap in complementary or variable components, among those who receive them
         "b_mean_gap_components": gap(_stat(fr["components"], "mean"), _stat(mr["components"], "mean")),
         # (c) median gender pay gap
-        "c_median_gap_hourly": gap(_stat(f["hourly_total"], "median"), _stat(m["hourly_total"], "median")),
-        "c_median_gap_annual": gap(_stat(f["total_pay"], "median"), _stat(m["total_pay"], "median")),
+        "c_median_gap_hourly": gap(_stat(f[hourly], "median"), _stat(m[hourly], "median")),
+        "c_median_gap_annual": gap(_stat(f[annual], "median"), _stat(m[annual], "median")),
         # (d) median gap in components, among those who receive them
         "d_median_gap_components": gap(_stat(fr["components"], "median"), _stat(mr["components"], "median")),
         # (e) share of each sex receiving components
@@ -52,7 +64,7 @@ def indicators(w: pd.DataFrame) -> dict:
     }
     # (f) share of women and men in each quartile pay band
     for q in (1, 2, 3, 4):
-        band = w[w["quartile"] == q]
+        band = w[w[quartile] == q]
         out[f"f_q{q}_workers"] = len(band)
         out[f"f_q{q}_share_women"] = (band["gender"] == "F").mean() if len(band) else float("nan")
         out[f"f_q{q}_share_men"] = (band["gender"] == "M").mean() if len(band) else float("nan")
@@ -85,3 +97,9 @@ def by_entity(w: pd.DataFrame, countries: list[str]) -> pd.DataFrame:
     cols = {c: indicators(w[w["country"] == c]) for c in countries}
     cols["Group"] = indicators(w)
     return pd.DataFrame(cols)
+
+
+def national(w: pd.DataFrame, countries: list[str]) -> pd.DataFrame:
+    """The same items on the national measure, one column per employer whose law defines one."""
+    return pd.DataFrame({c: indicators(w[w["country"] == c], "national")
+                         for c in countries if c in NATIONAL_MEASURE})

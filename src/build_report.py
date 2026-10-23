@@ -10,8 +10,8 @@ import article9
 import article10
 import charts
 import obligations
-from config import BANDS, ENTITIES, JPA_THRESHOLD, MIN_CELL, REPORTS, SNAPSHOT
-from workers import load_workers
+from config import BANDS, EIGE_WEIGHTS, ENTITIES, FIXED_COMPONENTS, JPA_THRESHOLD, MIN_CELL, REPORTS, SNAPSHOT
+from workers import load_job_evaluation, load_workers
 
 FIG = REPORTS / "figures"
 
@@ -52,6 +52,20 @@ def driver(row) -> str:
     return f"Base pay ({share(base_part)})"
 
 
+def weights_test(w: pd.DataFrame, cats: pd.DataFrame) -> dict:
+    """The categories and the screen again with the EU guidelines' default factor weights."""
+    ours, eige = load_job_evaluation(), load_job_evaluation(EIGE_WEIGHTS)
+    moved = ours.merge(eige[["role", "points", "category"]], on="role", suffixes=("", "_eige"))
+    moved = moved[moved["category"] != moved["category_eige"]]
+    w2 = w.assign(category=w["role"].map(eige.set_index("role")["category"]))
+    other = article10.screen(w2, list(ENTITIES), [b for _, b in BANDS])
+    flags = lambda s: set(map(tuple, s.loc[s["status"] == article10.STATUS_FLAG, ["country", "category"]].values))
+    return {"roles": moved, "workers": int(w["role"].isin(moved["role"]).sum()), "n_roles": len(ours),
+            "only_ours": sorted(flags(cats) - flags(other)), "only_eige": sorted(flags(other) - flags(cats)),
+            "flags_eige": len(flags(other)),
+            "cost_eige": float(other.loc[other["status"] == article10.STATUS_FLAG, "remedy_cost"].sum())}
+
+
 def facts(w: pd.DataFrame) -> dict:
     codes = list(ENTITIES)
     ind = article9.by_entity(w, codes)
@@ -60,9 +74,68 @@ def facts(w: pd.DataFrame) -> dict:
     ready = obligations.readiness()
     sales = w[w["department"] == "Sales"].assign(rate=lambda d: d["commission"] / d["base_pay"])
     flagged = cats[cats["status"] == article10.STATUS_FLAG]
+    nat = article9.national(w, codes)
+    ncats = article10.national_screen(w, codes, [b for _, b in BANDS])
     return {"codes": codes, "ind": ind, "cats": cats, "obl": obl, "ready": ready, "flagged": flagged,
+            "nat": nat, "ncats": ncats, "weights": weights_test(w, cats),
             "sales_rate": sales.groupby("gender")["rate"].mean(),
             "sales_n": sales["gender"].value_counts()}
+
+
+def italy(add, w, ind, nat, cats, ncats) -> None:
+    """Section 5: the Milan figures again on the measure the Italian decree uses."""
+    fixed = " and ".join(c.replace("_", " ") + "s" for c in FIXED_COMPONENTS)
+    add("## 5. Italy measures the gap on fixed pay")
+    add("")
+    add("The Italian decree does not compute the gaps on total pay. Its items (a) and (c), its quartile bands and "
+        "its 5% test for a joint pay assessment all use *livello retributivo*: annual and hourly pay made of the "
+        "fixed and continuing elements, leaving out individual components granted on a personal, discretionary "
+        "or temporary basis (D.lgs. 96/2026, art. 3(1)(b), art. 9(1), art. 10(1)(a)). The Directive has no such "
+        "notion. Here it is read as base pay plus the " + fixed + " this employer pays by a general rule; "
+        "bonus and commission are left out.")
+    add("")
+    keys = [("a_mean_gap_hourly", "(a) Gender pay gap, mean hourly pay"), ("a_mean_gap_annual", "(a) Gender pay gap, mean annual pay"),
+            ("c_median_gap_hourly", "(c) Median gender pay gap, hourly pay"), ("c_median_gap_annual", "(c) Median gender pay gap, annual pay"),
+            ("f_q4_share_women", "(f) Women in the highest quartile pay band")]
+    add(md_table(["Milan", "Directive: total pay", "Italy: livello retributivo", "Difference"],
+                 [[label, pct(ind.loc[k, "IT"]), pct(nat.loc[k, "IT"]),
+                   f"{(nat.loc[k, 'IT'] - ind.loc[k, 'IT']) * 100:+.1f} pts".replace("-", "−")] for k, label in keys], "lrrr"))
+    add("")
+    d = cats[cats["country"] == "IT"].set_index("category")
+    n = ncats[ncats["country"] == "IT"].set_index("category")
+    show = [c for c in n.index if n.loc[c, "status"] == article10.STATUS_FLAG or d.loc[c, "status"] == article10.STATUS_FLAG]
+    add(md_table(["Category", "Hourly gap, total pay", "Hourly gap, livello retributivo", "Annual gap, livello retributivo",
+                  "Status, Italy", "Cost to close, Italy"],
+                 [[c, pct(d.loc[c, "gap_hourly"]), pct(n.loc[c, "gap_hourly"]), pct(n.loc[c, "gap_annual"]),
+                   n.loc[c, "status"], eur(n.loc[c, "remedy_cost"])] for c in show], "lrrrlr"))
+    add("")
+    changed = [c for c in n.index if n.loc[c, "status"] != d.loc[c, "status"]]
+    shift = n["gap_hourly"] - d["gap_hourly"]
+    up, down = shift.idxmax(), shift.idxmin()
+    cost_d = d.loc[d["status"] == article10.STATUS_FLAG, "remedy_cost"].sum()
+    cost_n = n.loc[n["status"] == article10.STATUS_FLAG, "remedy_cost"].sum()
+    add("What changes, and why it matters for the justification:")
+    add("")
+    if changed:
+        add(f"- **{len(changed)} categor{'y changes' if len(changed) == 1 else 'ies change'} status** between the two "
+            f"measures: {', '.join(changed)}.")
+    else:
+        add("- **The same categories are flagged under both measures**, so the Milan employer's to-do list does not "
+            "change. What has to be justified does.")
+    if shift[down] < 0:
+        add(f"- **In {down}, the hourly gap falls from {pct(d.loc[down, 'gap_hourly'])} to {pct(n.loc[down, 'gap_hourly'])}** "
+            f"once bonus and commission are left out: {-shift[down] * 100:.1f} of its points sit outside the Italian "
+            f"5% test, but they stay in items (b) and (d) and in any equal-pay claim.")
+    if shift[up] > 0:
+        add(f"- **In {up}, the hourly gap rises from {pct(d.loc[up, 'gap_hourly'])} to {pct(n.loc[up, 'gap_hourly'])}**: "
+            f"bonus and commission partly offset a gap in fixed pay, and the decree takes that offset away. The "
+            f"justification has to be about fixed pay.")
+    add(f"- **The cost ceiling for Milan moves from {eur(cost_d)} to {eur(cost_n)} a year.**")
+    add("- **Keep both measures on file.** The Directive sets the floor and the Commission is checking national "
+        "laws for conformity; if the narrower definition does not survive, the total-pay figures are the ones "
+        "that count. Whether an individual superminimo or a role allowance is \"fixed and continuing\" is the open "
+        "question; ministry guidance on art. 4 may come by 31 December 2026 (art. 4(6)).")
+    add("")
 
 
 def write(w: pd.DataFrame) -> dict:
@@ -90,6 +163,8 @@ def write(w: pd.DataFrame) -> dict:
     worst = ind.loc["a_mean_gap_hourly", codes].astype(float)
     hi, lo = worst.idxmax(), worst.idxmin()
     status = obligations.transposition().set_index("country")
+    checked = pd.to_datetime(status["checked_on"]).max()
+    nat, ncats = f["nat"], f["ncats"]
 
     L = []
     add = L.append
@@ -123,6 +198,11 @@ def write(w: pd.DataFrame) -> dict:
     add(f"- **The organisation is not ready yet:** of 14 obligations, {counts.get('Ready', 0)} is in place, "
         f"{counts.get('Partial', 0)} are partly in place and {counts.get('Gap', 0)} are missing - pay ranges in "
         f"vacancies, published progression criteria and a route for workers' information requests among them.")
+    if "IT" in nat:
+        add(f"- **Italy measures the gap on fixed pay, and the Milan figures change.** The decree counts only "
+            f"fixed and continuing pay (livello retributivo): the Milan gap is {pct(nat.loc['a_mean_gap_hourly', 'IT'])} "
+            f"on that measure against {pct(ind.loc['a_mean_gap_hourly', 'IT'])} on total pay. The same categories "
+            f"are flagged; what each one has to justify is not the same (section 5).")
     add(f"- **The law is settled in one country of four.** {status.loc['IT', 'instrument'].split(' (')[0]} "
         f"transposes the Directive in Italy; Poland has transposed the recruitment rules only, and Germany and "
         f"Spain have not finished.")
@@ -136,14 +216,16 @@ def write(w: pd.DataFrame) -> dict:
                  "lrllll"))
     add("")
     add("*Remedy by: six months after the first report, the latest date to justify or close a category gap "
-        "before a joint pay assessment is due. National status as checked on 16 September 2026; "
+        f"before a joint pay assessment is due. National status as checked on {day(checked)}; "
         "sources in [docs/verification.md](../docs/verification.md).*")
     add("")
-    add("For Italy, applying a national collective agreement signed by representative unions is presumed to "
-        "comply, classification included, so the categories of workers should start from the agreement's "
-        "levels and use job evaluation to complement them, not replace them. The categories in this dry run "
-        "come from job evaluation alone, because the synthetic organisation has no collective agreement. "
-        "*[to verify on the decree text]*")
+    add("For Italy, applying a national collective agreement signed by the most representative unions is "
+        "presumed to comply, classification included (D.lgs. 96/2026, art. 4(1)), and the agreement's levels are "
+        "the reference for comparing work of equal value; an employer's own job evaluation may complement them "
+        "if its criteria are objective and gender-neutral (art. 4(4)). So the categories of workers should start "
+        "from the agreement's levels and use job evaluation to refine them, not replace them. The categories in "
+        "this dry run come from job evaluation alone, because the synthetic organisation has no collective "
+        "agreement.")
     add("")
 
     add("## 2. The seven reporting items")
@@ -224,8 +306,27 @@ def write(w: pd.DataFrame) -> dict:
         "lower annual total; the hourly figure is the one to defend.")
     add("- **Gaps in either direction count.** A category where men are paid less is flagged the same way.")
     add("")
+    wt = f["weights"]
+    roles = ", ".join(wt["roles"]["role"])
+    name = lambda pair: f"{ENTITIES[pair[0]]} {pair[1]}"
+    add("**How much the categories depend on the weights.** The EU-wide guidelines on gender-neutral job evaluation "
+        "(European Commission and EIGE, March 2026) come with preset, illustrative weights of 40% skills, 35% responsibility, 15% "
+        "effort and 10% working conditions; this kit uses 35/35/15/15. With the guidelines' weights, "
+        f"{len(wt['roles'])} of {wt['n_roles']} roles change category ({roles}), moving {wt['workers']:,} workers; "
+        f"{wt['flags_eige']} categories are flagged instead of {len(flagged)}"
+        + (f" ({', '.join(map(name, wt['only_ours']))} drop out" if wt["only_ours"] else "")
+        + (f"; {', '.join(map(name, wt['only_eige']))} come{'s' if len(wt['only_eige']) == 1 else ''} in)" if wt["only_eige"] else ")" if wt["only_ours"] else "")
+        + f", and the cost ceiling is {eur_m(wt['cost_eige'])} instead of {eur_m(flagged['remedy_cost'].sum())}. "
+        "The weights are a negotiated choice, not a technical one: agree them with workers' representatives "
+        "before anyone sees the pay figures, and test them on women- and men-dominated roles, as the guidelines "
+        "ask. The comparison with the guidelines' method is in "
+        "[docs/job-evaluation-eige.md](../docs/job-evaluation-eige.md).")
+    add("")
 
-    add("## 5. Readiness: what has to be in place")
+    if "IT" in nat:
+        italy(add, w, ind, nat, cats, ncats)
+
+    add("## 6. Readiness: what has to be in place")
     add("")
     add(md_table(["Ref", "Article", "Requirement", "Status", "Owner"],
                  [[r.ref, r.article, r.requirement, r.status, r.owner] for r in ready.itertuples()],
@@ -235,7 +336,7 @@ def write(w: pd.DataFrame) -> dict:
         "the workbook's Readiness sheet.*")
     add("")
 
-    add("## 6. The next 90 days")
+    add("## 7. The next 90 days")
     add("")
     add("1. **Agree the job evaluation with workers' representatives** in each country, starting from the Italian "
         "collective agreement's classification. Categories decide every later number.")
@@ -249,7 +350,7 @@ def write(w: pd.DataFrame) -> dict:
         "management confirm the figures after consulting workers' representatives (Article 9(6)).")
     add("")
 
-    add("## 7. Method, choices and limits")
+    add("## 8. Method, choices and limits")
     add("")
     add("- **Two engines, one answer.** Every figure is computed in pandas and again by live formulas in "
         "[the workbook](../deliverables/pay_transparency_model.xlsx); its Reconciliation sheet checks "

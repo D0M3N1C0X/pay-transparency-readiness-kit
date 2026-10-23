@@ -1,6 +1,6 @@
 // Recomputes with web/engine.js every case that pandas computed, and exits with 1 at the first difference.
 import { readFileSync } from "node:fs";
-import { evaluate, derive, byEntity, screen, obligations, categoryOrder, sex, number, addMonths } from "../../web/engine.js";
+import { evaluate, derive, byEntity, national, screen, obligations, categoryOrder, sex, number, addMonths } from "../../web/engine.js";
 
 const V = JSON.parse(readFileSync(new URL("../fixtures/js_vectors.json", import.meta.url)));
 const close = (a, b) => (b === null ? a === null || Number.isNaN(a)
@@ -10,11 +10,12 @@ const expect = (ok, what) => { checks++; if (!ok) { failures++; if (failures <= 
 
 const roles = evaluate(V.grid, V.cfg);
 const comps = V.cfg.components;
+const fixed = comps.map((x) => V.cfg.fixed_components.includes(x));
 V.cases.forEach((c, k) => {
   const rows = (c.rows ? c.rows.map((i) => ({ ...V.base[i] })) : V.base.map((r) => ({ ...r })));
   for (const [i, f, v] of c.patch) rows[i][f] = v;
   const w = derive(rows.map((r) => ({ worker_id: r.worker_id, country: r.country, gender: r.gender,
-    category: roles.get(r.role).category, base_pay: r.base_pay, components: comps.map((x) => r[x]),
+    category: roles.get(r.role).category, base_pay: r.base_pay, components: comps.map((x) => r[x]), fixed,
     weekly_hours: r.weekly_hours })), V.cfg);
   const countries = Object.keys(V.cfg.entities).filter((x) => w.some((r) => r.country === x));
   const items = byEntity(w, countries);
@@ -28,6 +29,19 @@ V.cases.forEach((c, k) => {
   }
   const q = new Map(w.map((r) => [r.worker_id, r.quartile]));
   expect(c.quartiles.every(([id, v]) => q.get(id) === v), `case ${k}: quartile bands`);
+  // Italy's narrower measure: the items, the quartile bands and the screen again on fixed and continuing pay
+  const nat = national(w, countries, V.cfg);
+  expect(Object.keys(nat).length === Object.keys(c.national_items).length, `case ${k}: national employers`);
+  for (const [entity, values] of Object.entries(c.national_items))
+    for (const [key, v] of Object.entries(values)) expect(close(nat[entity]?.[key], v), `case ${k} national ${entity} ${key}: ${nat[entity]?.[key]} vs ${v}`);
+  const qf = new Map(w.map((r) => [r.worker_id, r.quartile_fixed]));
+  expect(c.quartiles_fixed.every(([id, v]) => qf.get(id) === v), `case ${k}: quartile bands on fixed pay`);
+  const ns = screen(w, countries, categoryOrder(w, V.cfg), V.cfg, "national");
+  expect(ns.length === c.national_screen.length, `case ${k}: ${ns.length} national categories vs ${c.national_screen.length}`);
+  for (const e of c.national_screen) {
+    const a = ns.find((r) => r.country === e.country && r.category === e.category) || {};
+    for (const [key, v] of Object.entries(e)) expect(close(a[key], v), `case ${k} national ${e.country} ${e.category} ${key}: ${a[key]} vs ${v}`);
+  }
   const o = obligations(w, countries, V.cfg);
   for (const e of c.obligations) {
     const a = o.find((r) => r.country === e.country) || {};

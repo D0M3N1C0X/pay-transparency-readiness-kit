@@ -18,9 +18,11 @@ from config import (
     ENTITIES,
     FACTOR_WEIGHTS,
     FACTORS,
+    FIXED_COMPONENTS,
     FULL_TIME_WEEKLY_HOURS,
     JPA_THRESHOLD,
     MIN_CELL,
+    NATIONAL_MEASURE,
     PAYROLL_EXTRACT,
     REMEDY_MONTHS,
     ROOT,
@@ -44,7 +46,8 @@ def cfg() -> dict:
         "factors": FACTORS, "weights": FACTOR_WEIGHTS, "bands": [[floor, label] for floor, label in BANDS],
         "size_bands": [[floor, label, frequency, first.isoformat() if first else None]
                        for floor, label, frequency, first in SIZE_BANDS],
-        "entities": ENTITIES, "components": COMPONENTS,
+        "entities": ENTITIES, "components": COMPONENTS, "fixed_components": FIXED_COMPONENTS,
+        "national": NATIONAL_MEASURE,
         "transposition": {c: {k: str(r[k]) for k in ("status", "instrument", "reporting", "notes", "checked_on")}
                           for c, r in status.iterrows()},
     }
@@ -78,6 +81,10 @@ def expected(extract: pd.DataFrame) -> dict:
     items = article9.by_entity(w, countries)
     screen = article10.screen(w, countries, [label for _, label in BANDS])
     screen["status"] = screen["status"].map(STATUS)
+    nat_items = article9.national(w, countries)
+    nat_screen = article10.national_screen(w, countries, [label for _, label in BANDS])
+    if len(nat_screen):
+        nat_screen["status"] = nat_screen["status"].map(STATUS)
     duties = obligations.by_entity(w)
     duties = duties[duties["country"].isin(countries)]
     return _clean({
@@ -85,6 +92,11 @@ def expected(extract: pd.DataFrame) -> dict:
         "screen": screen[["country", "category", "women", "men", "gap_base", "gap_components", "gap_hourly",
                           "gap_annual", "small_cell", "status", "remedy_cost"]].to_dict("records"),
         "quartiles": w[["worker_id", "quartile"]].values.tolist(),
+        "national_items": {col: {k: float(v) for k, v in nat_items[col].items()} for col in nat_items.columns},
+        "national_screen": [] if nat_screen.empty else nat_screen[[
+            "country", "category", "women", "men", "gap_hourly", "gap_annual", "small_cell", "status",
+            "remedy_cost"]].to_dict("records"),
+        "quartiles_fixed": w[["worker_id", "quartile_fixed"]].values.tolist(),
         "obligations": [{"country": r.country, "workers": int(r.workers), "size_band": r.size_band,
                          "first_report": r.first_report.isoformat() if r.first_report else None,
                          "remedy_by": r.remedy_by.isoformat() if r.remedy_by else None}

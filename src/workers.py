@@ -6,7 +6,15 @@ the same order of operations so that the two agree to the last bit.
 """
 import pandas as pd
 
-from config import BANDS, FACTOR_WEIGHTS, FACTORS, JOB_EVALUATION, PAYROLL_EXTRACT, WEEKS_PER_YEAR
+from config import (
+    BANDS,
+    FACTOR_WEIGHTS,
+    FACTORS,
+    FIXED_COMPONENTS,
+    JOB_EVALUATION,
+    PAYROLL_EXTRACT,
+    WEEKS_PER_YEAR,
+)
 
 COMPONENTS = ["bonus", "commission", "shift_allowance", "car_allowance"]
 VARIABLE = ["bonus", "commission"]          # variable components
@@ -21,9 +29,10 @@ def band_for(points: int) -> str:
     return label
 
 
-def load_job_evaluation() -> pd.DataFrame:
+def load_job_evaluation(weights: dict | None = None) -> pd.DataFrame:
     grid = pd.read_csv(JOB_EVALUATION)
-    grid["points"] = sum(grid[f] * FACTOR_WEIGHTS[f] for f in FACTORS)
+    weights = weights or FACTOR_WEIGHTS
+    grid["points"] = sum(grid[f] * weights[f] for f in FACTORS)
     grid["category"] = grid["points"].map(band_for)
     return grid
 
@@ -47,9 +56,15 @@ def derive(extract: pd.DataFrame) -> pd.DataFrame:
         comp = comp + w[c]
     w["components"] = comp
     w["total_pay"] = w["base_pay"] + w["components"]
+    # Italy's "livello retributivo": base pay plus the components paid by a general rule
+    fixed = w["base_pay"]
+    for c in FIXED_COMPONENTS:
+        fixed = fixed + w[c]
+    w["fixed_pay"] = fixed
     w["hourly_base"] = w["base_pay"] / w["annual_hours"]
     w["hourly_components"] = w["components"] / w["annual_hours"]
     w["hourly_total"] = w["total_pay"] / w["annual_hours"]
+    w["hourly_fixed"] = w["fixed_pay"] / w["annual_hours"]
     w["receives_components"] = (w["components"] > 0).astype(int)
 
     # Quartile pay bands (Article 3(1)(f)): four equal groups by pay level within each
@@ -58,4 +73,8 @@ def derive(extract: pd.DataFrame) -> pd.DataFrame:
                            .rank(method="first").astype(int))
     n = w.groupby("country")["worker_id"].transform("size")
     w["quartile"] = ((w["rank_in_entity"] - 1) * 4 // n + 1).clip(upper=4)
+    # The same bands on the national measure, for the employers whose law defines one
+    w["rank_fixed_in_entity"] = (w.groupby("country")["hourly_fixed"]
+                                 .rank(method="first").astype(int))
+    w["quartile_fixed"] = ((w["rank_fixed_in_entity"] - 1) * 4 // n + 1).clip(upper=4)
     return w

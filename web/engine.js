@@ -17,24 +17,30 @@ export function evaluate(grid, cfg) {
 }
 
 // ---- Per-worker figures (workers.derive) ---------------------------------------------------------------
-// rows: { worker_id, country, gender: "F" | "M", category, base_pay, components: [numbers], weekly_hours }
+// rows: { worker_id, country, gender: "F" | "M", category, base_pay, components: [numbers], weekly_hours,
+//         fixed: [booleans, one per component: paid by a general rule, so part of Italy's "livello retributivo"] }
 export function derive(rows, cfg) {
   const w = rows.map((r) => {
     const annual_hours = r.weekly_hours * cfg.weeks_per_year;
     let components = r.components.length ? r.components[0] : 0;
     for (const c of r.components.slice(1)) components += c;
     const total_pay = r.base_pay + components;
-    return { ...r, annual_hours, components_total: components, total_pay,
+    let fixed_pay = r.base_pay;
+    r.components.forEach((c, i) => { if (r.fixed?.[i]) fixed_pay += c; });
+    return { ...r, annual_hours, components_total: components, total_pay, fixed_pay,
       hourly_base: r.base_pay / annual_hours, hourly_components: components / annual_hours,
-      hourly_total: total_pay / annual_hours, receives_components: components > 0 ? 1 : 0 };
+      hourly_total: total_pay / annual_hours, hourly_fixed: fixed_pay / annual_hours, receives_components: components > 0 ? 1 : 0 };
   });
-  // Quartile pay bands within each employer: four equal groups by hourly pay, ties broken by row order.
+  // Quartile pay bands within each employer: four equal groups by hourly pay, ties broken by row order;
+  // and the same bands on fixed and continuing pay, for the employers whose law measures that.
   const byCountry = new Map();
   w.forEach((r, i) => { if (!byCountry.has(r.country)) byCountry.set(r.country, []); byCountry.get(r.country).push(i); });
   for (const idx of byCountry.values()) {
-    const order = [...idx].sort((a, b) => w[a].hourly_total - w[b].hourly_total || a - b);
-    const n = order.length;
-    order.forEach((i, k) => { w[i].quartile = Math.min(4, Math.floor((k * 4) / n) + 1); });
+    const n = idx.length;
+    for (const [pay, band] of [["hourly_total", "quartile"], ["hourly_fixed", "quartile_fixed"]]) {
+      const order = [...idx].sort((a, b) => w[a][pay] - w[b][pay] || a - b);
+      order.forEach((i, k) => { w[i][band] = Math.min(4, Math.floor((k * 4) / n) + 1); });
+    }
   }
   return w;
 }
@@ -52,16 +58,20 @@ function median(xs) {
 }
 const col = (rows, k) => rows.map((r) => r[k]);
 
-export function indicators(w) {
+// The pay each measure compares: hourly, annual, and the quartile bands built on it.
+const MEASURES = { directive: ["hourly_total", "total_pay", "quartile"], national: ["hourly_fixed", "fixed_pay", "quartile_fixed"] };
+
+export function indicators(w, measure = "directive") {
+  const [hourly, annual, quartile] = MEASURES[measure];
   const f = w.filter((r) => r.gender === "F"), m = w.filter((r) => r.gender === "M");
   const fr = f.filter((r) => r.receives_components), mr = m.filter((r) => r.receives_components);
   const out = {
     workers: w.length, women: f.length, men: m.length,
-    a_mean_gap_hourly: gap(mean(col(f, "hourly_total")), mean(col(m, "hourly_total"))),
-    a_mean_gap_annual: gap(mean(col(f, "total_pay")), mean(col(m, "total_pay"))),
+    a_mean_gap_hourly: gap(mean(col(f, hourly)), mean(col(m, hourly))),
+    a_mean_gap_annual: gap(mean(col(f, annual)), mean(col(m, annual))),
     b_mean_gap_components: gap(mean(col(fr, "components_total")), mean(col(mr, "components_total"))),
-    c_median_gap_hourly: gap(median(col(f, "hourly_total")), median(col(m, "hourly_total"))),
-    c_median_gap_annual: gap(median(col(f, "total_pay")), median(col(m, "total_pay"))),
+    c_median_gap_hourly: gap(median(col(f, hourly)), median(col(m, hourly))),
+    c_median_gap_annual: gap(median(col(f, annual)), median(col(m, annual))),
     d_median_gap_components: gap(median(col(fr, "components_total")), median(col(mr, "components_total"))),
     e_share_women_receiving: f.length ? fr.length / f.length : NaN,
     e_share_men_receiving: m.length ? mr.length / m.length : NaN,
@@ -70,7 +80,7 @@ export function indicators(w) {
     mean_hourly_total_men: mean(col(m, "hourly_total")),
   };
   for (const q of [1, 2, 3, 4]) {
-    const band = w.filter((r) => r.quartile === q);
+    const band = w.filter((r) => r[quartile] === q);
     out[`f_q${q}_workers`] = band.length;
     out[`f_q${q}_share_women`] = band.length ? band.filter((r) => r.gender === "F").length / band.length : NaN;
     out[`f_q${q}_share_men`] = band.length ? band.filter((r) => r.gender === "M").length / band.length : NaN;
@@ -83,6 +93,13 @@ export function byEntity(w, countries) {
   const out = {};
   for (const c of countries) out[c] = indicators(w.filter((r) => r.country === c));
   out.Group = indicators(w);
+  return out;
+}
+
+// The same items on the national measure, for the employers whose law defines one (cfg.national).
+export function national(w, countries, cfg) {
+  const out = {};
+  for (const c of countries) if (cfg.national[c]) out[c] = indicators(w.filter((r) => r.country === c), "national");
   return out;
 }
 
@@ -101,24 +118,42 @@ export function categoryRow(g, cfg) {
   row.gap_hourly = gap(row.hourly_total_women, row.hourly_total_men);
   row.gap_annual = gap(row.annual_total_women, row.annual_total_men);
   row.small_cell = Math.min(f.length, m.length) < cfg.min_cell ? 1 : 0;
+  return verdict(row, f, m, "hourly_total", cfg);
+}
+
+// Status and remedy cost, from the row's two gaps and its mean hourly pay of women and men.
+function verdict(row, f, m, hourly, cfg) {
   if (!f.length || !m.length) return { ...row, status: "one_sex", remedy_cost: 0 };
   // "a difference ... of at least 5%": either direction, on either measure of pay level
   const flagged = Math.abs(row.gap_hourly) >= cfg.threshold || Math.abs(row.gap_annual) >= cfg.threshold;
   row.status = flagged ? "flag" : "ok";
   // ceiling of the annual cost of lifting the lower-paid group's average hourly pay to the other's
   const hours = (rows) => rows.reduce((s, r) => s + r.annual_hours, 0);
-  if (flagged && row.gap_hourly > 0) row.remedy_cost = (row.hourly_total_men - row.hourly_total_women) * hours(f);
-  else if (flagged && row.gap_hourly < 0) row.remedy_cost = (row.hourly_total_women - row.hourly_total_men) * hours(m);
+  if (flagged && row.gap_hourly > 0) row.remedy_cost = (row[`${hourly}_men`] - row[`${hourly}_women`]) * hours(f);
+  else if (flagged && row.gap_hourly < 0) row.remedy_cost = (row[`${hourly}_women`] - row[`${hourly}_men`]) * hours(m);
   else row.remedy_cost = 0;
   return row;
 }
 
-export function screen(w, countries, categories, cfg) {
+// The screen on fixed and continuing pay (Italy's "livello retributivo").
+export function nationalRow(g, cfg) {
+  const f = g.filter((r) => r.gender === "F"), m = g.filter((r) => r.gender === "M");
+  const row = { women: f.length, men: m.length,
+    hourly_fixed_women: mean(col(f, "hourly_fixed")), hourly_fixed_men: mean(col(m, "hourly_fixed")),
+    annual_fixed_women: mean(col(f, "fixed_pay")), annual_fixed_men: mean(col(m, "fixed_pay")) };
+  row.gap_hourly = gap(row.hourly_fixed_women, row.hourly_fixed_men);
+  row.gap_annual = gap(row.annual_fixed_women, row.annual_fixed_men);
+  row.small_cell = Math.min(f.length, m.length) < cfg.min_cell ? 1 : 0;
+  return verdict(row, f, m, "hourly_fixed", cfg);
+}
+
+export function screen(w, countries, categories, cfg, measure = "directive") {
   const rows = [];
   for (const c of countries) {
+    if (measure === "national" && !cfg.national[c]) continue;
     for (const cat of categories) {
       const g = w.filter((r) => r.country === c && r.category === cat);
-      if (g.length) rows.push({ country: c, category: cat, ...categoryRow(g, cfg) });
+      if (g.length) rows.push({ country: c, category: cat, ...(measure === "national" ? nationalRow(g, cfg) : categoryRow(g, cfg)) });
     }
   }
   return rows;

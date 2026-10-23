@@ -25,6 +25,30 @@ in the Official Journal (see [verification.md](verification.md)).
   contractual hours × 52. The synthetic organisation has a 40-hour full-time week in every
   country; part-time workers are on 32 hours.
 
+### Italy: livello retributivo
+
+Italy's decree defines pay level differently. *Livello retributivo* is gross annual and hourly
+pay made of "the fixed and continuing elements", without individual non-structural components
+granted on a personal, discretionary or temporary basis (D.lgs. 96/2026, art. 3(1)(b)). The
+gaps of items (a) and (c), the quartile bands of item (f) and the 5% test for a joint pay
+assessment are all defined on it (art. 3(1)(c)-(f), art. 10(1)(a)). The Directive's measure, and
+this kit's main one, is total pay.
+
+- **Reading used here:** base pay plus the shift and car allowances, because this employer pays
+  both by a general rule (role, level, shift pattern); bonus and commission are left out. The
+  list is `FIXED_COMPONENTS` in `src/config.py`, and the browser tool asks the user which
+  components of a client's file are fixed.
+- **What it changes:** the Milan employer's items (a), (c) and (f) and its category screen are
+  computed again on this measure: the workbook's Italy sheet, section 5 of the report, slide 8
+  of the deck, and the Italy panel of the browser tool. Items (b), (d) and (e) are on the
+  components alone and do not change.
+- **Open question:** whether an individual superminimo or a role-based allowance counts as fixed
+  and continuing. The decree's wording points to "generalised within the category" as the test;
+  ministry guidance may settle it (art. 4(6), by 31 December 2026).
+- **Why both measures stay:** the Directive is the floor and the Commission is checking national
+  laws for conformity. If the narrower definition does not survive, the total-pay figures are the
+  ones that count.
+
 ## The Article 9(1) items
 
 | Item | Computed as |
@@ -67,10 +91,15 @@ conditions.
 - Two choices guard against the bias the Directive warns about ("relevant soft skills shall
   not be undervalued"): customer service scores high on effort for sustained emotional load, and
   HR scores extra responsibility for confidential data and legal compliance.
-- **In Italy the national collective agreement comes first.** D.Lgs. 96/2026 presumes that
-  applying a representative collective agreement complies, classification included; job
-  evaluation complements the agreement's levels. The synthetic organisation has no agreement,
-  so its categories come from job evaluation alone.
+- **In Italy the national collective agreement comes first.** D.lgs. 96/2026 presumes that
+  applying a collective agreement signed by the most representative unions complies,
+  classification included (art. 4(1)); the agreement's levels are the reference for comparing
+  work of equal value, and an employer's own job evaluation may complement them (art. 4(4)).
+  The synthetic organisation has no agreement, so its categories come from job evaluation alone.
+- **The weights are tested against the EU guidelines.** The European Commission and EIGE
+  guidelines on gender-neutral job evaluation (March 2026) come with illustrative weights of
+  40/35/15/10. Section 4 of the report reruns the categories and the screen with them; the
+  comparison of methods is in [job-evaluation-eige.md](job-evaluation-eige.md).
 
 ## The Article 10 screen
 
@@ -104,7 +133,7 @@ Every figure is computed twice:
    change.
 
 `src/build_workbook.py` writes the pandas value next to each formula on the Reconciliation
-sheet, and the sheet checks every pair to one part in a billion (460 checks). Two engines then
+sheet, and the sheet checks every pair to one part in a billion (511 checks). Two engines then
 evaluate the formulas:
 
 - **LibreOffice**, in CI, on the full workbook (`src/check_workbook.py`);

@@ -1,7 +1,7 @@
 // The browser tool's page: payroll in, columns matched, roles scored, assessment run, results shown and downloaded.
 // The calculations are in engine.js, verified against pandas on every change; this file only moves data between the
 // user and them. Nothing here talks to a server: inputs.json comes from this same page.
-import { evaluate, derive, byEntity, screen, obligations, categoryOrder, sex, number, points, bandFor } from "./engine.js";
+import { evaluate, derive, byEntity, national, screen, obligations, categoryOrder, sex, number, points, bandFor } from "./engine.js";
 import { createI18n } from "./design/i18n.js";
 import { readTable, parseCsv, matchColumns, applyMapping, savedMapping, rememberMapping, download, normalise } from "./design/table.js";
 import { writeXlsx } from "./design/xlsx.js";
@@ -69,6 +69,16 @@ const UI = {
     footer: "The same calculations as the kit's Python pipeline and Excel model, checked against each other on every change. Not legal advice.",
     rapporto: "Report", metodo: "Method", codice: "Code",
     x_sintesi: "Summary", x_categorie: "Categories", x_obblighi: "Obligations", x_griglia: "Job evaluation", x_impostazioni: "Settings",
+    x_italia: "Italy",
+    fisse: "Fixed and continuing pay (Italy)",
+    fisseSub: "Italy measures the gaps on \u201clivello retributivo\u201d (D.lgs. 96/2026): base pay plus the components paid by a general rule, such as an allowance every shift worker receives. Tick those; bonuses, commission and personal or one-off amounts stay out. Used only for Italian employers.",
+    fisseNessuna: "Tick a component above first.",
+    italia: "Italy measures it differently",
+    italiaSub: "D.lgs. 96/2026 computes items (a), (c) and (f) and the 5% test on livello retributivo, fixed and continuing pay. This employer's statutory report uses it; the Directive's figures above stay as the floor until the Commission's conformity check settles the definition.",
+    italiaFisse: "Counted as fixed and continuing: base pay and {c}.", italiaSoloBase: "Counted as fixed and continuing: base pay only.",
+    hDirettiva: "Directive: total pay", hItalia: "Italy: livello retributivo", hDiff: "Difference, points",
+    hEsitoIt: "Status, Italy", hEsitoDir: "Status, Directive",
+    italiaCambia: "{n} categories change status between the two measures.", italiaUguale: "The same categories need a justification under both measures; the gaps to justify differ.",
     xFile: "Payroll file", xData: "Run on", xPeriodo: "Base pay", xOre: "Full-time weekly hours", xSoglia: "Threshold (Article 10)",
     xMinimo: "Fewest women or men before averages are shared", xEsclusi: "Workers not recorded as woman or man", xFonte: "Method",
     xResponsabile: "Owner", xEntro: "Due by", xMediaD: "Women, mean hourly pay", xMediaU: "Men, mean hourly pay",
@@ -136,6 +146,16 @@ const UI = {
     footer: "Gli stessi calcoli della pipeline Python e del modello Excel del kit, verificati tra loro a ogni modifica. Non è consulenza legale.",
     rapporto: "Rapporto", metodo: "Metodo", codice: "Codice",
     x_sintesi: "Sintesi", x_categorie: "Categorie", x_obblighi: "Obblighi", x_griglia: "Valutazione dei ruoli", x_impostazioni: "Impostazioni",
+    x_italia: "Italia",
+    fisse: "Retribuzione fissa e continuativa (Italia)",
+    fisseSub: "In Italia i divari si calcolano sul \u201clivello retributivo\u201d (D.lgs. 96/2026): la retribuzione base più le componenti pagate per regola generale, come un'indennità che ricevono tutti i turnisti. Spuntale; premi, provvigioni e importi personali o una tantum restano fuori. Serve solo per i datori di lavoro italiani.",
+    fisseNessuna: "Prima spunta una componente qui sopra.",
+    italia: "In Italia si misura in un altro modo",
+    italiaSub: "Il D.lgs. 96/2026 calcola le voci (a), (c) e (f) e la soglia del 5% sul livello retributivo, cioè sulla retribuzione fissa e continuativa. Il rapporto obbligatorio di questo datore di lavoro usa questa misura; i dati della direttiva qui sopra restano il riferimento minimo finché la verifica di conformità della Commissione non chiarisce la definizione.",
+    italiaFisse: "Contate come fisse e continuative: retribuzione base e {c}.", italiaSoloBase: "Contata come fissa e continuativa: solo la retribuzione base.",
+    hDirettiva: "Direttiva: retribuzione totale", hItalia: "Italia: livello retributivo", hDiff: "Differenza, punti",
+    hEsitoIt: "Esito, Italia", hEsitoDir: "Esito, direttiva",
+    italiaCambia: "{n} categorie cambiano esito tra le due misure.", italiaUguale: "Le stesse categorie vanno giustificate con entrambe le misure; cambiano i divari da giustificare.",
     xFile: "File delle paghe", xData: "Eseguita il", xPeriodo: "Retribuzione base", xOre: "Ore settimanali a tempo pieno", xSoglia: "Soglia (articolo 10)",
     xMinimo: "Minimo di donne o uomini per mostrare le medie", xEsclusi: "Lavoratori non registrati come donna o uomo", xFonte: "Metodo",
     xResponsabile: "Responsabile", xEntro: "Entro il", xMediaD: "Donne, paga oraria media", xMediaU: "Uomini, paga oraria media",
@@ -176,6 +196,9 @@ const GRIGLIA = [["role", true, ["ruolo", "mansione", "job title", "position"]],
   ["effort", true, ["impegno", "sforzo"]], ["responsibility", true, ["responsabilita", "responsibilities"]],
   ["working_conditions", true, ["condizioni di lavoro", "conditions", "condizioni"]]].map(([key, required, aliases]) => ({ key, required, aliases }));
 const COMPONENTE = /bonus|commission|allowance|premi|provvigion|indennit|incentiv|variab|zulage|pramie|prowizj|dodat|comision|complement|overtime|straordinar|benefit/;
+// A first guess at the components paid by a general rule (Italy's livello retributivo); the user corrects it.
+const FISSA = /allowance|indennit|zulage|dodat|superminim|maggioraz|plus/;
+const VARIABILE = /bonus|premi|commission|provvigion|incentiv|variab|pramie|prowizj|comision|overtime|straordinar|una.?tantum|one.?off/;
 const PERIODI = { pAnnuale: 1, p12: 12, p13: 13, p14: 14 };
 
 const i18n = createI18n(UI, "en");
@@ -194,7 +217,7 @@ const K_GRIGLIA = () => `strumenti.pt.griglia.${chiaveFile()}`, K_GIUST = () => 
 
 // state: the files the user gave, the column choices, the role scores and the result of the last run
 const files = { paghe: null, griglia: null };
-let esempio = false, mapping = {}, componenti = new Set(), punteggi = {}, generi = {}, risultato = null, entita = null;
+let esempio = false, mapping = {}, componenti = new Set(), fisse = new Set(), punteggi = {}, generi = {}, risultato = null, entita = null;
 const soldi = (x, d = 0) => {
   const v = $("valuta").value;
   if (!v) return i18n.number(x, d);
@@ -293,6 +316,7 @@ function colonne() {
     try { number(r[h], f.decimalComma); return true; } catch { return false; }
   }));
   componenti = new Set(numeriche.filter((h) => COMPONENTE.test(normalise(h))));
+  fisse = new Set([...componenti].filter((h) => FISSA.test(normalise(h)) && !VARIABILE.test(normalise(h))));
   $("passo-colonne").style.display = "block";
   disegnaMappa(false);
   disegnaComponenti(numeriche);
@@ -348,7 +372,20 @@ function disegnaComponenti(numeriche) {
     ? numeriche.map((h) => `<label><input type="checkbox" value="${esc(h)}" ${componenti.has(h) ? "checked" : ""}> ${esc(h)}</label>`).join("")
     : `<span class="s-why">${esc(t("nessunaColonna"))}</span>`;
   $("componenti").querySelectorAll("input").forEach((c) => c.addEventListener("change", () => {
-    if (c.checked) componenti.add(c.value); else componenti.delete(c.value);
+    if (c.checked) componenti.add(c.value); else { componenti.delete(c.value); fisse.delete(c.value); }
+    nascondi();
+    disegnaFisse();
+  }));
+  disegnaFisse();
+}
+
+function disegnaFisse() {
+  const scelte = [...componenti];
+  $("fisse").innerHTML = scelte.length
+    ? scelte.map((h) => `<label><input type="checkbox" value="${esc(h)}" ${fisse.has(h) ? "checked" : ""}> ${esc(h)}</label>`).join("")
+    : `<span class="s-why">${esc(t("fisseNessuna"))}</span>`;
+  $("fisse").querySelectorAll("input").forEach((c) => c.addEventListener("change", () => {
+    if (c.checked) fisse.add(c.value); else fisse.delete(c.value);
     nascondi();
   }));
 }
@@ -459,13 +496,16 @@ function calcola() {
       else category = String(raw[mapping.category] ?? "").trim() || err(t("eCategoria"));
       rows.push({ worker_id: String(raw[mapping.worker_id]), country: mapping.country ? paese(raw[mapping.country]) : $("paese").value,
         gender: g, category, role: mapping.role ? String(raw[mapping.role] ?? "").trim() : "",
-        base_pay: num(raw[mapping.base_pay]) * mult, components: cols.map((c) => num(raw[c])), weekly_hours: hours });
+        base_pay: num(raw[mapping.base_pay]) * mult, components: cols.map((c) => num(raw[c])), fixed: cols.map((c) => fisse.has(c)),
+        weekly_hours: hours });
     });
     if (!rows.length) throw new Error(t("eVuoto"));
     const w = derive(rows, CFG);
     const noti = Object.keys(CFG.entities);
     const countries = [...noti.filter((c) => w.some((r) => r.country === c)), ...[...new Set(w.map((r) => r.country))].filter((c) => !noti.includes(c))];
-    risultato = { w, countries, esclusi, items: byEntity(w, countries), screen: screen(w, countries, categoryOrder(w, CFG), CFG),
+    const ordine = categoryOrder(w, CFG);
+    risultato = { w, countries, esclusi, items: byEntity(w, countries), screen: screen(w, countries, ordine, CFG),
+      national: national(w, countries, CFG), nscreen: screen(w, countries, ordine, CFG, "national"), fisse: cols.filter((c) => fisse.has(c)),
       duties: obligations(w, countries, CFG, altri), roles, file: f.name, oggi: new Date().toISOString().slice(0, 10) };
     if (!countries.includes(entita) && !(entita === "Group" && countries.length > 1)) entita = countries[0];
     mostra();
@@ -522,6 +562,34 @@ function mostra() {
   $("grafico-quartili").innerHTML = graficoQuartili(it);
   $("grafico-categorie").innerHTML = graficoCategorie(cats);
   tabellaCategorie(cats);
+  sezioneItalia();
+}
+
+// Italy's narrower measure, side by side with the Directive's, for an Italian employer.
+function sezioneItalia() {
+  const nat = risultato.national[entita];
+  $("sez-italia").style.display = nat ? "block" : "none";
+  if (!nat) return;
+  const dir = risultato.items[entita];
+  const diff = (a, b) => (a == null || b == null || Number.isNaN(a) || Number.isNaN(b) ? "–"
+    : `${b >= a ? "+" : "−"}${i18n.number(Math.abs(b - a) * 100, 1)}`);
+  const voci = VOCI[i18n.lang].filter(([k]) => /^(a_|c_)/.test(k))
+    .concat([1, 2, 3, 4].map((q) => [`f_q${q}_share_women`, `(f) ${t("donne")} · ${t("quartile", { q })}`]));
+  $("tab-italia-voci").innerHTML = `<tr><th class="l">${esc(t("hVoce"))}</th><th>${esc(t("hDirettiva"))}</th><th>${esc(t("hItalia"))}</th><th>${esc(t("hDiff"))}</th></tr>` +
+    voci.map(([k, label]) => `<tr><td class="l">${esc(label)}</td><td>${pct(dir[k])}</td><td><b>${pct(nat[k])}</b></td><td>${diff(dir[k], nat[k])}</td></tr>`).join("");
+  const dirRow = new Map(risultato.screen.filter((r) => r.country === entita).map((r) => [r.category, r]));
+  const righe = risultato.nscreen.filter((r) => r.country === entita);
+  const lock = `<span class="lock">🔒 ${esc(t("riservato"))}</span>`;
+  $("tab-italia-cat").innerHTML = `<tr><th class="l">${esc(t("hCategoria"))}</th><th>${esc(t("donne"))}</th><th>${esc(t("uomini"))}</th>
+    <th>${esc(t("hDivOrario"))}</th><th>${esc(t("hDivAnnuo"))}</th><th class="l">${esc(t("hEsitoIt"))}</th><th class="l">${esc(t("hEsitoDir"))}</th><th>${esc(t("hCosto"))}</th></tr>` +
+    righe.map((r) => { const d = dirRow.get(r.category) || {};
+      return `<tr><td class="l"><b>${esc(r.category)}</b></td><td>${r.women}</td><td>${r.men}</td>
+        ${r.small_cell ? `<td>${lock}</td><td>${lock}</td>` : `<td><b>${pct(r.gap_hourly)}</b></td><td>${pct(r.gap_annual)}</td>`}
+        <td class="l">${pill(r.status)}</td><td class="l">${d.status ? pill(d.status) : "–"}</td>
+        <td>${r.status !== "flag" ? "–" : r.small_cell ? lock : soldi(r.remedy_cost)}</td></tr>`; }).join("");
+  const cambiano = righe.filter((r) => dirRow.get(r.category)?.status !== r.status).length;
+  const f = risultato.fisse;
+  $("nota-italia").textContent = `${cambiano ? t("italiaCambia", { n: cambiano }) : t("italiaUguale")} ${f.length ? t("italiaFisse", { c: f.join(", ") }) : t("italiaSoloBase")}`;
 }
 
 function graficoQuartili(it) {
@@ -617,6 +685,21 @@ $("scarica-xlsx").addEventListener("click", () => {
     { name: t("x_categorie"), rows: categorieX, widths: [18, 12, 9, 9, 16, 16, 14, 16, 14, 14, 20, 14, 50, 18, 14] },
     { name: t("x_obblighi"), rows: obblighi, widths: [18, 12, 16, 22, 14, 18, 20, 50, 60, 14] },
   ];
+  for (const [c, nat] of Object.entries(risultato.national)) {
+    const dir = items[c];
+    const voci = VOCI[i18n.lang].filter(([k]) => /^(a_|c_)/.test(k))
+      .concat([1, 2, 3, 4].map((q) => [`f_q${q}_share_women`, `(f) ${t("donne")} · ${t("quartile", { q })}`]));
+    const dirStato = new Map(s.filter((r) => r.country === c).map((r) => [r.category, r.status]));
+    sheets.push({ name: Object.keys(risultato.national).length > 1 ? `${t("x_italia")} ${c}` : t("x_italia"), rows: [
+      [`${t("hVoce")} (${t("xPct")})`, t("hDirettiva"), t("hItalia")],
+      ...voci.map(([k, label]) => [label, p100(dir[k]), p100(nat[k])]), [],
+      [t("hCategoria"), t("donne"), t("uomini"), `${t("hDivOrario")} (%)`, `${t("hDivAnnuo")} (%)`, t("hEsitoIt"), t("hEsitoDir"), t("hCosto")],
+      ...risultato.nscreen.filter((r) => r.country === c).map((r) => [r.category, r.women, r.men,
+        r.small_cell ? t("riservato") : p100(r.gap_hourly), r.small_cell ? t("riservato") : p100(r.gap_annual), stato(r.status),
+        stato(dirStato.get(r.category)), r.status !== "flag" ? "" : r.small_cell ? t("riservato") : Math.round(r.remedy_cost)]),
+      [], [risultato.fisse.length ? t("italiaFisse", { c: risultato.fisse.join(", ") }) : t("italiaSoloBase")]],
+      widths: [60, 22, 22, 14, 14, 20, 20, 14] });
+  }
   if (roles) {
     const n = new Map();
     w.forEach((r) => n.set(r.role, (n.get(r.role) || 0) + 1));
@@ -635,6 +718,6 @@ $("scarica-xlsx").addEventListener("click", () => {
 i18n.apply();
 i18n.onChange(() => {
   opzioni();
-  if (files.paghe) { disegnaMappa(false); categorie(); }
+  if (files.paghe) { disegnaMappa(false); disegnaFisse(); categorie(); }
   mostra();
 });
