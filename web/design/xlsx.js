@@ -1,4 +1,4 @@
-// strumenti-design 1.0.0 · xlsx.js
+// strumenti-design 1.1.0 · xlsx.js
 // Reads and writes .xlsx files in the browser with no library: an .xlsx is a zip of XML files, and the browser
 // already knows how to inflate zip entries (DecompressionStream "deflate-raw"). Nothing is sent anywhere.
 //
@@ -136,7 +136,10 @@ export async function readXlsx(buffer) {
     const path = target.startsWith("/") ? target.slice(1) : `xl/${target.replace(/^\.\//, "")}`;
     const xml = get(path);
     const rows = [];
-    for (const [, rowXml] of xml.matchAll(/<row\b[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g)) {
+    for (const [rowTag, rowXml] of xml.matchAll(/<row\b[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g)) {
+      // rows can skip numbers (empty rows are not written): put each one at its own row number
+      const at = Number(attr(rowTag.match(/<row\b[^>]*>/)[0], "r")) || rows.length + 1;
+      while (rows.length < at - 1) rows.push([]);
       const row = [];
       for (const m of (rowXml || "").matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
         const a = m[1], inner = m[2] || "";
@@ -149,6 +152,7 @@ export async function readXlsx(buffer) {
         else if (type === "inlineStr") value = textOf(inner);
         else if (type === "str" || type === "e") value = raw === undefined ? "" : unescapeXml(raw);
         else if (type === "b") value = raw === "1";
+        else if (type === "d") value = raw === undefined ? "" : String(raw).slice(0, 10);   // ISO date cell
         else if (raw !== undefined) {
           const n = Number(raw);
           value = dateStyle[style] ? serialToIso(n, date1904) : n;

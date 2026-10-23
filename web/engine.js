@@ -137,9 +137,10 @@ export function addMonths(iso, months) {
   return `${y + Math.floor(k / 12)}-${String((k % 12) + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 }
 
-export function obligations(w, countries, cfg) {
+// `others`: workers left out of the comparisons (sex not recorded as woman or man) still count for the size band
+export function obligations(w, countries, cfg, others = {}) {
   return countries.map((c) => {
-    const n = w.filter((r) => r.country === c).length;
+    const n = w.filter((r) => r.country === c).length + (others[c] || 0);
     const band = sizeBand(n, cfg);
     return { country: c, workers: n, size_band: band.label, band: band.index, frequency: band.frequency,
       first_report: band.first, remedy_by: band.first ? addMonths(band.first, cfg.remedy_months) : null,
@@ -156,8 +157,12 @@ export function categoryOrder(w, cfg) {
 }
 
 // ---- Reading values from a user's file ------------------------------------------------------------------------
-const WOMEN = new Set(["f", "female", "woman", "women", "w", "donna", "d", "femmina", "k", "kobieta", "frau", "mujer", "weiblich", "femenino"]);
-const MEN = new Set(["m", "male", "man", "men", "uomo", "u", "maschio", "mezczyzna", "mann", "hombre", "h", "mannlich", "masculino"]);
+// A first guess only: the page shows every code found and lets the user correct it. Single letters that mean
+// different things in different exports are left out ("d" is donna in Italy and divers in Germany; "h" is hombre).
+const WOMEN = new Set(["f", "female", "woman", "women", "w", "donna", "donne", "femmina", "k", "kobieta", "kobiety",
+  "frau", "frauen", "weiblich", "mujer", "mujeres", "femenino"]);
+const MEN = new Set(["m", "male", "man", "men", "uomo", "uomini", "maschio", "mezczyzna", "mezczyzni", "mann", "manner",
+  "mannlich", "hombre", "hombres", "masculino"]);
 export function sex(v) {
   const s = String(v ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/ł/g, "l").trim();
   return WOMEN.has(s) ? "F" : MEN.has(s) ? "M" : null;
@@ -165,7 +170,7 @@ export function sex(v) {
 
 export function number(v, decimalComma) {
   if (typeof v === "number") return v;
-  let t = String(v ?? "").replace(/[\s€$£]|zł|PLN|EUR/gi, "");
+  let t = String(v ?? "").replace(/[\s€$£%]|zł|PLN|EUR/gi, "");
   if (t === "") return 0;
   if (decimalComma) t = t.replace(/\./g, "").replace(",", ".");
   else if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(t)) t = t.replace(/,/g, "");

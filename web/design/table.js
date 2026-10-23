@@ -1,4 +1,4 @@
-// strumenti-design 1.0.0 · table.js
+// strumenti-design 1.1.0 · table.js
 // Turns a file the user picked (CSV or Excel) into rows of objects, and matches its columns to the ones a tool
 // needs. Everything runs in the page: the file is read with the browser's own File API and never uploaded.
 //
@@ -9,7 +9,7 @@
 
 import { readXlsx } from "./xlsx.js";
 
-export const normalise = (s) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+export const normalise = (s) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[łŁ]/g, "l").toLowerCase()
   .replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 
 export function parseCsv(text) {
@@ -37,7 +37,22 @@ export function parseCsv(text) {
   if (row.some((v) => v !== "")) records.push(row);
   const headers = (records.shift() || []).map((h) => h.trim());
   const rows = records.map((r) => Object.fromEntries(headers.map((h, i) => [h, (r[i] ?? "").trim()])));
-  return { headers, rows, decimalComma: sep === ";" };
+  return { headers, rows, decimalComma: decimalMark(rows, sep === ";") };
+}
+
+// Is the decimal mark a comma? Read it from the numbers themselves: a semicolon file can still write 1539.70,
+// and a comma file can write "1539,70" in quotes. Only when the numbers do not tell (no decimals at all) does
+// the separator decide: semicolon files come from Italian, Polish or German Excel, which use the comma.
+export function decimalMark(rows, fallback) {
+  let comma = 0, dot = 0;
+  for (const r of rows.slice(0, 500)) {
+    for (const v of Object.values(r)) {
+      const s = String(v).trim().replace(/[\s€$£%]/g, "");
+      if (/^-?\d{1,3}(\.\d{3})+,\d+$/.test(s) || /^-?\d+,\d+$/.test(s) && !/^-?\d{1,3}(,\d{3})+$/.test(s)) comma++;
+      else if (/^-?\d{1,3}(,\d{3})+\.\d+$/.test(s) || /^-?\d+\.\d+$/.test(s) && !/^-?\d{1,3}(\.\d{3})+$/.test(s)) dot++;
+    }
+  }
+  return comma === dot ? fallback : comma > dot;
 }
 
 export async function readTable(file, { sheet } = {}) {
@@ -46,7 +61,8 @@ export async function readTable(file, { sheet } = {}) {
     const sheets = await readXlsx(await file.arrayBuffer());
     const chosen = sheets.find((s) => s.name === sheet) || sheets.find((s) => s.rows.length > 1) || sheets[0];
     if (!chosen) throw new Error("empty workbook");
-    const [head = [], ...body] = chosen.rows;
+    const start = chosen.rows.findIndex((r) => r.some((v) => v !== "" && v !== null));   // a title row or two above
+    const [head = [], ...body] = chosen.rows.slice(Math.max(0, start));
     const headers = head.map((h) => String(h ?? "").trim());
     const rows = body.filter((r) => r.some((v) => v !== "" && v !== null))
       .map((r) => Object.fromEntries(headers.map((h, i) => [h, r[i] ?? ""])));

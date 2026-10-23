@@ -1,7 +1,7 @@
 # Verification register
 
 Every legal statement the kit relies on, where it comes from, and how far it has been checked.
-Checked on **16 September 2026**; national transposition rechecked on **9 October 2026**.
+Checked on **16 September 2026**; national transposition rechecked on **9 October** and **23 October 2026**.
 
 **Status key**
 
@@ -57,6 +57,14 @@ information delayed to 2028 (single sources, **to verify** on the Bundesgesetzbl
 [Lockton implementation tracker](https://global.lockton.com/us/en/news-insights/eu-pay-transparency-directive-implementation-status),
 [Trusaic, August 2026 update](https://trusaic.com/blog/eu-pay-transparency-directive-august-2026-transposition-update/).
 Italy's status (N01) is unchanged.
+
+### Rechecked on 23 October 2026
+
+Still no adoption in Poland, Germany or Spain at the tracker's latest status (23 September 2026). Two details now
+recorded in `data/transposition.csv`: Lockton dates Poland's revised draft 4 May 2026 (this kit had 29 April, the
+date on the draft), and calls Spain's 3 August 2026 text a draft law. `checked_on` was left at 16 September after
+the 9 October recheck; it now carries this date. Source:
+[Lockton implementation tracker](https://global.lockton.com/us/en/news-insights/eu-pay-transparency-directive-implementation-status).
 
 ## What this kit is not
 

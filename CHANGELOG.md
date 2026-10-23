@@ -5,6 +5,24 @@ in [docs/roadmap.md](docs/roadmap.md).
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-23
+
+### Fixed
+
+- **Gender codes:** the tool shows every code found in the file and asks which means woman and which man,
+  instead of guessing: in Spanish exports M can mean *mujer*, in German ones d means *divers*.
+- **Size band:** workers not recorded as woman or man are left out of the comparisons but counted for the
+  employer's size (Article 9(2)-(4)).
+- **Small categories:** averages, gaps and cost are kept back in the table, the chart and the download, and left
+  out of the total cost, which would otherwise give them away. The note no longer claims more than it does.
+- The category table and the download show the gap in complementary and variable pay, item (g) in full.
+- Role scores and justifications are remembered per file, so one client's never appear in another's results.
+- National transposition rechecked on 23 October 2026 (no adoption in Poland, Germany or Spain); `checked_on` in
+  `data/transposition.csv`, left at 16 September after the 9 October recheck, now carries the date.
+- A currency choice for the amounts; semicolon CSV files with dot decimals are read correctly (design base 1.1.0);
+  "80%" as a full-time share; country names in Polish, German and Spanish; the group view resets with one
+  country; print shows the results only.
+
 ## [1.2.0] - 2026-10-23
 
 ### Added
@@ -40,7 +58,8 @@ in [docs/roadmap.md](docs/roadmap.md).
 First complete release: Article 9 reporting items, the Article 10 screen, a live Excel model reconciled with
 pandas on 460 checks, a board briefing, a written report and a verification register.
 
-[Unreleased]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/releases/tag/v1.2.1
 [1.2.0]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/releases/tag/v1.2.0
 [1.1.0]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/releases/tag/v1.1.0
 [1.0.0]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/releases/tag/v1.0.0

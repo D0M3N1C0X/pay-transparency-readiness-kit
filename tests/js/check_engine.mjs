@@ -35,10 +35,13 @@ V.cases.forEach((c, k) => {
   }
 });
 // Reading values the way payroll exports write them
-for (const [v, s] of [["F", "F"], ["donna", "F"], ["Kobieta", "F"], ["M", "M"], ["Uomo", "M"], ["Mężczyzna", "M"], ["X", null], ["", null]])
+for (const [v, s] of [["F", "F"], ["donna", "F"], ["Kobieta", "F"], ["M", "M"], ["Uomo", "M"], ["Mężczyzna", "M"], ["X", null], ["", null],
+  ["d", null], ["h", null], ["Mujeres", "F"], ["Hombres", "M"], ["Frauen", "F"]])
   expect(sex(v) === s, `sex(${v}) = ${sex(v)}`);
 for (const [v, comma, n] of [["1.234,50", true, 1234.5], ["1,234.50", false, 1234.5], ["€ 32 000", false, 32000], ["", false, 0], [41000, false, 41000]])
   expect(number(v, comma) === n, `number(${v}) = ${number(v, comma)}`);
+expect(obligations([{ country: "IT" }], ["IT"], V.cfg, { IT: 150 })[0].band === 1, "size band counts everyone");
+expect(number("80%", false) === 80, "number strips the percent sign");
 for (const [d, m, r] of [["2027-06-07", 6, "2027-12-07"], ["2027-09-30", 4, "2028-01-30"], ["2031-06-07", 6, "2031-12-07"]])
   expect(addMonths(d, m) === r, `addMonths(${d}, ${m}) = ${addMonths(d, m)}`);
 console.log(`${checks - failures} of ${checks} values agree with pandas in ${V.cases.length} cases`);

@@ -19,7 +19,10 @@ const UI = {
     dropGriglia: "Job evaluation grid", dropGrigliaSub: "Optional · roles scored on skills, effort, responsibility and working conditions",
     esempio: "Try it with the sample employer", modelli: "Templates:", modelloPaghe: "payroll", modelloGriglia: "job evaluation",
     step2: "The columns", modifica: "Change", nonPresente: "— not in the file —", facoltativa: "optional",
-    colonneOk: "All {n} columns needed were found", colonneSub: "Check the matches below, or change them.",
+    colonneOk: "{n} columns matched",
+    generi: "How gender is written in the file", generiSub: "Check each code. Exports differ: in Spanish files M can mean mujer, in German files d means divers. Workers marked \"not compared\" still count for the employer's size.",
+    gDonna: "Woman", gUomo: "Man", gNo: "Not compared", valuta: "Currency of the pay in the file", hDivComp: "Gap, complementary and variable",
+    notaCosto: "excluding {n} small categories kept back", colonneSub: "Check the matches below, or change them.",
     colonneMancano: "Choose the column for {n} item(s) marked in red.", ruoloOCategoria: "The file needs a role or a category column.",
     componenti: "Complementary or variable pay",
     componentiSub: "Tick every column paid on top of base pay, as annual amounts: bonus, commission, allowances.",
@@ -56,10 +59,10 @@ const UI = {
     hGiust: "Justification or remedy", hMediaD: "Women, mean hourly", hMediaU: "Men, mean hourly",
     sFlag: "Justify or remedy", sOk: "Below 5%", sOneSex: "One sex only",
     giustPh: "The gender-neutral reason, or the remedy and its date",
-    riservato: "kept back", notaPiccole: "{n} categories have fewer than {m} women or men: their averages are kept back, so no one's pay can be identified (Article 12(3)).",
+    riservato: "kept back", notaPiccole: "{n} categories have fewer than {m} women or men: their averages, gaps and cost are kept back here, in the chart and in the download, and left out of the total cost, so that no one's pay can be worked out. Article 12(3) lets Member States set such a threshold; {m} is this tool's choice.",
     scaricaXlsx: "Download in Excel", stampa: "Print for the client", stampaTitolo: "Pay gap assessment",
     stampaMeta: "{f} · {oggi} · {n} workers", nessunFlag: "No category reaches 5%.",
-    esclusi: "{n} worker(s) are not recorded as a woman or a man: they count in the totals of no item, because the Directive compares women and men.",
+    esclusi: "{n} worker(s) are not recorded as a woman or a man: they are left out of the comparisons, because the Directive compares women and men, but they count for the employer's size.",
     eFile: "Could not read {f}: {e}", eVuoto: "The file has no rows.", eRiga: "Row {r}: {e}",
     eOre: "weekly hours missing or zero", ePaga: "base pay missing", eCategoria: "no category", eRuolo: "role «{r}» has no score",
     eNumero: "this is not a number: {e}",
@@ -83,7 +86,10 @@ const UI = {
     dropGriglia: "Griglia di valutazione dei ruoli", dropGrigliaSub: "Facoltativa · ruoli valutati su competenze, impegno, responsabilità e condizioni di lavoro",
     esempio: "Prova con l'azienda di esempio", modelli: "Modelli:", modelloPaghe: "paghe", modelloGriglia: "valutazione dei ruoli",
     step2: "Le colonne", modifica: "Modifica", nonPresente: "— non presente —", facoltativa: "facoltativa",
-    colonneOk: "Trovate tutte le {n} colonne necessarie", colonneSub: "Controlla gli abbinamenti qui sotto, o cambiali.",
+    colonneOk: "{n} colonne abbinate",
+    generi: "Come è scritto il genere nel file", generiSub: "Controlla ogni codice. Gli export cambiano: nei file spagnoli M può voler dire mujer, in quelli tedeschi d vuol dire divers. Chi è \"non confrontato\" conta comunque per la dimensione dell'azienda.",
+    gDonna: "Donna", gUomo: "Uomo", gNo: "Non confrontato", valuta: "Valuta della retribuzione nel file", hDivComp: "Divario, componenti complementari e variabili",
+    notaCosto: "escluse {n} categorie piccole riservate", colonneSub: "Controlla gli abbinamenti qui sotto, o cambiali.",
     colonneMancano: "Scegli la colonna per {n} voce/i in rosso.", ruoloOCategoria: "Al file serve una colonna con il ruolo o con la categoria.",
     componenti: "Componenti complementari o variabili",
     componentiSub: "Spunta ogni colonna pagata in più rispetto alla retribuzione base, come importo annuo: premi, provvigioni, indennità.",
@@ -120,10 +126,10 @@ const UI = {
     hGiust: "Giustificazione o rimedio", hMediaD: "Donne, media oraria", hMediaU: "Uomini, media oraria",
     sFlag: "Giustificare o correggere", sOk: "Sotto il 5%", sOneSex: "Un solo sesso",
     giustPh: "Il motivo neutro rispetto al genere, o il rimedio e la sua data",
-    riservato: "riservato", notaPiccole: "{n} categorie hanno meno di {m} donne o uomini: le loro medie non si mostrano, così nessuna retribuzione è riconoscibile (articolo 12, paragrafo 3).",
+    riservato: "riservato", notaPiccole: "{n} categorie hanno meno di {m} donne o uomini: medie, divari e costo non si mostrano, né qui né nel grafico né nel file scaricato, e restano fuori dal costo totale, così nessuna retribuzione si può ricavare. L'articolo 12, paragrafo 3 lascia agli Stati membri questa soglia; {m} è la scelta di questo strumento.",
     scaricaXlsx: "Scarica in Excel", stampa: "Stampa per il cliente", stampaTitolo: "Verifica del divario retributivo",
     stampaMeta: "{f} · {oggi} · {n} lavoratori", nessunFlag: "Nessuna categoria arriva al 5%.",
-    esclusi: "{n} lavoratore/i non risultano né donna né uomo: non entrano negli indicatori, perché la direttiva confronta donne e uomini.",
+    esclusi: "{n} lavoratore/i non risultano né donna né uomo: restano fuori dai confronti, perché la direttiva confronta donne e uomini, ma contano per la dimensione dell'azienda.",
     eFile: "Non riesco a leggere {f}: {e}", eVuoto: "Il file non ha righe.", eRiga: "Riga {r}: {e}",
     eOre: "ore settimanali mancanti o pari a zero", ePaga: "retribuzione base mancante", eCategoria: "categoria mancante", eRuolo: "il ruolo «{r}» non ha un punteggio",
     eNumero: "non è un numero: {e}",
@@ -159,7 +165,7 @@ const VOCI = {
 const CAMPI = [
   ["worker_id", true, ["employee id", "employee number", "personnel number", "id", "matricola", "codice dipendente", "numer pracownika", "personalnummer"]],
   ["gender", true, ["sex", "sesso", "genere", "plec", "geschlecht", "sexo", "gender code"]],
-  ["base_pay", true, ["base salary", "annual base pay", "annual base salary", "salary", "ral", "retribuzione base", "stipendio base", "retribuzione annua lorda", "grundgehalt", "salario base", "wynagrodzenie zasadnicze"]],
+  ["base_pay", true, ["base salary", "annual base pay", "annual base salary", "salary", "ral", "retribuzione base", "stipendio base", "retribuzione annua lorda", "grundgehalt", "gehalt", "salario base", "salario", "sueldo", "wynagrodzenie zasadnicze", "pensja"]],
   ["role", false, ["job title", "job", "position", "ruolo", "mansione", "posizione", "qualifica", "stanowisko", "rolle", "puesto"]],
   ["category", false, ["category of workers", "job grade", "pay grade", "grade", "band", "categoria", "livello", "grado", "kategoria", "entgeltgruppe"]],
   ["country", false, ["paese", "nazione", "country code", "kraj", "land", "pais"]],
@@ -182,11 +188,18 @@ const store = {
   get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* private mode: fine */ } },
 };
-const K_GRIGLIA = "strumenti.pt.griglia", K_GIUST = "strumenti.pt.giustificazioni";
+// remembered per file, so one client's scores and justifications never show up in another client's results
+const chiaveFile = () => (esempio ? "esempio" : normalise(files.paghe?.name || "").slice(0, 80));
+const K_GRIGLIA = () => `strumenti.pt.griglia.${chiaveFile()}`, K_GIUST = () => `strumenti.pt.giustificazioni.${chiaveFile()}`;
 
 // state: the files the user gave, the column choices, the role scores and the result of the last run
 const files = { paghe: null, griglia: null };
-let esempio = false, mapping = {}, componenti = new Set(), punteggi = store.get(K_GRIGLIA, {}), risultato = null, entita = null;
+let esempio = false, mapping = {}, componenti = new Set(), punteggi = {}, generi = {}, risultato = null, entita = null;
+const soldi = (x, d = 0) => {
+  const v = $("valuta").value;
+  if (!v) return i18n.number(x, d);
+  return new Intl.NumberFormat(i18n.lang === "it" ? "it-IT" : "en-GB", { style: "currency", currency: v, minimumFractionDigits: d, maximumFractionDigits: d }).format(x).replace(/^-/, "−");
+};
 
 $("ore").value = CFG.full_time_weekly_hours;
 function opzioni() {
@@ -208,7 +221,12 @@ async function prendiFile(slot, file) {
     const table = await readTable(file);
     if (!table.rows.length) throw new Error(t("eVuoto"));
     files[slot] = { name: file.name, ...table };
-    if (slot === "griglia") leggiGriglia(); else esempio = false;
+    if (slot === "paghe") {
+      esempio = false; generi = {};
+      punteggi = store.get(K_GRIGLIA(), {});
+      document.querySelector('input[name="fonte"][value="file"]').checked = true;    // a new file: its own categories first
+    }
+    if (slot === "griglia") leggiGriglia();
     nascondi();
     $(`nome-${slot}`).textContent = `${file.name} · ${table.rows.length}`;
     $(`drop-${slot}`).classList.add("is-done");
@@ -252,6 +270,7 @@ $("esempio").addEventListener("click", async () => {
     files.griglia = { name: "job_evaluation.csv", ...parseCsv(g) };
     esempio = true;
   } catch (e) { messaggio(t("eFile", { f: "sample", e: e.message })); return; }
+  punteggi = {};
   leggiGriglia();
   $("nome-paghe").textContent = `payroll_extract.csv · ${files.paghe.rows.length}`;
   $("nome-griglia").textContent = `job_evaluation.csv · ${files.griglia.rows.length}`;
@@ -277,7 +296,21 @@ function colonne() {
   $("passo-colonne").style.display = "block";
   disegnaMappa(false);
   disegnaComponenti(numeriche);
+  disegnaGeneri();
   categorie();
+}
+
+// The codes the file uses for gender, each with a first guess the user can correct.
+function disegnaGeneri() {
+  const f = files.paghe;
+  if (!mapping.gender) { $("generi").innerHTML = ""; return; }
+  const valori = [...new Set(f.rows.map((r) => String(r[mapping.gender] ?? "").trim()))].slice(0, 30);
+  generi = Object.fromEntries(valori.map((v) => [v, generi[v] ?? sex(v) ?? ""]));
+  const opz = (v) => [["F", t("gDonna")], ["M", t("gUomo")], ["", t("gNo")]]
+    .map(([k, l]) => `<option value="${k}" ${generi[v] === k ? "selected" : ""}>${esc(l)}</option>`).join("");
+  $("generi").innerHTML = valori.map((v) => `<div class="s-map-row"><div class="need">«${esc(v || "—")}»</div>
+    <select class="s-select" data-g="${esc(v)}" aria-label="${esc(`${t("generi")} · ${v}`)}">${opz(v)}</select></div>`).join("");
+  $("generi").querySelectorAll("select").forEach((s) => s.addEventListener("change", () => { generi[s.dataset.g] = s.value; nascondi(); }));
 }
 
 const mancanti = () => CAMPI.filter((c) => c.required && !mapping[c.key]).map((c) => c.key);
@@ -304,6 +337,7 @@ function disegnaMappa(apri) {
     rememberMapping("pt", f.headers, mapping);
     nascondi();
     disegnaMappa("forza");
+    disegnaGeneri();
     categorie();
   }));
 }
@@ -362,7 +396,7 @@ function disegnaGriglia() {
   $("griglia").querySelectorAll("select").forEach((s) => s.addEventListener("change", () => {
     const { role, f } = s.dataset;
     punteggi[role] = { ...(punteggi[role] || {}), [f]: s.value ? Number(s.value) : undefined };
-    store.set(K_GRIGLIA, punteggi);
+    store.set(K_GRIGLIA(), punteggi);
     nascondi();
     disegnaGriglia();
     pronto();
@@ -387,7 +421,9 @@ $("scarica-griglia").addEventListener("click", () => {
 
 // ---- the assessment -----------------------------------------------------------------------------------------
 const PAESI = { it: "IT", ita: "IT", italy: "IT", italia: "IT", pl: "PL", pol: "PL", poland: "PL", polska: "PL", polonia: "PL",
-  de: "DE", deu: "DE", germany: "DE", deutschland: "DE", germania: "DE", es: "ES", esp: "ES", spain: "ES", espana: "ES", spagna: "ES" };
+  de: "DE", deu: "DE", germany: "DE", deutschland: "DE", germania: "DE", es: "ES", esp: "ES", spain: "ES", espana: "ES", spagna: "ES",
+  wlochy: "IT", italien: "IT", niemcy: "DE", alemania: "DE", allemagne: "DE", hiszpania: "ES", spanien: "ES", espagne: "ES",
+  polen: "PL", pologne: "PL", italie: "IT" };
 function paese(v) {
   const s = String(v ?? "").trim();
   const n = normalise(s);
@@ -401,11 +437,17 @@ function calcola() {
     const roles = fonte() === "griglia" ? evaluate(ruoli().map(([role]) => ({ role, ...punteggi[role] })), CFG) : null;
     const cols = [...componenti];
     let esclusi = 0;
+    const altri = {};
     const rows = [];
     f.rows.forEach((raw, i) => {
       const err = (e) => { throw new Error(t("eRiga", { r: i + 2, e })); };
-      const g = sex(raw[mapping.gender]);
-      if (!g) { esclusi++; return; }
+      const g = generi[String(raw[mapping.gender] ?? "").trim()] || null;
+      if (!g) {
+        esclusi++;
+        const c = mapping.country ? paese(raw[mapping.country]) : $("paese").value;
+        altri[c] = (altri[c] || 0) + 1;
+        return;
+      }
       const num = (v) => { try { return number(v, dc); } catch { return err(t("eNumero", { e: v })); } };
       if (String(raw[mapping.base_pay] ?? "").trim() === "") err(t("ePaga"));
       let hours = ore;
@@ -424,8 +466,8 @@ function calcola() {
     const noti = Object.keys(CFG.entities);
     const countries = [...noti.filter((c) => w.some((r) => r.country === c)), ...[...new Set(w.map((r) => r.country))].filter((c) => !noti.includes(c))];
     risultato = { w, countries, esclusi, items: byEntity(w, countries), screen: screen(w, countries, categoryOrder(w, CFG), CFG),
-      duties: obligations(w, countries, CFG), roles, file: f.name, oggi: new Date().toISOString().slice(0, 10) };
-    if (!countries.includes(entita) && entita !== "Group") entita = countries[0];
+      duties: obligations(w, countries, CFG, altri), roles, file: f.name, oggi: new Date().toISOString().slice(0, 10) };
+    if (!countries.includes(entita) && !(entita === "Group" && countries.length > 1)) entita = countries[0];
     mostra();
     if (esclusi) messaggio(t("esclusi", { n: esclusi }), "info");
     $("risultati").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
@@ -435,6 +477,7 @@ function calcola() {
 }
 $("esegui").addEventListener("click", calcola);
 ["paese", "periodo", "ore"].forEach((id) => $(id).addEventListener("change", nascondi));
+$("valuta").addEventListener("change", () => mostra());
 
 // ---- results ------------------------------------------------------------------------------------------------
 const nomePaese = (c) => L().paesi[c] || c;
@@ -456,9 +499,11 @@ function mostra() {
   $("entita").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => { entita = b.dataset.e; mostra(); }));
   const it = items[entita], cats = righeEntita();
   const flag = cats.filter((r) => r.status === "flag");
-  const costo = flag.reduce((s, r) => s + r.remedy_cost, 0);        // a total identifies no one: small categories count
+  // small categories stay out of the total: with the other costs on show, it would give theirs away
+  const costo = flag.filter((r) => !r.small_cell).reduce((s, r) => s + r.remedy_cost, 0);
+  const fuori = flag.filter((r) => r.small_cell).length;
   $("kpis").innerHTML = [[t("kLavoratori"), i18n.number(it.workers), ""], [t("kDivario"), pct(it.a_mean_gap_hourly), Math.abs(it.a_mean_gap_hourly) >= CFG.threshold ? "is-bad" : "is-good"],
-    [t("kCategorie"), `${flag.length} / ${cats.length}`, flag.length ? "is-bad" : "is-good"], [t("kCosto"), i18n.money(costo, 0), ""]]
+    [t("kCategorie"), `${flag.length} / ${cats.length}`, flag.length ? "is-bad" : "is-good"], [t("kCosto"), soldi(costo) + (fuori ? `<div class="note">${esc(t("notaCosto", { n: fuori }))}</div>` : ""), ""]]
     .map(([k, v, c]) => `<div class="s-kpi ${c}"><div class="k">${esc(k)}</div><div class="v">${v}</div></div>`).join("");
   $("stampa-meta").textContent = `${nomeEntita(entita)} · ${t("stampaMeta", { f: risultato.file, oggi: data(risultato.oggi), n: i18n.number(it.workers) })}`;
 
@@ -494,7 +539,7 @@ function graficoQuartili(it) {
 }
 
 function graficoCategorie(cats) {
-  const rows = cats.filter((r) => r.status !== "one_sex");
+  const rows = cats.filter((r) => r.status !== "one_sex" && !r.small_cell);
   if (!rows.length) return "";
   const W = 720, row = 30, lab = entita === "Group" ? 170 : 110, H = rows.length * row + 30, right = 64;
   const max = Math.max(0.1, ...rows.map((r) => Math.abs(r.gap_hourly))) * 1.05;
@@ -517,25 +562,26 @@ function graficoCategorie(cats) {
 }
 
 function tabellaCategorie(cats) {
-  const giust = store.get(K_GIUST, {});
-  const ora = (x) => i18n.money(x, 2);
+  const giust = store.get(K_GIUST(), {});
+  const ora = (x) => soldi(x, 2);
   const lock = `<span class="lock">🔒 ${esc(t("riservato"))}</span>`;
   $("tab-categorie").innerHTML = `<tr>${entita === "Group" ? `<th class="l">${esc(t("hPaese"))}</th>` : ""}<th class="l">${esc(t("hCategoria"))}</th><th>${esc(t("donne"))}</th><th>${esc(t("uomini"))}</th>
-    <th>${esc(t("hMediaD"))}</th><th>${esc(t("hMediaU"))}</th><th>${esc(t("hDivBase"))}</th><th>${esc(t("hDivOrario"))}</th><th>${esc(t("hDivAnnuo"))}</th>
+    <th>${esc(t("hMediaD"))}</th><th>${esc(t("hMediaU"))}</th><th>${esc(t("hDivBase"))}</th><th>${esc(t("hDivComp"))}</th><th>${esc(t("hDivOrario"))}</th><th>${esc(t("hDivAnnuo"))}</th>
     <th class="l">${esc(t("hEsito"))}</th><th>${esc(t("hCosto"))}</th></tr>` +
     cats.map((r) => {
       const k = chiaveGiust(r), testo = giust[k] || "";
       return `<tr>${entita === "Group" ? `<td class="l">${esc(r.country)}</td>` : ""}<td class="l"><b>${esc(r.category)}</b></td><td>${r.women}</td><td>${r.men}</td>
       <td>${r.small_cell ? lock : ora(r.hourly_total_women)}</td><td>${r.small_cell ? lock : ora(r.hourly_total_men)}</td>
-      <td>${pct(r.gap_base)}</td><td><b>${pct(r.gap_hourly)}</b></td><td>${pct(r.gap_annual)}</td><td class="l">${pill(r.status)}</td>
-      <td>${r.status !== "flag" ? "–" : r.small_cell ? lock : i18n.money(r.remedy_cost, 0)}</td></tr>${r.status !== "flag" ? ""
-        : `<tr class="giust-row"><td class="l" colspan="${entita === "Group" ? 11 : 10}"><label class="s-why" for="g-${esc(k)}">${esc(t("hGiust"))} · ${esc(r.category)}</label>
+      ${r.small_cell ? `<td>${lock}</td><td>${lock}</td><td>${lock}</td><td>${lock}</td>`
+        : `<td>${pct(r.gap_base)}</td><td>${pct(r.gap_components)}</td><td><b>${pct(r.gap_hourly)}</b></td><td>${pct(r.gap_annual)}</td>`}<td class="l">${pill(r.status)}</td>
+      <td>${r.status !== "flag" ? "–" : r.small_cell ? lock : soldi(r.remedy_cost)}</td></tr>${r.status !== "flag" ? ""
+        : `<tr class="giust-row"><td class="l" colspan="${entita === "Group" ? 12 : 11}"><label class="s-why" for="g-${esc(k)}">${esc(t("hGiust"))} · ${esc(r.category)}</label>
         <textarea class="giust" id="g-${esc(k)}" data-k="${esc(k)}" placeholder="${esc(t("giustPh"))}">${esc(testo)}</textarea><div class="giust-print">${esc(testo)}</div></td></tr>`}`;
     }).join("");
   $("tab-categorie").querySelectorAll("textarea").forEach((a) => a.addEventListener("input", () => {
-    const g = store.get(K_GIUST, {});
+    const g = store.get(K_GIUST(), {});
     g[a.dataset.k] = a.value;
-    store.set(K_GIUST, g);
+    store.set(K_GIUST(), g);
     a.nextElementSibling.textContent = a.value;
   }));
   const piccole = cats.filter((r) => r.small_cell).length;
@@ -545,7 +591,7 @@ $("stampa").addEventListener("click", () => print());
 
 $("scarica-xlsx").addEventListener("click", () => {
   const { countries, items, screen: s, duties, roles, w, esclusi } = risultato;
-  const giust = store.get(K_GIUST, {});
+  const giust = store.get(K_GIUST(), {});
   const p100 = (x) => (x == null || Number.isNaN(x) ? "" : Math.round(x * 10000) / 100);
   const entities = countries.length > 1 ? [...countries, "Group"] : countries;
   const sintesi = [[`${t("hVoce")} (${t("xPct")})`, ...entities.map(nomeEntita)],
@@ -555,10 +601,11 @@ $("scarica-xlsx").addEventListener("click", () => {
     ...[1, 2, 3, 4].flatMap((q) => [[`(f) ${t("donne")} · ${t("quartile", { q })}`, ...entities.map((e) => p100(items[e][`f_q${q}_share_women`]))],
       [`(f) ${t("uomini")} · ${t("quartile", { q })}`, ...entities.map((e) => p100(items[e][`f_q${q}_share_men`]))]])];
   const remedy = Object.fromEntries(duties.map((o) => [o.country, o.remedy_by]));
-  const categorieX = [[t("hPaese"), t("hCategoria"), t("donne"), t("uomini"), t("xMediaD"), t("xMediaU"), `${t("hDivBase")} (%)`,
+  const categorieX = [[t("hPaese"), t("hCategoria"), t("donne"), t("uomini"), t("xMediaD"), t("xMediaU"), `${t("hDivBase")} (%)`, `${t("hDivComp")} (%)`,
     `${t("hDivOrario")} (%)`, `${t("hDivAnnuo")} (%)`, t("hEsito"), t("hCosto"), t("hGiust"), t("xResponsabile"), t("xEntro")],
     ...s.map((r) => [nomeEntita(r.country), r.category, r.women, r.men, r.small_cell ? t("riservato") : Math.round(r.hourly_total_women * 100) / 100,
-      r.small_cell ? t("riservato") : Math.round(r.hourly_total_men * 100) / 100, p100(r.gap_base), p100(r.gap_hourly), p100(r.gap_annual),
+      r.small_cell ? t("riservato") : Math.round(r.hourly_total_men * 100) / 100,
+      ...(r.small_cell ? Array(4).fill(t("riservato")) : [p100(r.gap_base), p100(r.gap_components), p100(r.gap_hourly), p100(r.gap_annual)]),
       stato(r.status), r.status !== "flag" ? "" : r.small_cell ? t("riservato") : Math.round(r.remedy_cost),
       giust[chiaveGiust(r)] || "", "", r.status === "flag" ? remedy[r.country] || "" : ""])];
   const obblighi = [[t("hPaese"), t("hLavoratori"), t("hFascia"), t("hFrequenza"), t("hPrimo"), t("hRimedio"), t("hStato"), t("xIstituto"), t("xNote"), t("xVerificato")],
@@ -567,7 +614,7 @@ $("scarica-xlsx").addEventListener("click", () => {
         n.instrument || "", n.notes || "", n.checked_on || ""]; })];
   const sheets = [
     { name: t("x_sintesi"), rows: sintesi, widths: [70, ...entities.map(() => 18)] },
-    { name: t("x_categorie"), rows: categorieX, widths: [18, 12, 9, 9, 16, 16, 14, 14, 14, 20, 14, 50, 18, 14] },
+    { name: t("x_categorie"), rows: categorieX, widths: [18, 12, 9, 9, 16, 16, 14, 16, 14, 14, 20, 14, 50, 18, 14] },
     { name: t("x_obblighi"), rows: obblighi, widths: [18, 12, 16, 22, 14, 18, 20, 50, 60, 14] },
   ];
   if (roles) {
@@ -579,7 +626,7 @@ $("scarica-xlsx").addEventListener("click", () => {
   }
   sheets.push({ name: t("x_impostazioni"), rows: [[t("x_impostazioni"), ""], [t("xFile"), risultato.file], [t("xData"), risultato.oggi],
     [t("xPeriodo"), t($("periodo").value)], [t("xOre"), Number($("ore").value)], [t("xSoglia"), i18n.percent(CFG.threshold, 0)],
-    [t("xMinimo"), CFG.min_cell], [t("xEsclusi"), esclusi], [t("xFonte"), "https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/blob/main/docs/method.md"]],
+    [t("xMinimo"), CFG.min_cell], [t("xEsclusi"), esclusi], [t("valuta"), $("valuta").value || "—"], [t("xFonte"), "https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/blob/main/docs/method.md"]],
     widths: [44, 70] });
   download(writeXlsx(sheets), `${i18n.lang === "it" ? "verifica_divario" : "pay_gap_assessment"}_${risultato.oggi}.xlsx`,
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

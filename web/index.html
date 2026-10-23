@@ -38,6 +38,8 @@
   details.naz summary { cursor: pointer; color: var(--accent); font-size: 14px; }
   details.naz p { font-size: 14px; color: var(--ink-2); margin: 6px 0 0; max-width: 46em; }
   @media print { .print-only { display: block; margin-bottom: 16px; } #risultati { display: block !important; }
+    section[aria-labelledby="h-file"], #passo-colonne, #passo-categorie, section[aria-labelledby="h-imp"] { display: none !important; }
+    details.naz p { display: block; }
     .seg, textarea.giust { display: none; } .giust-print { display: block !important; } }
   .giust-print { display: none; font-size: 12px; }
 </style>
@@ -97,6 +99,9 @@
     <h3 style="margin:22px 0 0;font-size:17px" data-i18n="componenti">Complementary or variable pay</h3>
     <p class="s-why" data-i18n="componentiSub">Tick every column paid on top of base pay, as annual amounts: bonus, commission, allowances.</p>
     <div class="comps" id="componenti"></div>
+    <h3 style="margin:22px 0 0;font-size:17px" data-i18n="generi">How gender is written in the file</h3>
+    <p class="s-why" data-i18n="generiSub">Check each code. Exports differ: in Spanish files M can mean mujer, in German files d means divers. Workers marked "not compared" still count for the employer's size.</p>
+    <div class="s-map" id="generi"></div>
   </section>
 
   <section class="s-card" id="passo-categorie" aria-labelledby="h-cat">
@@ -120,6 +125,8 @@
         <select id="paese"></select><small data-i18n="paeseSub">Used when the file has no country column.</small></div>
       <div class="s-field"><label for="periodo" data-i18n="periodo">Base pay in the file is</label>
         <select id="periodo"></select><small data-i18n="periodoSub">Complementary and variable pay is read as annual.</small></div>
+      <div class="s-field"><label for="valuta" data-i18n="valuta">Currency of the pay in the file</label>
+        <select id="valuta"><option value="EUR">EUR €</option><option value="PLN">PLN zł</option><option value="CHF">CHF</option><option value="SEK">SEK</option><option value="CZK">CZK</option><option value="">—</option></select></div>
       <div class="s-field"><label for="ore" data-i18n="ore">Full-time weekly hours</label>
         <input type="number" id="ore" min="1" max="60" step="0.5"><small data-i18n="oreSub">Used when the file has no weekly hours: full-time share × these hours.</small></div>
     </div>
