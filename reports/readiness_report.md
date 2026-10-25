@@ -27,7 +27,7 @@
 
 *Remedy by: six months after the first report, the latest date to justify or close a category gap before a joint pay assessment is due. National status as checked on 24 October 2026; sources in [docs/verification.md](../docs/verification.md).*
 
-For Italy, applying a national collective agreement signed by the most representative unions is presumed to comply, classification included (D.lgs. 96/2026, art. 4(1)), and the agreement's levels are the reference for comparing work of equal value; an employer's own job evaluation may complement them if its criteria are objective and gender-neutral (art. 4(4)). So the categories of workers should start from the agreement's levels and use job evaluation to refine them, not replace them. The categories in this dry run come from job evaluation alone, because the synthetic organisation has no collective agreement.
+For Italy, applying a national collective agreement signed by the unions comparatively most representative at national level is presumed to comply, classification included, unless individual discriminatory pay treatment is shown (D.lgs. 96/2026, art. 4(1)); the agreement's levels are the reference for comparing work of equal value; an employer's own job evaluation may complement them if its criteria are objective and gender-neutral (art. 4(4)). So the categories of workers should start from the agreement's levels and use job evaluation to refine them, not replace them. The categories in this dry run come from job evaluation alone, because the synthetic organisation has no collective agreement.
 
 ## 2. The seven reporting items
 
@@ -97,7 +97,7 @@ How to read the list:
 
 ## 5. Italy measures the gap on fixed pay
 
-The Italian decree does not compute the gaps on total pay. Its items (a) and (c), its quartile bands and its 5% test for a joint pay assessment all use *livello retributivo*: annual and hourly pay made of the fixed and continuing elements, leaving out individual components granted on a personal, discretionary or temporary basis (D.lgs. 96/2026, art. 3(1)(b), art. 9(1), art. 10(1)(a)). The Directive has no such notion. Here it is read as base pay plus the shift allowances and car allowances this employer pays by a general rule; bonus and commission are left out.
+The Italian decree does not compute the gaps on total pay. Its items (a) and (c), its quartile bands and its 5% test for a joint pay assessment all use *livello retributivo*: annual and hourly pay made of the fixed and continuing elements, leaving out individual non-structural components granted on a personal, discretionary or temporary basis, not generalised within the category of workers and based on individual objective criteria (D.lgs. 96/2026, art. 3(1)(b), art. 9(1), art. 10(1)(a)). The Directive has no such notion. Here it is read as base pay plus the shift allowances and car allowances this employer pays by a general rule; bonus and commission are left out.
 
 | Milan | Directive: total pay | Italy: livello retributivo | Difference |
 |---|---:|---:|---:|
@@ -119,7 +119,8 @@ What changes, and why it matters for the justification:
 - **In Cat G, the hourly gap falls from 10.5% to 6.1%** once bonus and commission are left out: 4.4 of its points sit outside the Italian 5% test, but they stay in items (b) and (d) and in any equal-pay claim.
 - **In Cat A, the hourly gap rises from 4.1% to 6.1%**: bonus and commission partly offset a gap in fixed pay, and the decree takes that offset away. The justification has to be about fixed pay.
 - **The cost ceiling for Milan moves from €512,477 to €503,242 a year.**
-- **Keep both measures on file.** The Directive sets the floor and the Commission is checking national laws for conformity; if the narrower definition does not survive, the total-pay figures are the ones that count. Whether an individual superminimo or a role allowance is "fixed and continuing" is the open question; ministry guidance on art. 4 may come by 31 December 2026 (art. 4(6)).
+- **Keep both measures on file.** The Directive sets the floor and the Commission is checking national laws for conformity; if the narrower definition does not survive, the total-pay figures are the ones that count. Whether an individual superminimo or a role allowance is "fixed and continuing" is the open question; the ministerial decrees on the data to collect (art. 9(4)(b)) are the likelier place for an answer.
+- **The excluded components stay visible.** Item (g) still breaks each category's gap down into ordinary base pay and complementary or variable components (art. 9(1)(g)), and items (b) and (d) report the components on their own.
 
 ## 6. Readiness: what has to be in place
 

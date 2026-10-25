@@ -29,7 +29,8 @@ in the Official Journal (see [verification.md](verification.md)).
 
 Italy's decree defines pay level differently. *Livello retributivo* is gross annual and hourly
 pay made of "the fixed and continuing elements", without individual non-structural components
-granted on a personal, discretionary or temporary basis (D.lgs. 96/2026, art. 3(1)(b)). The
+granted on a personal, discretionary or temporary basis, not generalised within the category of
+workers and based on individual objective criteria (D.lgs. 96/2026, art. 3(1)(b)). The
 gaps of items (a) and (c), the quartile bands of item (f) and the 5% test for a joint pay
 assessment are all defined on it (art. 3(1)(c)-(f), art. 10(1)(a)). The Directive's measure, and
 this kit's main one, is total pay.
@@ -44,7 +45,8 @@ this kit's main one, is total pay.
   components alone and do not change.
 - **Open question:** whether an individual superminimo or a role-based allowance counts as fixed
   and continuing. The decree's wording points to "generalised within the category" as the test;
-  ministry guidance may settle it (art. 4(6), by 31 December 2026).
+  the ministerial decrees on the data to collect (art. 9(4)(b)) are the likelier place for an answer.
+  Item (g) still shows base pay and components separately for every category (art. 9(1)(g)).
 - **Why both measures stay:** the Directive is the floor and the Commission is checking national
   laws for conformity. If the narrower definition does not survive, the total-pay figures are the
   ones that count.
@@ -92,8 +94,9 @@ conditions.
   not be undervalued"): customer service scores high on effort for sustained emotional load, and
   HR scores extra responsibility for confidential data and legal compliance.
 - **In Italy the national collective agreement comes first.** D.lgs. 96/2026 presumes that
-  applying a collective agreement signed by the most representative unions complies,
-  classification included (art. 4(1)); the agreement's levels are the reference for comparing
+  applying a collective agreement signed by the unions comparatively most representative at
+  national level complies, classification included, unless individual discriminatory pay treatment
+  is shown (art. 4(1)); the agreement's levels are the reference for comparing
   work of equal value, and an employer's own job evaluation may complement them (art. 4(4)).
   The synthetic organisation has no agreement, so its categories come from job evaluation alone.
 - **The weights are tested against the EU guidelines.** The European Commission and EIGE

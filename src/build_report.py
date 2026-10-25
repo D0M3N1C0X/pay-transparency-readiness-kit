@@ -89,8 +89,9 @@ def italy(add, w, ind, nat, cats, ncats) -> None:
     add("")
     add("The Italian decree does not compute the gaps on total pay. Its items (a) and (c), its quartile bands and "
         "its 5% test for a joint pay assessment all use *livello retributivo*: annual and hourly pay made of the "
-        "fixed and continuing elements, leaving out individual components granted on a personal, discretionary "
-        "or temporary basis (D.lgs. 96/2026, art. 3(1)(b), art. 9(1), art. 10(1)(a)). The Directive has no such "
+        "fixed and continuing elements, leaving out individual non-structural components granted on a personal, "
+        "discretionary or temporary basis, not generalised within the category of workers and based on individual "
+        "objective criteria (D.lgs. 96/2026, art. 3(1)(b), art. 9(1), art. 10(1)(a)). The Directive has no such "
         "notion. Here it is read as base pay plus the " + fixed + " this employer pays by a general rule; "
         "bonus and commission are left out.")
     add("")
@@ -134,7 +135,10 @@ def italy(add, w, ind, nat, cats, ncats) -> None:
     add("- **Keep both measures on file.** The Directive sets the floor and the Commission is checking national "
         "laws for conformity; if the narrower definition does not survive, the total-pay figures are the ones "
         "that count. Whether an individual superminimo or a role allowance is \"fixed and continuing\" is the open "
-        "question; ministry guidance on art. 4 may come by 31 December 2026 (art. 4(6)).")
+        "question; the ministerial decrees on the data to collect (art. 9(4)(b)) are the likelier place for an answer.")
+    add("- **The excluded components stay visible.** Item (g) still breaks each category's gap down into ordinary "
+        "base pay and complementary or variable components (art. 9(1)(g)), and items (b) and (d) report the "
+        "components on their own.")
     add("")
 
 
@@ -219,8 +223,9 @@ def write(w: pd.DataFrame) -> dict:
         f"before a joint pay assessment is due. National status as checked on {day(checked)}; "
         "sources in [docs/verification.md](../docs/verification.md).*")
     add("")
-    add("For Italy, applying a national collective agreement signed by the most representative unions is "
-        "presumed to comply, classification included (D.lgs. 96/2026, art. 4(1)), and the agreement's levels are "
+    add("For Italy, applying a national collective agreement signed by the unions comparatively most representative "
+        "at national level is presumed to comply, classification included, unless individual discriminatory pay "
+        "treatment is shown (D.lgs. 96/2026, art. 4(1)); the agreement's levels are "
         "the reference for comparing work of equal value; an employer's own job evaluation may complement them "
         "if its criteria are objective and gender-neutral (art. 4(4)). So the categories of workers should start "
         "from the agreement's levels and use job evaluation to refine them, not replace them. The categories in "

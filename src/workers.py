@@ -50,6 +50,9 @@ def derive(extract: pd.DataFrame) -> pd.DataFrame:
         missing = sorted(w.loc[w["category"].isna(), "role"].unique())
         raise SystemExit(f"Roles missing from the job evaluation grid: {missing}")
 
+    if (w["weekly_hours"] <= 0).any():
+        bad = list(w.loc[w["weekly_hours"] <= 0, "worker_id"])[:5]
+        raise ValueError(f"weekly hours must be above zero for every worker: {bad}")
     w["annual_hours"] = w["weekly_hours"] * WEEKS_PER_YEAR
     comp = w[COMPONENTS[0]]
     for c in COMPONENTS[1:]:

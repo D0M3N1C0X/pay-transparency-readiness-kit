@@ -123,3 +123,10 @@ def test_national_screen_only_where_the_law_defines_a_measure():
     s = article10.national_screen(w, ["IT", "PL", "DE", "ES"], [b for _, b in BANDS])
     assert set(s["country"]) == {"IT"}
     assert list(article9.national(w, ["IT", "PL"]).columns) == ["IT"]
+
+
+def test_zero_weekly_hours_are_rejected():
+    x = pd.read_csv(__import__("config").PAYROLL_EXTRACT).head(20)
+    x.loc[3, "weekly_hours"] = 0
+    with pytest.raises(ValueError):
+        derive(x)

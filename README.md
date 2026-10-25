@@ -95,7 +95,7 @@ The full reasoning is in [docs/method.md](docs/method.md); how an engagement run
 
 | | |
 |---|---|
-| **Three engines, one answer** | pandas, the Excel model's live formulas (reconciled on 511 checks, recalculated by LibreOffice in CI) and the browser tool (checked against pandas on 3,821 values) |
+| **Three engines, one answer** | pandas, the Excel model's live formulas (reconciled on 511 checks, recalculated by LibreOffice in CI) and the browser tool (checked against pandas on 4,452 values) |
 | **Every legal statement sourced** | a [verification register](docs/verification.md) with the source, its status and the date each one was read |
 | **Reproducible** | one command rebuilds every output; CI fails if a rebuilt file differs from the committed one |
 | **Documented like a deliverable** | a [catalogue](docs/catalogue.md) of the reporting items, a [data dictionary](data/README.md) kept complete by a test, an [architecture](docs/architecture.md) note, a [roadmap](docs/roadmap.md) and a [changelog](CHANGELOG.md) |

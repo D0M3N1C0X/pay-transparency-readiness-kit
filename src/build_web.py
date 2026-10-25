@@ -118,12 +118,19 @@ def write_vectors(n: int = 6, seed: int = 9) -> int:
         x[["weekly_hours", "base_pay", *COMPONENTS]] = x[["weekly_hours", "base_pay", *COMPONENTS]].astype(float)
         patch = []
         for _ in range(rng.randint(5, 25)):
-            i, col = rng.randrange(len(x)), rng.choice(["base_pay", "bonus", "commission", "weekly_hours"])
+            i, col = rng.randrange(len(x)), rng.choice(["base_pay", "bonus", "commission", "weekly_hours",
+                                                        "shift_allowance", "car_allowance"])
             v = (rng.choice([20, 24, 30, 36]) if col == "weekly_hours"
                  else round(float(x.loc[i, col]) * rng.choice([0.5, 0.9, 1.07, 1.5]) + rng.choice([0, 0.5]), 2))
             x.loc[i, col] = v
             patch.append([i, col, v])
         cases.append({"rows": rows, "patch": patch, **expected(x)})
+    # the Italian measure's edge cases: an employer without Italian workers, and an Italian entity of nine
+    no_it = [i for i in range(len(base)) if base.loc[i, "country"] != "IT"][:400]
+    nine_it = sorted([i for i in range(len(base)) if base.loc[i, "country"] == "IT"][:9]
+                     + [i for i in range(len(base)) if base.loc[i, "country"] == "PL"][:200])
+    for rows in (no_it, nine_it):
+        cases.append({"rows": rows, "patch": [], **expected(base.loc[rows].reset_index(drop=True))})
     VECTORS.parent.mkdir(exist_ok=True)
     VECTORS.write_text(json.dumps({"cfg": cfg(), "grid": load_job_evaluation()[["role", *FACTORS]].to_dict("records"),
                                    "base": base.to_dict("records"), "cases": cases},

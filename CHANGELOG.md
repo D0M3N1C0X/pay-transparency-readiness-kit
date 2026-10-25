@@ -5,6 +5,21 @@ in [docs/roadmap.md](docs/roadmap.md).
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-10-24
+
+### Fixed
+
+After an independent review of v1.3.0:
+
+- **Italian law, stated as the decree states it**: the full definition of *livello retributivo* (art. 3(1)(b));
+  the collective-agreement presumption is rebuttable and needs unions comparatively most representative at national
+  level (art. 4(1)); the open question on fixed pay points to the ministerial decrees on data (art. 9(4)(b)), not to
+  the guidance on equal value (art. 4(6)); item (g) keeps base pay and components apart.
+- **Browser tool**: loading a job evaluation grid no longer resets the components ticked on the payroll file; a column
+  chosen for a field is no longer also counted as a component.
+- **Checks**: the JavaScript is now also tested on changed allowances, an employer without Italian workers and an
+  Italian entity of nine (3,821 → 4,452 values); weekly hours of zero are rejected in Python as they are on the page.
+
 ## [1.3.0] - 2026-10-24
 
 ### Added

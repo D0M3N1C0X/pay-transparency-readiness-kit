@@ -217,6 +217,7 @@ const K_GRIGLIA = () => `strumenti.pt.griglia.${chiaveFile()}`, K_GIUST = () => 
 
 // state: the files the user gave, the column choices, the role scores and the result of the last run
 const files = { paghe: null, griglia: null };
+let numeriche = [];      // the file's numeric columns not used by a mapped field: the candidates for components
 let esempio = false, mapping = {}, componenti = new Set(), fisse = new Set(), punteggi = {}, generi = {}, risultato = null, entita = null;
 const soldi = (x, d = 0) => {
   const v = $("valuta").value;
@@ -254,7 +255,8 @@ async function prendiFile(slot, file) {
     $(`nome-${slot}`).textContent = `${file.name} · ${table.rows.length}`;
     $(`drop-${slot}`).classList.add("is-done");
     messaggio("");
-    colonne();
+    // a grid file changes the categories only: the column choices and ticks made on the payroll file stay
+    if (slot === "paghe") colonne(); else if (files.paghe) categorie();
   } catch (e) {
     messaggio(t("eFile", { f: file.name, e: e.message }));
   }
@@ -312,7 +314,7 @@ function colonne() {
   const m = matchColumns(f.headers, CAMPI, savedMapping("pt", f.headers));
   mapping = m.mapping;
   const usate = new Set(Object.values(mapping));
-  const numeriche = f.headers.filter((h) => !usate.has(h) && f.rows.slice(0, 50).every((r) => {
+  numeriche = f.headers.filter((h) => !usate.has(h) && f.rows.slice(0, 50).every((r) => {
     try { number(r[h], f.decimalComma); return true; } catch { return false; }
   }));
   componenti = new Set(numeriche.filter((h) => COMPONENTE.test(normalise(h))));
@@ -359,6 +361,9 @@ function disegnaMappa(apri) {
   $("mappa").querySelectorAll("select").forEach((sel) => sel.addEventListener("change", () => {
     mapping = { ...mapping, [sel.dataset.key]: sel.value };
     rememberMapping("pt", f.headers, mapping);
+    // a column now read as a field cannot also be a component, or it would be counted twice
+    componenti.delete(sel.value); fisse.delete(sel.value);
+    disegnaComponenti(numeriche.filter((h) => !Object.values(mapping).includes(h)));
     nascondi();
     disegnaMappa("forza");
     disegnaGeneri();

@@ -685,7 +685,7 @@ class Model:
             "Fixed and continuing pay here = base pay + " + " + ".join(x.replace("_", " ") for x in FIXED_COMPONENTS)
             + ": both are paid by a general rule (role, level, shift pattern), not on a personal or discretionary basis.",
             "Whether an individual superminimo or a role allowance counts as fixed is the open question of the decree; "
-            "ministry guidance on art. 4 is due by 31 December 2026.",
+            "the ministerial decrees on the data to collect (art. 9(4)(b)) are the likelier place for an answer.",
             "The Directive is the floor: keep both measures on file until the Commission's conformity check settles the definition.",
         ]:
             put(ws, f"B{r}", note, color=MUTED, italic=True)
