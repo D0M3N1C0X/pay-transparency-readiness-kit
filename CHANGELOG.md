@@ -9,6 +9,7 @@ in [docs/roadmap.md](docs/roadmap.md).
 
 - **Actual-pay browser mode**: captures the completed calendar year, requires amounts actually paid and worker-specific annual contractual hours, validates pseudonymous ID uniqueness, omits the source filename from exported reports, and records the basis and year in the print view and workbook. Annualized contract amounts remain labelled simulations.
 - **Pilot data contract** for a local Italian-company payroll run, including pseudonymous IDs, minimum columns, CCNL category review, storage behavior and calculation limits.
+- **Pay-code dictionary import** in the browser: validates pay codes against exact payroll column headers, pre-fills component and fixed-continuing classes, and records the map in the downloaded workbook.
 
 ### Changed
 
