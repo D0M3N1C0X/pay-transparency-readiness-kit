@@ -13,10 +13,12 @@ const UI = {
     brand: "Pay Transparency Readiness Kit", eyebrow: "EU Pay Transparency Directive · Articles 9 and 10",
     title: "Run the pay gap assessment on your client's payroll",
     lead: "Load a payroll export: the seven reporting items, the categories of workers with a gap of 5% or more, what closing them would cost, and when each employer has to report.",
-    privacy: "Remove direct identifiers before import and use pseudonymous worker IDs. Payroll and role files are processed in this page and are not uploaded. Working data, role scores and notes stay in memory until cleared or reloaded. Only the language preference is saved; downloaded reports remain confidential company data.",
+    privacy: "Remove direct identifiers before import and use pseudonymous worker IDs. Payroll, role and pay-code files are processed in this page and are not uploaded. Working data, role scores and notes stay in memory until cleared or reloaded. Only the language preference is saved; downloaded reports remain confidential company data.",
     step1: "The payroll file", step1sub: "Excel (.xlsx) or CSV, one row per worker, with the pay period stated.",
     dropPaghe: "Payroll extract", dropPagheSub: "Required · drag it here or tap to choose it",
     dropGriglia: "Job evaluation grid", dropGrigliaSub: "Optional · roles scored on skills, effort, responsibility and working conditions",
+    dropCodici: "Pay-code dictionary", dropCodiciSub: "Optional except for Italian actual-pay runs that include pay components.",
+    modelloCodici: "pay-code map",
     esempio: "Try it with the sample employer", modelli: "Templates:", modelloPaghe: "payroll", modelloGriglia: "job evaluation",
     step2: "The columns", modifica: "Change", nonPresente: "— not in the file —", facoltativa: "optional",
     colonneOk: "{n} columns matched",
@@ -25,8 +27,28 @@ const UI = {
     notaCosto: "excluding {n} small categories kept back", colonneSub: "Check the matches below, or change them.",
     colonneMancano: "Choose the column for {n} item(s) marked in red.", ruoloOCategoria: "The file needs a role or a category column.",
     componenti: "Complementary or variable pay",
-    componentiSub: "Tick every numeric column paid on top of base pay, using amounts for the same period selected below: bonus, commission, allowances.",
+    componentiSub: "Review numeric columns paid on top of base pay, using amounts for the same period selected below. An imported dictionary preselects and locks mapped components; in an Italian actual-pay run, add any other component to the dictionary first.",
     nessunaColonna: "No other numeric columns in the file.",
+    payCodeOptional: "Upload the payroll first. The dictionary maps pay codes to exact payroll column headers and pre-fills component classes.",
+    payCodeRequired: "For Italian actual-pay runs, classify every included pay component in the pay-code dictionary.",
+    payCodeUnmappedComponent: "component column «{h}» has no pay-code classification",
+    payCodeNeedsPayroll: "Upload the payroll export before the pay-code dictionary.",
+    payCodeSchema: "The dictionary needs pay_code, column_header, description and classification columns.",
+    payCodeLoaded: "Loaded {n} pay-code entries; component and fixed-pay selections are prefilled from the dictionary.",
+    payCodeMismatch: "Pay-code dictionary needs attention: {details}",
+    payCodeCandidates: "{n} likely component column(s) remain unchecked; review them before running.",
+    payCodeEmptyCode: "row {r}: pay_code is blank",
+    payCodeEmptyHeader: "row {r}: column_header is blank",
+    payCodeEmptyDescription: "row {r}: description is blank",
+    payCodeHeaderMissing: "payroll column «{h}» does not exist",
+    payCodeFieldConflict: "payroll column «{h}» is already mapped to a core field",
+    payCodeNotNumeric: "payroll column «{h}» is not numeric",
+    payCodeUnknownClass: "row {r}: unsupported classification «{c}»",
+    payCodeDuplicateCode: "duplicate pay code «{c}»",
+    payCodeDuplicateHeader: "duplicate payroll column «{h}» in the dictionary",
+    payClassFixed: "Fixed and continuing",
+    payClassVariable: "Variable",
+    payClassOneOff: "One-off",
     step3: "Work of equal value", usaFile: "Use the categories in the file", usaGriglia: "Use exploratory score bands; review before any statutory use",
     catFile: "Categories come from the column «{c}»: {n} categories.",
     catGriglia: "{n} roles in the file. The score bands are exploratory groupings; review them with HR and worker representatives before any statutory use.",
@@ -78,9 +100,11 @@ const UI = {
     footer: "The same calculations as the kit's Python pipeline and Excel model, checked against each other on every change. Not legal advice.",
     rapporto: "Report", metodo: "Method", codice: "Code",
     x_sintesi: "Summary", x_categorie: "Categories", x_obblighi: "Obligations", x_griglia: "Job evaluation", x_impostazioni: "Settings",
-    x_italia: "Italy",
+    x_italia: "Italy", x_paycodes: "Pay-code map",
+    hPayCode: "Pay code", hPayHeader: "Payroll column header", hPayDescription: "Description", hPayClassification: "Classification",
+    hPayInTotal: "Included in components", hPayFixed: "Included in fixed and continuing pay (Italy)", yes: "Yes", no: "No",
     fisse: "Fixed and continuing pay (Italy)",
-    fisseSub: "Italy measures the gaps on \u201clivello retributivo\u201d (D.lgs. 96/2026): base pay plus the components paid by a general rule, such as an allowance every shift worker receives. Tick those; bonuses, commission and personal or one-off amounts stay out. Used only for Italian employers.",
+    fisseSub: "Italy measures the gaps on \u201clivello retributivo\u201d (D.lgs. 96/2026): base pay plus components paid by a general rule, such as an allowance every shift worker receives. An imported dictionary preselects and locks items classified as fixed and continuing; without one, select them here. Bonuses, commission and one-off amounts stay out. Confirm the class with HR.",
     fisseNessuna: "Tick a component above first.",
     italia: "Italy measures it differently",
     italiaSub: "D.lgs. 96/2026 computes items (a), (c) and (f) and the 5% test on livello retributivo, fixed and continuing pay. This employer's statutory report uses it; the Directive's figures above stay as the floor until the Commission's conformity check settles the definition.",
@@ -99,10 +123,12 @@ const UI = {
     brand: "Pay Transparency Readiness Kit", eyebrow: "Direttiva UE sulla trasparenza retributiva · articoli 9 e 10",
     title: "La verifica del divario retributivo, sulle paghe del tuo cliente",
     lead: "Carica un export delle paghe: i sette indicatori da comunicare, le categorie di lavoratori con un divario del 5% o più, quanto costerebbe chiuderli e quando ogni datore di lavoro deve comunicarli.",
-    privacy: "Prima dell’importazione rimuovi gli identificativi diretti e usa ID pseudonimi. I file delle paghe e dei ruoli sono elaborati in questa pagina e non vengono caricati online. Dati, punteggi e note restano in memoria finché non svuoti o ricarichi la pagina. Si salva solo la lingua; i report scaricati sono dati aziendali riservati.",
+    privacy: "Prima dell’importazione rimuovi gli identificativi diretti e usa ID pseudonimi. I file delle paghe, dei ruoli e della mappa codici paga sono elaborati in questa pagina e non vengono caricati online. Dati, punteggi e note restano in memoria finché non svuoti o ricarichi la pagina. Si salva solo la lingua; i report scaricati sono dati aziendali riservati.",
     step1: "Il file delle paghe", step1sub: "Excel (.xlsx) o CSV, una riga per lavoratore, indicando il periodo retributivo.",
     dropPaghe: "Export delle paghe", dropPagheSub: "Obbligatorio · trascinalo qui o tocca per sceglierlo",
     dropGriglia: "Griglia di valutazione dei ruoli", dropGrigliaSub: "Facoltativa · ruoli valutati su competenze, impegno, responsabilità e condizioni di lavoro",
+    dropCodici: "Mappa dei codici paga", dropCodiciSub: "Facoltativa, salvo pagamenti effettivi italiani con componenti retributive.",
+    modelloCodici: "mappa codici paga",
     esempio: "Prova con l'azienda di esempio", modelli: "Modelli:", modelloPaghe: "paghe", modelloGriglia: "valutazione dei ruoli",
     step2: "Le colonne", modifica: "Modifica", nonPresente: "— non presente —", facoltativa: "facoltativa",
     colonneOk: "{n} colonne abbinate",
@@ -111,8 +137,28 @@ const UI = {
     notaCosto: "escluse {n} categorie piccole riservate", colonneSub: "Controlla gli abbinamenti qui sotto, o cambiali.",
     colonneMancano: "Scegli la colonna per {n} voce/i in rosso.", ruoloOCategoria: "Al file serve una colonna con il ruolo o con la categoria.",
     componenti: "Componenti complementari o variabili",
-    componentiSub: "Spunta ogni colonna numerica pagata in più rispetto alla retribuzione base, usando importi dello stesso periodo scelto qui sotto: premi, provvigioni, indennità.",
+    componentiSub: "Controlla le colonne numeriche pagate oltre alla retribuzione base, con importi dello stesso periodo scelto qui sotto. La mappa importa e blocca le componenti classificate; nei pagamenti effettivi italiani aggiungi prima alla mappa ogni altra componente.",
     nessunaColonna: "Nel file non ci sono altre colonne numeriche.",
+    payCodeOptional: "Carica prima l'export paghe. La mappa collega i codici paga alle intestazioni esatte e precompila le classificazioni delle componenti.",
+    payCodeRequired: "Per i pagamenti effettivi italiani, classifica ogni componente retributiva inclusa nella mappa dei codici paga.",
+    payCodeUnmappedComponent: "la componente «{h}» non ha una classificazione nella mappa codici paga",
+    payCodeNeedsPayroll: "Carica l'export paghe prima della mappa dei codici paga.",
+    payCodeSchema: "La mappa deve avere le colonne pay_code, column_header, description e classification.",
+    payCodeLoaded: "Caricate {n} voci: componenti e retribuzione fissa sono precompilate dalla mappa.",
+    payCodeMismatch: "La mappa dei codici paga richiede una correzione: {details}",
+    payCodeCandidates: "Restano deselezionate {n} probabili colonne componente: controllale prima di elaborare.",
+    payCodeEmptyCode: "riga {r}: pay_code vuoto",
+    payCodeEmptyHeader: "riga {r}: column_header vuoto",
+    payCodeEmptyDescription: "riga {r}: description vuota",
+    payCodeHeaderMissing: "la colonna paghe «{h}» non esiste",
+    payCodeFieldConflict: "la colonna paghe «{h}» è già mappata a un campo principale",
+    payCodeNotNumeric: "la colonna paghe «{h}» non contiene importi numerici",
+    payCodeUnknownClass: "riga {r}: classificazione non supportata «{c}»",
+    payCodeDuplicateCode: "codice paga duplicato «{c}»",
+    payCodeDuplicateHeader: "colonna paghe «{h}» duplicata nella mappa",
+    payClassFixed: "Fissa e continuativa",
+    payClassVariable: "Variabile",
+    payClassOneOff: "Una tantum",
     step3: "Lavoro di pari valore", usaFile: "Usa le categorie del file", usaGriglia: "Usa fasce esplorative; verifica prima di un uso legale",
     catFile: "Le categorie vengono dalla colonna «{c}»: {n} categorie.",
     catGriglia: "{n} ruoli nel file. Le fasce di punteggio sono esplorative: verifica i raggruppamenti con HR e rappresentanti dei lavoratori prima di ogni uso legale.",
@@ -164,9 +210,11 @@ const UI = {
     footer: "Gli stessi calcoli della pipeline Python e del modello Excel del kit, verificati tra loro a ogni modifica. Non è consulenza legale.",
     rapporto: "Rapporto", metodo: "Metodo", codice: "Codice",
     x_sintesi: "Sintesi", x_categorie: "Categorie", x_obblighi: "Obblighi", x_griglia: "Valutazione dei ruoli", x_impostazioni: "Impostazioni",
-    x_italia: "Italia",
+    x_italia: "Italia", x_paycodes: "Mappa codici paga",
+    hPayCode: "Codice paga", hPayHeader: "Intestazione colonna paghe", hPayDescription: "Descrizione", hPayClassification: "Classificazione",
+    hPayInTotal: "Inclusa nelle componenti", hPayFixed: "Inclusa nella retribuzione fissa e continuativa (Italia)", yes: "Sì", no: "No",
     fisse: "Retribuzione fissa e continuativa (Italia)",
-    fisseSub: "In Italia i divari si calcolano sul \u201clivello retributivo\u201d (D.lgs. 96/2026): la retribuzione base più le componenti pagate per regola generale, come un'indennità che ricevono tutti i turnisti. Spuntale; premi, provvigioni e importi personali o una tantum restano fuori. Serve solo per i datori di lavoro italiani.",
+    fisseSub: "In Italia i divari si calcolano sul \u201clivello retributivo\u201d (D.lgs. 96/2026): retribuzione base più componenti pagate per regola generale, come un'indennità che ricevono tutti i turnisti. La mappa precompila e blocca le voci classificate come fisse e continuative; senza mappa, selezionale qui. Premi, provvigioni e importi una tantum restano fuori. Conferma la classificazione con HR.",
     fisseNessuna: "Prima spunta una componente qui sopra.",
     italia: "In Italia si misura in un altro modo",
     italiaSub: "Il D.lgs. 96/2026 calcola le voci (a), (c) e (f) e la soglia del 5% sul livello retributivo, cioè sulla retribuzione fissa e continuativa. Il rapporto obbligatorio di questo datore di lavoro usa questa misura; i dati della direttiva qui sopra restano il riferimento minimo finché la verifica di conformità della Commissione non chiarisce la definizione.",
@@ -211,6 +259,12 @@ const CAMPI = [
   ["weekly_hours", false, ["hours per week", "contractual weekly hours", "weekly working hours", "average weekly hours", "average contractual hours per week", "ore settimanali", "ore settimanali medie", "ore contrattuali medie", "orario settimanale", "wochenstunden", "horas semanales", "wymiar godzin"]],
   ["fte", false, ["full time equivalent", "fte %", "part time", "percentuale part time", "etat", "arbeitszeitanteil"]],
 ].map(([key, required, aliases]) => ({ key, required, aliases }));
+const CODICI = [
+  ["pay_code", true, ["code", "component code", "payroll code", "codice paga", "codice componente", "codice voce"]],
+  ["column_header", true, ["payroll column", "export column", "column header", "payroll export column", "intestazione colonna", "colonna export", "intestazione export"]],
+  ["description", true, ["label", "descrizione", "voce"]],
+  ["classification", true, ["class", "component classification", "pay type", "classificazione", "tipo componente", "tipo voce"]],
+].map(([key, required, aliases]) => ({ key, required, aliases }));
 const GRIGLIA = [["role", true, ["ruolo", "mansione", "job title", "position"]], ["skills", true, ["competenze", "skill"]],
   ["effort", true, ["impegno", "sforzo"]], ["responsibility", true, ["responsabilita", "responsibilities"]],
   ["working_conditions", true, ["condizioni di lavoro", "conditions", "condizioni"]]].map(([key, required, aliases]) => ({ key, required, aliases }));
@@ -219,6 +273,64 @@ const COMPONENTE = /bonus|commission|allowance|premi|provvigion|indennit|incenti
 const FISSA = /allowance|indennit|zulage|dodat|superminim|maggioraz|plus/;
 const VARIABILE = /bonus|premi|commission|provvigion|incentiv|variab|pramie|prowizj|comision|overtime|straordinar|una.?tantum|one.?off/;
 const PERIODI = { pAnnuale: 1, p12: 12, p13: 13, p14: 14 };
+const PAY_CLASS = new Map([
+  ["fixed", "fixed_continuing"], ["continuing", "fixed_continuing"], ["fixed_continuing", "fixed_continuing"],
+  ["fixed_and_continuing", "fixed_continuing"], ["fisso", "fixed_continuing"], ["fissa", "fixed_continuing"],
+  ["fisso_continuativo", "fixed_continuing"], ["fissa_continuativa", "fixed_continuing"], ["continuativa", "fixed_continuing"],
+  ["variable", "variable"], ["variabile", "variable"], ["variabili", "variable"],
+  ["one_off", "one_off"], ["oneoff", "one_off"], ["one_time", "one_off"], ["una_tantum", "one_off"],
+  ["occasionale", "one_off"],
+]);
+function canonicalPayClass(value) { return PAY_CLASS.get(normalise(value)); }
+function payClassLabel(value) {
+  return t(({ fixed_continuing: "payClassFixed", variable: "payClassVariable", one_off: "payClassOneOff" })[value] || "payClassOneOff");
+}
+function validatePayCodeItems(items, payroll) {
+  const issues = [];
+  if (!payroll) return [t("payCodeNeedsPayroll")];
+  const seenCodes = new Set(), seenHeaders = new Set();
+  for (const item of items) {
+    const codeKey = item.pay_code, headerKey = item.column_header;
+    if (!payroll.headers.includes(item.column_header)) issues.push(t("payCodeHeaderMissing", { h: item.column_header }));
+    if (Object.values(mapping).includes(item.column_header)) issues.push(t("payCodeFieldConflict", { h: item.column_header }));
+    if (seenCodes.has(codeKey)) issues.push(t("payCodeDuplicateCode", { c: item.pay_code }));
+    if (seenHeaders.has(headerKey)) issues.push(t("payCodeDuplicateHeader", { h: item.column_header }));
+    seenCodes.add(codeKey); seenHeaders.add(headerKey);
+    if (!canonicalPayClass(item.classification)) issues.push(t("payCodeUnknownClass", { r: item.row, c: item.classification }));
+    if (payroll.headers.includes(item.column_header)) {
+      try {
+        for (const row of payroll.rows) {
+          const value = String(row[item.column_header] ?? "").trim();
+          if (value !== "") number(value, payroll.decimalComma);
+        }
+      } catch { issues.push(t("payCodeNotNumeric", { h: item.column_header })); }
+    }
+  }
+  return [...new Set(issues)];
+}
+function parsePayCodeMap(table, payroll) {
+  if (!table.rows.length) throw new Error(t("eVuoto"));
+  if (new Set(table.headers.map(normalise)).size !== table.headers.length) throw new Error(t("payCodeSchema"));
+  const { mapping: fields, missing } = matchColumns(table.headers, CODICI);
+  if (missing.length) throw new Error(t("payCodeSchema"));
+  const items = [];
+  for (let i = 0; i < table.rows.length; i++) {
+    const row = table.rows[i], line = i + 2;
+    const pay_code = String(row[fields.pay_code] ?? "").trim();
+    const column_header = String(row[fields.column_header] ?? "").trim();
+    const description = String(row[fields.description] ?? "").trim();
+    const rawClass = String(row[fields.classification] ?? "").trim();
+    if (!pay_code) throw new Error(t("payCodeEmptyCode", { r: line }));
+    if (!column_header) throw new Error(t("payCodeEmptyHeader", { r: line }));
+    if (!description) throw new Error(t("payCodeEmptyDescription", { r: line }));
+    const classification = canonicalPayClass(rawClass);
+    if (!classification) throw new Error(t("payCodeUnknownClass", { r: line, c: rawClass }));
+    items.push({ pay_code, column_header, description, classification, row: line });
+  }
+  const issues = validatePayCodeItems(items, payroll);
+  if (issues.length) throw new Error(t("payCodeMismatch", { details: issues.join("; ") }));
+  return items;
+}
 
 const i18n = createI18n(UI, "en");
 const t = i18n.t;
@@ -247,9 +359,10 @@ const chiaveFile = () => (esempio ? "esempio" : normalise(files.paghe?.name || "
 const K_GRIGLIA = () => `strumenti.pt.griglia.${chiaveFile()}`, K_GIUST = () => `strumenti.pt.giustificazioni.${chiaveFile()}`;
 
 // state: the files the user gave, the column choices, the role scores and the result of the last run
-const files = { paghe: null, griglia: null };
+const files = { paghe: null, griglia: null, codici: null };
 let numeriche = [];      // the file's numeric columns not used by a mapped field: the candidates for components
 let esempio = false, mapping = {}, componenti = new Set(), fisse = new Set(), punteggi = {}, generi = {}, risultato = null, entita = null;
+let payCodeByHeader = new Map();
 const soldi = (x, d = 0) => {
   const v = $("valuta").value;
   if (!v) return i18n.number(x, d);
@@ -291,11 +404,27 @@ async function prendiFile(slot, file) {
   try {
     const table = await readTable(file);
     if (!table.rows.length) throw new Error(t("eVuoto"));
+    if (slot === "codici") {
+      if (!files.paghe) throw new Error(t("payCodeNeedsPayroll"));
+      const items = parsePayCodeMap(table, files.paghe);
+      files.codici = { name: file.name, ...table, items };
+      applicaMappaCodici();
+      nascondi();
+      $("nome-codici").textContent = `${file.name} · ${items.length}`;
+      $("drop-codici").classList.add("is-done");
+      messaggio("");
+      disegnaComponenti(numeriche.filter((h) => !Object.values(mapping).includes(h)));
+      aggiornaStatoPayCode(); pronto();
+      return;
+    }
     files[slot] = { name: file.name, ...table };
     store.clear();
     punteggi = {};
     if (slot === "paghe") {
       clearMappings();
+      files.codici = null; payCodeByHeader = new Map();
+      $("file-codici").value = ""; $("nome-codici").textContent = ""; $("codici-sub").textContent = "";
+      $("drop-codici").classList.remove("is-done", "is-over");
       files.griglia = null;
       $("file-griglia").value = "";
       $("nome-griglia").textContent = "";
@@ -344,7 +473,8 @@ $("esempio").addEventListener("click", async () => {
       if (!r.ok) throw new Error(`${u}: ${r.status}`);
       return r.text();
     }));
-    ["paghe", "griglia"].forEach((slot) => { $("file-" + slot).value = ""; });
+    ["paghe", "griglia", "codici"].forEach((slot) => { $("file-" + slot).value = ""; $("nome-" + slot).textContent = ""; $("drop-" + slot).classList.remove("is-done", "is-over"); });
+    files.codici = null; payCodeByHeader = new Map(); $("codici-sub").textContent = "";
     files.paghe = { name: "payroll_extract.csv", ...parseCsv(p) };
     files.griglia = { name: "job_evaluation.csv", ...parseCsv(g) };
     esempio = true;
@@ -378,11 +508,13 @@ function colonne() {
   }));
   componenti = new Set(numeriche.filter((h) => COMPONENTE.test(normalise(h))));
   fisse = new Set([...componenti].filter((h) => FISSA.test(normalise(h)) && !VARIABILE.test(normalise(h))));
+  if (files.codici) applicaMappaCodici();
   $("passo-colonne").style.display = "block";
   disegnaMappa(false);
   disegnaComponenti(numeriche);
   disegnaGeneri();
   categorie();
+  aggiornaStatoPayCode();
 }
 
 // The codes the file uses for gender, each with a first guess the user can correct.
@@ -424,23 +556,30 @@ function disegnaMappa(apri) {
     rememberMapping("pt", f.headers, mapping);
     // a column now read as a field cannot also be a component, or it would be counted twice
     componenti.delete(sel.value); fisse.delete(sel.value);
+    applicaMappaCodici();
     disegnaComponenti(numeriche.filter((h) => !Object.values(mapping).includes(h)));
     nascondi();
     disegnaMappa("forza");
     disegnaGeneri();
     categorie();
+    aggiornaStatoPayCode(); pronto();
   }));
 }
 $("mostra-colonne").addEventListener("click", () => disegnaMappa("forza"));
 
 function disegnaComponenti(numeriche) {
   $("componenti").innerHTML = numeriche.length
-    ? numeriche.map((h) => `<label><input type="checkbox" value="${esc(h)}" ${componenti.has(h) ? "checked" : ""}> ${esc(h)}</label>`).join("")
+    ? numeriche.map((h) => {
+      const item = payCodeByHeader.get(h);
+      const label = item ? `${h} · ${item.pay_code} · ${item.description} (${payClassLabel(item.classification)})` : h;
+      return `<label><input type="checkbox" value="${esc(h)}" ${item ? "checked disabled" : componenti.has(h) ? "checked" : ""}> ${esc(label)}</label>`;
+    }).join("")
     : `<span class="s-why">${esc(t("nessunaColonna"))}</span>`;
   $("componenti").querySelectorAll("input").forEach((c) => c.addEventListener("change", () => {
     if (c.checked) componenti.add(c.value); else { componenti.delete(c.value); fisse.delete(c.value); }
     nascondi();
     disegnaFisse();
+    aggiornaStatoPayCode(); pronto();
   }));
   disegnaFisse();
 }
@@ -448,7 +587,11 @@ function disegnaComponenti(numeriche) {
 function disegnaFisse() {
   const scelte = [...componenti];
   $("fisse").innerHTML = scelte.length
-    ? scelte.map((h) => `<label><input type="checkbox" value="${esc(h)}" ${fisse.has(h) ? "checked" : ""}> ${esc(h)}</label>`).join("")
+    ? scelte.map((h) => {
+      const item = payCodeByHeader.get(h);
+      const label = item ? `${h} · ${item.pay_code} · ${item.description} (${payClassLabel(item.classification)})` : h;
+      return `<label><input type="checkbox" value="${esc(h)}" ${item ? "disabled" : ""} ${fisse.has(h) ? "checked" : ""}> ${esc(label)}</label>`;
+    }).join("")
     : `<span class="s-why">${esc(t("fisseNessuna"))}</span>`;
   $("fisse").querySelectorAll("input").forEach((c) => c.addEventListener("change", () => {
     if (c.checked) fisse.add(c.value); else fisse.delete(c.value);
@@ -510,8 +653,9 @@ function pronto() {
   const f = files.paghe;
   const yearOk = annoValido();
   $("avviso-impostazioni").textContent = f && !yearOk ? t("eAnno") : "";
+  const payCodeErrors = erroriPayCode();
   $("esegui").disabled = !(f && yearOk && !mancanti().length && (mapping.role || mapping.category)
-    && (fonte() === "file" || ruoli().every(([r]) => valutato(r))));
+    && (fonte() === "file" || ruoli().every(([r]) => valutato(r))) && !payCodeErrors.length);
 }
 
 $("scarica-griglia").addEventListener("click", () => {
@@ -534,6 +678,37 @@ function paese(v) {
   const n = normalise(s);
   return PAESI[n] || PAESI[n.split("_")[0]] || s || $("paese").value;
 }
+function italiaPresente() {
+  const f = files.paghe;
+  return mapping.country && f ? f.rows.some((r) => paese(r[mapping.country]) === "IT") : $("paese").value === "IT";
+}
+function erroriPayCode() {
+  const isItalianActual = $("base-dati").value === "actual" && italiaPresente();
+  if (!files.codici) return isItalianActual && componenti.size ? [t("payCodeRequired")] : [];
+  const issues = validatePayCodeItems(files.codici.items, files.paghe);
+  const mapped = new Set(files.codici.items.map((x) => x.column_header));
+  if (isItalianActual) for (const h of componenti) if (!mapped.has(h)) issues.push(t("payCodeUnmappedComponent", { h }));
+  return issues.length ? [t("payCodeMismatch", { details: [...new Set(issues)].join("; ") })] : [];
+}
+function aggiornaStatoPayCode() {
+  const el = $("codici-sub");
+  if (!el) return;
+  const errors = erroriPayCode();
+  if (files.codici) {
+    const mapped = new Set(files.codici.items.map((x) => x.column_header));
+    const candidates = numeriche.filter((h) => COMPONENTE.test(normalise(h)) && !mapped.has(h)).length;
+    el.textContent = errors[0] || [t("payCodeLoaded", { n: files.codici.items.length }),
+      candidates ? t("payCodeCandidates", { n: candidates }) : ""].filter(Boolean).join(" ");
+  } else el.textContent = errors[0] || t("payCodeOptional");
+}
+function applicaMappaCodici() {
+  if (!files.codici || !files.paghe) return;
+  const issues = validatePayCodeItems(files.codici.items, files.paghe);
+  if (issues.length) { aggiornaStatoPayCode(); return; }
+  payCodeByHeader = new Map(files.codici.items.map((item) => [item.column_header, item]));
+  componenti = new Set(files.codici.items.map((item) => item.column_header));
+  fisse = new Set(files.codici.items.filter((item) => item.classification === "fixed_continuing").map((item) => item.column_header));
+}
 
 function calcola() {
   try {
@@ -541,6 +716,8 @@ function calcola() {
     const f = files.paghe, dc = f.decimalComma, basis = $("base-dati").value, year = Number($("anno-paghe").value);
     if (!annoValido()) throw new Error(t("eAnno"));
     if (basis === "actual" && !mapping.annual_hours) throw new Error(t("eOreColonna"));
+    const payCodeErrors = erroriPayCode();
+    if (payCodeErrors.length) throw new Error(payCodeErrors[0]);
     const mult = basis === "actual" ? 1 : PERIODI[$("periodo").value], ore = Number($("ore").value);
     const roles = fonte() === "griglia" ? evaluate(ruoli().map(([role]) => ({ role, ...punteggi[role] })), CFG) : null;
     const cols = [...componenti];
@@ -598,11 +775,12 @@ function calcola() {
   }
 }
 $("esegui").addEventListener("click", calcola);
-["paese", "periodo", "ore", "anno-paghe"].forEach((id) => $(id).addEventListener("change", () => { nascondi(); pronto(); }));
+["paese", "periodo", "ore", "anno-paghe"].forEach((id) => $(id).addEventListener("change", () => { aggiornaStatoPayCode(); nascondi(); pronto(); }));
 $("anno-paghe").addEventListener("input", pronto);
 $("base-dati").addEventListener("change", () => {
   aggiornaBaseDatiUI();
   if (files.paghe) { disegnaMappa(false); categorie(); }
+  aggiornaStatoPayCode();
   nascondi();
   pronto();
 });
@@ -618,12 +796,12 @@ $("pulisci").addEventListener("click", () => {
     $("nome-" + slot).textContent = "";
     $("drop-" + slot).classList.remove("is-done", "is-over");
   });
-  numeriche = []; esempio = false; mapping = {}; componenti = new Set(); fisse = new Set();
+  numeriche = []; esempio = false; mapping = {}; componenti = new Set(); fisse = new Set(); payCodeByHeader = new Map();
   punteggi = {}; generi = {}; risultato = null; entita = null;
   ["mappa", "componenti", "fisse", "generi", "griglia", "entita", "kpis", "tab-obblighi", "tab-voci",
     "grafico-quartili", "grafico-categorie", "tab-categorie", "tab-italia-voci", "tab-italia-cat"]
     .forEach((id) => { $(id).innerHTML = ""; });
-  ["colonne-ok", "colonne-sub", "cat-sub", "voci-sub", "stampa-meta", "avviso-base", "nota-piccole", "nota-italia"]
+  ["colonne-ok", "colonne-sub", "codici-sub", "cat-sub", "voci-sub", "stampa-meta", "avviso-base", "nota-piccole", "nota-italia"]
     .forEach((id) => { $(id).textContent = ""; });
   $("passo-colonne").style.display = "none";
   $("passo-categorie").style.display = "none";
@@ -809,6 +987,11 @@ $("scarica-xlsx").addEventListener("click", () => {
     { name: t("x_categorie"), rows: categorieX, widths: [18, 12, 9, 9, 16, 16, 14, 16, 14, 14, 20, 14, 50, 18, 14] },
     { name: t("x_obblighi"), rows: obblighi, widths: [18, 12, 16, 22, 14, 18, 20, 50, 60, 14] },
   ];
+  if (files.codici) sheets.push({ name: t("x_paycodes"), rows: [
+    [t("hPayCode"), t("hPayHeader"), t("hPayDescription"), t("hPayClassification"), t("hPayInTotal"), t("hPayFixed")],
+    ...files.codici.items.map((item) => [item.pay_code, item.column_header, item.description, payClassLabel(item.classification),
+      t("yes"), fisse.has(item.column_header) ? t("yes") : t("no")]),
+  ], widths: [20, 36, 38, 24, 24, 38] });
   for (const [c, nat] of Object.entries(risultato.national)) {
     const dir = items[c];
     const voci = VOCI[i18n.lang].filter(([k]) => /^(a_|c_)/.test(k))
@@ -847,5 +1030,6 @@ aggiornaBaseDatiUI();
 i18n.onChange(() => {
   opzioni();
   if (files.paghe) { disegnaMappa(false); disegnaFisse(); categorie(); }
+  aggiornaStatoPayCode();
   mostra();
 });
