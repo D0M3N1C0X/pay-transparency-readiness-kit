@@ -554,6 +554,9 @@ function calcola() {
       if (!workerId) err(t("eWorkerId"));
       if (workerIds.has(workerId)) err(t("eWorkerIdDuplicate"));
       workerIds.add(workerId);
+      const num = (v) => { try { return number(v, dc); } catch { return err(t("eNumero", { e: v })); } };
+      const annualHours = mapping.annual_hours ? num(raw[mapping.annual_hours]) : null;
+      if (mapping.annual_hours && !(annualHours > 0)) err(t("eOre"));
       const g = generi[String(raw[mapping.gender] ?? "").trim()] || null;
       if (!g) {
         esclusi++;
@@ -561,12 +564,9 @@ function calcola() {
         altri[c] = (altri[c] || 0) + 1;
         return;
       }
-      const num = (v) => { try { return number(v, dc); } catch { return err(t("eNumero", { e: v })); } };
       if (String(raw[mapping.base_pay] ?? "").trim() === "") err(t("ePaga"));
       let hours = ore;
       if (mapping.annual_hours) {
-        const annualHours = num(raw[mapping.annual_hours]);
-        if (!(annualHours > 0)) err(t("eOre"));
         // derive() accepts weekly hours and multiplies by weeks_per_year; convert annual hours back to its input convention.
         hours = annualHours / CFG.weeks_per_year;
       } else if (basis === "actual") err(t("eOreColonna"));
