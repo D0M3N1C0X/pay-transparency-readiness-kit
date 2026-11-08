@@ -1,5 +1,6 @@
 """The browser tool: its inputs come from the pipeline, its JavaScript is checked against cases computed here, and
 the page keeps its promise that nothing leaves the computer."""
+import csv
 import json
 import re
 
@@ -45,3 +46,14 @@ def test_the_page_loads_nothing_from_outside():
         text = js.read_text(encoding="utf-8")
         assert "goatcounter" not in text.lower()
         assert not re.search(r"fetch\(\s*[\"'`]https?:", text), js.name
+
+
+def test_actual_pay_template_includes_annual_hours():
+    with (WEB / "template_payroll.csv").open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    assert rows
+    assert {"weekly_hours", "annual_hours"} <= set(rows[0])
+    assert all(
+        float(row["annual_hours"]) == float(row["weekly_hours"]) * build_web.WEEKS_PER_YEAR
+        for row in rows
+    )
