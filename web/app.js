@@ -285,7 +285,7 @@ function canonicalPayClass(value) { return PAY_CLASS.get(normalise(value)); }
 function payClassLabel(value) {
   return t(({ fixed_continuing: "payClassFixed", variable: "payClassVariable", one_off: "payClassOneOff" })[value] || "payClassOneOff");
 }
-function validatePayCodeItems(items, payroll) {
+function validatePayCodeItems(items, payroll, checkAmounts = true) {
   const issues = [];
   if (!payroll) return [t("payCodeNeedsPayroll")];
   const seenCodes = new Set(), seenHeaders = new Set();
@@ -297,7 +297,7 @@ function validatePayCodeItems(items, payroll) {
     if (seenHeaders.has(headerKey)) issues.push(t("payCodeDuplicateHeader", { h: item.column_header }));
     seenCodes.add(codeKey); seenHeaders.add(headerKey);
     if (!canonicalPayClass(item.classification)) issues.push(t("payCodeUnknownClass", { r: item.row, c: item.classification }));
-    if (payroll.headers.includes(item.column_header)) {
+    if (checkAmounts && payroll.headers.includes(item.column_header)) {
       try {
         for (const row of payroll.rows) {
           const value = String(row[item.column_header] ?? "").trim();
@@ -685,7 +685,7 @@ function italiaPresente() {
 function erroriPayCode() {
   const isItalianActual = $("base-dati").value === "actual" && italiaPresente();
   if (!files.codici) return isItalianActual && componenti.size ? [t("payCodeRequired")] : [];
-  const issues = validatePayCodeItems(files.codici.items, files.paghe);
+  const issues = validatePayCodeItems(files.codici.items, files.paghe, false);
   const mapped = new Set(files.codici.items.map((x) => x.column_header));
   if (isItalianActual) for (const h of componenti) if (!mapped.has(h)) issues.push(t("payCodeUnmappedComponent", { h }));
   return issues.length ? [t("payCodeMismatch", { details: [...new Set(issues)].join("; ") })] : [];
