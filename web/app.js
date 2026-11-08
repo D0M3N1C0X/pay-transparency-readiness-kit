@@ -1,9 +1,9 @@
 // The browser tool's page: payroll in, columns matched, roles scored, assessment run, results shown and downloaded.
 // The calculations are in engine.js, verified against pandas on every change; this file only moves data between the
-// user and them. Nothing here talks to a server: inputs.json comes from this same page.
+// user and them. Payroll and role files are read in-page; static settings and sample files are same-origin resources.
 import { evaluate, derive, byEntity, national, screen, obligations, categoryOrder, sex, number, points, bandFor } from "./engine.js";
 import { createI18n } from "./design/i18n.js";
-import { readTable, parseCsv, matchColumns, applyMapping, savedMapping, rememberMapping, download, normalise } from "./design/table.js";
+import { readTable, parseCsv, matchColumns, applyMapping, savedMapping, rememberMapping, clearMappings, download, normalise } from "./design/table.js";
 import { writeXlsx } from "./design/xlsx.js";
 
 const CFG = await fetch("./inputs.json").then((r) => r.json());
@@ -13,8 +13,8 @@ const UI = {
     brand: "Pay Transparency Readiness Kit", eyebrow: "EU Pay Transparency Directive · Articles 9 and 10",
     title: "Run the pay gap assessment on your client's payroll",
     lead: "Load a payroll export: the seven reporting items, the categories of workers with a gap of 5% or more, what closing them would cost, and when each employer has to report.",
-    privacy: "The payroll file stays on this computer: the calculations run in this page and nothing is sent anywhere. You can check by going offline once the page has loaded.",
-    step1: "The payroll file", step1sub: "Excel (.xlsx) or CSV, one row per worker, with annual pay.",
+    privacy: "Remove direct identifiers before import and use pseudonymous worker IDs. Payroll and role files are processed in this page and are not uploaded. Working data, role scores and notes stay in memory until cleared or reloaded. Only the language preference is saved; downloaded reports remain confidential company data.",
+    step1: "The payroll file", step1sub: "Excel (.xlsx) or CSV, one row per worker, with the pay period stated.",
     dropPaghe: "Payroll extract", dropPagheSub: "Required · drag it here or tap to choose it",
     dropGriglia: "Job evaluation grid", dropGrigliaSub: "Optional · roles scored on skills, effort, responsibility and working conditions",
     esempio: "Try it with the sample employer", modelli: "Templates:", modelloPaghe: "payroll", modelloGriglia: "job evaluation",
@@ -25,24 +25,33 @@ const UI = {
     notaCosto: "excluding {n} small categories kept back", colonneSub: "Check the matches below, or change them.",
     colonneMancano: "Choose the column for {n} item(s) marked in red.", ruoloOCategoria: "The file needs a role or a category column.",
     componenti: "Complementary or variable pay",
-    componentiSub: "Tick every column paid on top of base pay, as annual amounts: bonus, commission, allowances.",
+    componentiSub: "Tick every numeric column paid on top of base pay, using amounts for the same period selected below: bonus, commission, allowances.",
     nessunaColonna: "No other numeric columns in the file.",
-    step3: "Work of equal value", usaFile: "Use the categories in the file", usaGriglia: "Score the roles here, on the four criteria of Article 4",
+    step3: "Work of equal value", usaFile: "Use the categories in the file", usaGriglia: "Use exploratory score bands; review before any statutory use",
     catFile: "Categories come from the column «{c}»: {n} categories.",
-    catGriglia: "{n} roles in the file. Score each one: the points set its category of equal value.",
+    catGriglia: "{n} roles in the file. The score bands are exploratory groupings; review them with HR and worker representatives before any statutory use.",
     catDaFare: "{n} role(s) still to score, marked in red.",
-    grigliaSub: "Score each role from 1 to 5. Points = skills × 35 + effort × 15 + responsibility × 35 + working conditions × 15; the points set the category. Your scores are remembered on this computer.",
+    grigliaSub: "Score each role 1–5 on the four displayed criteria. This tool uses illustrative internal weights (skills 35, effort 15, responsibility 35, working conditions 15) to group roles for exploration; it does not decide legal categories. Review results with HR and worker representatives; for Italy, start from the applicable CCNL classification and specialist review. Scores stay in page memory until cleared or reloaded.",
     scaricaGriglia: "Download the grid",
     hRuolo: "Role", hLavoratori: "Workers", hPunti: "Points", hCategoria: "Category",
     skills: "Skills", effort: "Effort", responsibility: "Responsibility", working_conditions: "Working conditions",
     step4: "The settings", paese: "Country of the employer", paeseSub: "Used when the file has no country column.",
+    baseDati: "Pay data basis", baseDatiSub: "Choose actual payments for a completed calendar year or an annualized simulation.",
+    basisActual: "Actual amounts paid in the selected calendar year (screening)", basisAnnualized: "Annualized contract amount (simulation only)",
+    annoPaghe: "Calendar year covered by the payroll data", annoPagheSub: "Actual mode requires amounts paid from 1 January to 31 December. The default is the previous calendar year.",
+    periodoActual: "Base pay is the total actually paid in this year", periodoActualSub: "Enter the full-year amount actually paid; do not multiply it. Components must cover the same year.",
+    periodoAnnualizedSub: "Simulation only. Monthly base pay is multiplied by 12, 13 or 14; this is not an actual prior-year payroll report.",
+    oreSubPilot: "Actual-pay mode requires each worker’s total contractual hours for the selected calendar year. This setting applies only when converting FTE in simulations.",
+    basisActualNote: "Actual payments for {year}; hourly figures use each worker’s mapped contractual hours for that calendar year. Confirm the hours match the paid period before any statutory use.",
+    basisAnnualizedNote: "Annualized simulation for {year}; this is not a statutory report.",
+    pulisci: "Clear files and working data", cleared: "Files, scores and notes have been cleared from this page.",
     periodo: "Base pay in the file is", periodoSub: "Complementary and variable pay is read as annual.",
     pAnnuale: "Annual", p12: "Monthly, paid 12 times a year", p13: "Monthly, paid 13 times a year", p14: "Monthly, paid 14 times a year",
-    ore: "Full-time weekly hours", oreSub: "Used when the file has no weekly hours: full-time share × these hours.",
+    ore: "Standard full-time weekly hours", oreSub: "Used when the file has no weekly hours: full-time share × these hours.",
     esegui: "Run the assessment",
-    f_worker_id: "Worker ID", f_gender: "Gender (woman or man)", f_base_pay: "Base pay", f_role: "Role or job title",
-    f_category: "Category of equal value or grade", f_country: "Country of the employer", f_weekly_hours: "Weekly hours",
-    f_fte: "Full-time share (FTE)",
+    f_worker_id: "Pseudonymous worker ID", f_gender: "Gender (woman or man)", f_base_pay: "Base pay", f_role: "Role or job title",
+    f_category: "Reviewed category of equal value / internal grade (Italy: CCNL level)", f_country: "Country of the employer", f_weekly_hours: "Average contractual weekly hours (optional context; not used when annual hours are mapped)",
+    f_fte: "Full-time share (FTE)", f_annual_hours: "Contractual hours in the selected calendar year",
     entitaLabel: "Employer", gruppo: "Group (not a statutory figure)",
     kLavoratori: "Workers", kDivario: "Mean hourly pay gap", kCategorie: "Categories to justify or remedy", kCosto: "Cost ceiling to close them, a year",
     obblighi: "What each employer owes, and when",
@@ -61,10 +70,10 @@ const UI = {
     giustPh: "The gender-neutral reason, or the remedy and its date",
     riservato: "kept back", notaPiccole: "{n} categories have fewer than {m} women or men: their averages, gaps and cost are kept back here, in the chart and in the download, and left out of the total cost, so that no one's pay can be worked out. Article 12(3) lets Member States set such a threshold; {m} is this tool's choice.",
     scaricaXlsx: "Download in Excel", stampa: "Print for the client", stampaTitolo: "Pay gap assessment",
-    stampaMeta: "{f} · {oggi} · {n} workers", nessunFlag: "No category reaches 5%.",
+    stampaMeta: "{f} · {basis} · {year} · run {oggi} · {n} workers", nessunFlag: "No category reaches 5%.",
     esclusi: "{n} worker(s) are not recorded as a woman or a man: they are left out of the comparisons, because the Directive compares women and men, but they count for the employer's size.",
     eFile: "Could not read {f}: {e}", eVuoto: "The file has no rows.", eRiga: "Row {r}: {e}",
-    eOre: "weekly hours missing or zero", ePaga: "base pay missing", eCategoria: "no category", eRuolo: "role «{r}» has no score",
+    eWorkerId: "pseudonymous worker ID missing", eWorkerIdDuplicate: "duplicate pseudonymous worker ID", eOre: "contractual hours missing or zero", eOreColonna: "actual-pay mode requires each worker’s total contractual hours for the selected calendar year", eAnno: "enter a completed calendar year for actual-pay mode, or a valid reference year for a simulation", ePaga: "base pay missing", eCategoria: "no category", eRuolo: "role «{r}» has no score",
     eNumero: "this is not a number: {e}",
     footer: "The same calculations as the kit's Python pipeline and Excel model, checked against each other on every change. Not legal advice.",
     rapporto: "Report", metodo: "Method", codice: "Code",
@@ -79,8 +88,8 @@ const UI = {
     hDirettiva: "Directive: total pay", hItalia: "Italy: livello retributivo", hDiff: "Difference, points",
     hEsitoIt: "Status, Italy", hEsitoDir: "Status, Directive",
     italiaCambia: "{n} categories change status between the two measures.", italiaUguale: "The same categories need a justification under both measures; the gaps to justify differ.",
-    xFile: "Payroll file", xData: "Run on", xPeriodo: "Base pay", xOre: "Full-time weekly hours", xSoglia: "Threshold (Article 10)",
-    xMinimo: "Fewest women or men before averages are shared", xEsclusi: "Workers not recorded as woman or man", xFonte: "Method",
+    payrollFileLabel: "Local payroll data", xFile: "Data source", xData: "Run on", xPeriodo: "Base pay", xBasis: "Pay data basis", xYear: "Calendar year covered", xWeeklyHours: "Weekly hours annualized by × 52 (or FTE conversion)", xOre: "Full-time weekly hours", xSoglia: "Threshold (Article 10)",
+    xHoursBasis: "Hourly denominator", xAnnualHours: "Worker-specific contractual hours for the selected year", xMinimo: "Fewest women or men before averages are shared", xEsclusi: "Workers not recorded as woman or man", xFonte: "Method",
     xResponsabile: "Owner", xEntro: "Due by", xMediaD: "Women, mean hourly pay", xMediaU: "Men, mean hourly pay",
     xIstituto: "Instrument", xNote: "Notes", xVerificato: "Checked on", xPct: "%",
     statusT: { Transposed: "Transposed", "Partly transposed": "Partly transposed", "Not transposed": "Not transposed", Draft: "Draft" },
@@ -90,8 +99,8 @@ const UI = {
     brand: "Pay Transparency Readiness Kit", eyebrow: "Direttiva UE sulla trasparenza retributiva · articoli 9 e 10",
     title: "La verifica del divario retributivo, sulle paghe del tuo cliente",
     lead: "Carica un export delle paghe: i sette indicatori da comunicare, le categorie di lavoratori con un divario del 5% o più, quanto costerebbe chiuderli e quando ogni datore di lavoro deve comunicarli.",
-    privacy: "Il file delle paghe resta su questo computer: i calcoli girano in questa pagina e niente viene inviato. Puoi verificarlo staccando la rete dopo che la pagina si è aperta.",
-    step1: "Il file delle paghe", step1sub: "Excel (.xlsx) o CSV, una riga per lavoratore, con la retribuzione annua.",
+    privacy: "Prima dell’importazione rimuovi gli identificativi diretti e usa ID pseudonimi. I file delle paghe e dei ruoli sono elaborati in questa pagina e non vengono caricati online. Dati, punteggi e note restano in memoria finché non svuoti o ricarichi la pagina. Si salva solo la lingua; i report scaricati sono dati aziendali riservati.",
+    step1: "Il file delle paghe", step1sub: "Excel (.xlsx) o CSV, una riga per lavoratore, indicando il periodo retributivo.",
     dropPaghe: "Export delle paghe", dropPagheSub: "Obbligatorio · trascinalo qui o tocca per sceglierlo",
     dropGriglia: "Griglia di valutazione dei ruoli", dropGrigliaSub: "Facoltativa · ruoli valutati su competenze, impegno, responsabilità e condizioni di lavoro",
     esempio: "Prova con l'azienda di esempio", modelli: "Modelli:", modelloPaghe: "paghe", modelloGriglia: "valutazione dei ruoli",
@@ -102,24 +111,33 @@ const UI = {
     notaCosto: "escluse {n} categorie piccole riservate", colonneSub: "Controlla gli abbinamenti qui sotto, o cambiali.",
     colonneMancano: "Scegli la colonna per {n} voce/i in rosso.", ruoloOCategoria: "Al file serve una colonna con il ruolo o con la categoria.",
     componenti: "Componenti complementari o variabili",
-    componentiSub: "Spunta ogni colonna pagata in più rispetto alla retribuzione base, come importo annuo: premi, provvigioni, indennità.",
+    componentiSub: "Spunta ogni colonna numerica pagata in più rispetto alla retribuzione base, usando importi dello stesso periodo scelto qui sotto: premi, provvigioni, indennità.",
     nessunaColonna: "Nel file non ci sono altre colonne numeriche.",
-    step3: "Lavoro di pari valore", usaFile: "Usa le categorie del file", usaGriglia: "Valuta i ruoli qui, sui quattro criteri dell'articolo 4",
+    step3: "Lavoro di pari valore", usaFile: "Usa le categorie del file", usaGriglia: "Usa fasce esplorative; verifica prima di un uso legale",
     catFile: "Le categorie vengono dalla colonna «{c}»: {n} categorie.",
-    catGriglia: "{n} ruoli nel file. Valuta ciascuno: i punti decidono la sua categoria di pari valore.",
+    catGriglia: "{n} ruoli nel file. Le fasce di punteggio sono esplorative: verifica i raggruppamenti con HR e rappresentanti dei lavoratori prima di ogni uso legale.",
     catDaFare: "{n} ruolo/i ancora da valutare, in rosso.",
-    grigliaSub: "Dai a ogni ruolo un punteggio da 1 a 5. Punti = competenze × 35 + impegno × 15 + responsabilità × 35 + condizioni di lavoro × 15; i punti decidono la categoria. I punteggi restano su questo computer.",
+    grigliaSub: "Valuta ogni ruolo da 1 a 5 sui quattro criteri mostrati. Lo strumento applica pesi interni illustrativi (competenze 35, impegno 15, responsabilità 35, condizioni di lavoro 15) per raggruppare i ruoli a fini esplorativi; non decide categorie legali. Verifica i risultati con HR e rappresentanti dei lavoratori; in Italia parti dalla classificazione CCNL applicabile e da una verifica specialistica. I punteggi restano in memoria finché non svuoti o ricarichi la pagina.",
     scaricaGriglia: "Scarica la griglia",
     hRuolo: "Ruolo", hLavoratori: "Lavoratori", hPunti: "Punti", hCategoria: "Categoria",
     skills: "Competenze", effort: "Impegno", responsibility: "Responsabilità", working_conditions: "Condizioni di lavoro",
     step4: "Le impostazioni", paese: "Paese del datore di lavoro", paeseSub: "Usato se il file non ha una colonna con il paese.",
+    baseDati: "Base dei dati retributivi", baseDatiSub: "Scegli pagamenti effettivi di un anno civile concluso o una simulazione annualizzata.",
+    basisActual: "Importi effettivamente pagati nell’anno selezionato (analisi preliminare)", basisAnnualized: "Retribuzione contrattuale annualizzata (solo simulazione)",
+    annoPaghe: "Anno civile coperto dai dati delle paghe", annoPagheSub: "La modalità effettiva richiede importi pagati dal 1° gennaio al 31 dicembre. Preselezionato l’anno civile precedente.",
+    periodoActual: "La retribuzione base è il totale effettivamente pagato nell’anno", periodoActualSub: "Inserisci il totale pagato nell’intero anno; non moltiplicarlo. Le componenti devono coprire lo stesso anno.",
+    periodoAnnualizedSub: "Solo simulazione. La retribuzione base mensile viene moltiplicata per 12, 13 o 14; non è un report delle paghe effettive dell’anno precedente.",
+    oreSubPilot: "La modalità effettiva richiede le ore contrattuali totali di ogni lavoratore nell’anno civile selezionato. Questa impostazione serve solo a convertire l’FTE nelle simulazioni.",
+    basisActualNote: "Pagamenti effettivi del {year}; il dato orario usa le ore contrattuali annuali mappate per ogni lavoratore. Verifica che le ore corrispondano al periodo pagato prima di ogni uso legale.",
+    basisAnnualizedNote: "Simulazione annualizzata per il {year}; non è una comunicazione obbligatoria.",
+    pulisci: "Svuota file e dati di lavoro", cleared: "File, punteggi e note sono stati rimossi da questa pagina.",
     periodo: "La retribuzione base nel file è", periodoSub: "Le componenti complementari e variabili si leggono come annue.",
     pAnnuale: "Annua", p12: "Mensile, pagata 12 volte l'anno", p13: "Mensile, pagata 13 volte l'anno", p14: "Mensile, pagata 14 volte l'anno",
-    ore: "Ore settimanali a tempo pieno", oreSub: "Usate se il file non ha le ore settimanali: quota di tempo pieno × queste ore.",
+    ore: "Ore settimanali standard a tempo pieno", oreSub: "Usate se il file non ha le ore settimanali: quota di tempo pieno × queste ore.",
     esegui: "Esegui la verifica",
-    f_worker_id: "Matricola", f_gender: "Genere (donna o uomo)", f_base_pay: "Retribuzione base", f_role: "Ruolo o mansione",
-    f_category: "Categoria di pari valore o livello", f_country: "Paese del datore di lavoro", f_weekly_hours: "Ore settimanali",
-    f_fte: "Quota di tempo pieno (FTE)",
+    f_worker_id: "ID pseudonimo del lavoratore", f_gender: "Genere (donna o uomo)", f_base_pay: "Retribuzione base", f_role: "Ruolo o mansione",
+    f_category: "Categoria di pari valore verificata / livello interno (Italia: livello CCNL)", f_country: "Paese del datore di lavoro", f_weekly_hours: "Media delle ore contrattuali settimanali (contesto facoltativo; non usata se sono mappate le ore annue)",
+    f_fte: "Quota di tempo pieno (FTE)", f_annual_hours: "Ore contrattuali nell’anno civile selezionato",
     entitaLabel: "Datore di lavoro", gruppo: "Gruppo (non è un dato da comunicare)",
     kLavoratori: "Lavoratori", kDivario: "Divario medio, paga oraria", kCategorie: "Categorie da giustificare o correggere", kCosto: "Tetto del costo per chiuderle, l'anno",
     obblighi: "Cosa deve fare ogni datore di lavoro, e quando",
@@ -138,10 +156,10 @@ const UI = {
     giustPh: "Il motivo neutro rispetto al genere, o il rimedio e la sua data",
     riservato: "riservato", notaPiccole: "{n} categorie hanno meno di {m} donne o uomini: medie, divari e costo non si mostrano, né qui né nel grafico né nel file scaricato, e restano fuori dal costo totale, così nessuna retribuzione si può ricavare. L'articolo 12, paragrafo 3 lascia agli Stati membri questa soglia; {m} è la scelta di questo strumento.",
     scaricaXlsx: "Scarica in Excel", stampa: "Stampa per il cliente", stampaTitolo: "Verifica del divario retributivo",
-    stampaMeta: "{f} · {oggi} · {n} lavoratori", nessunFlag: "Nessuna categoria arriva al 5%.",
+    stampaMeta: "{f} · {basis} · {year} · elaborazione {oggi} · {n} lavoratori", nessunFlag: "Nessuna categoria arriva al 5%.",
     esclusi: "{n} lavoratore/i non risultano né donna né uomo: restano fuori dai confronti, perché la direttiva confronta donne e uomini, ma contano per la dimensione dell'azienda.",
     eFile: "Non riesco a leggere {f}: {e}", eVuoto: "Il file non ha righe.", eRiga: "Riga {r}: {e}",
-    eOre: "ore settimanali mancanti o pari a zero", ePaga: "retribuzione base mancante", eCategoria: "categoria mancante", eRuolo: "il ruolo «{r}» non ha un punteggio",
+    eWorkerId: "ID pseudonimo del lavoratore mancante", eWorkerIdDuplicate: "ID pseudonimo del lavoratore duplicato", eOre: "ore contrattuali mancanti o pari a zero", eOreColonna: "la modalità pagamenti effettivi richiede le ore contrattuali totali di ogni lavoratore nell’anno civile selezionato", eAnno: "inserisci un anno civile concluso per i pagamenti effettivi o un anno di riferimento valido per la simulazione", ePaga: "retribuzione base mancante", eCategoria: "categoria mancante", eRuolo: "il ruolo «{r}» non ha un punteggio",
     eNumero: "non è un numero: {e}",
     footer: "Gli stessi calcoli della pipeline Python e del modello Excel del kit, verificati tra loro a ogni modifica. Non è consulenza legale.",
     rapporto: "Rapporto", metodo: "Metodo", codice: "Codice",
@@ -156,8 +174,8 @@ const UI = {
     hDirettiva: "Direttiva: retribuzione totale", hItalia: "Italia: livello retributivo", hDiff: "Differenza, punti",
     hEsitoIt: "Esito, Italia", hEsitoDir: "Esito, direttiva",
     italiaCambia: "{n} categorie cambiano esito tra le due misure.", italiaUguale: "Le stesse categorie vanno giustificate con entrambe le misure; cambiano i divari da giustificare.",
-    xFile: "File delle paghe", xData: "Eseguita il", xPeriodo: "Retribuzione base", xOre: "Ore settimanali a tempo pieno", xSoglia: "Soglia (articolo 10)",
-    xMinimo: "Minimo di donne o uomini per mostrare le medie", xEsclusi: "Lavoratori non registrati come donna o uomo", xFonte: "Metodo",
+    payrollFileLabel: "Dati paghe locali", xFile: "Fonte dei dati", xData: "Eseguita il", xPeriodo: "Retribuzione base", xBasis: "Base dei dati retributivi", xYear: "Anno civile dei dati", xWeeklyHours: "Ore settimanali annualizzate × 52 (o conversione da FTE)", xOre: "Ore settimanali a tempo pieno", xSoglia: "Soglia (articolo 10)",
+    xHoursBasis: "Denominatore orario", xAnnualHours: "Ore contrattuali per lavoratore nell’anno selezionato", xMinimo: "Minimo di donne o uomini per mostrare le medie", xEsclusi: "Lavoratori non registrati come donna o uomo", xFonte: "Metodo",
     xResponsabile: "Responsabile", xEntro: "Entro il", xMediaD: "Donne, paga oraria media", xMediaU: "Uomini, paga oraria media",
     xIstituto: "Atto", xNote: "Note", xVerificato: "Verificato il", xPct: "%",
     statusT: { Transposed: "Recepita", "Partly transposed": "Recepita in parte", "Not transposed": "Non recepita", Draft: "In bozza" },
@@ -183,13 +201,14 @@ const VOCI = {
 
 // The columns the assessment reads, with the names payroll exports often use for them.
 const CAMPI = [
-  ["worker_id", true, ["employee id", "employee number", "personnel number", "id", "matricola", "codice dipendente", "numer pracownika", "personalnummer"]],
+  ["worker_id", true, ["pseudonymous worker id", "pseudonymous id", "worker pseudonym", "employee pseudonym", "id pseudonimo", "codice pseudonimo"]],
   ["gender", true, ["sex", "sesso", "genere", "plec", "geschlecht", "sexo", "gender code"]],
   ["base_pay", true, ["base salary", "annual base pay", "annual base salary", "salary", "ral", "retribuzione base", "stipendio base", "retribuzione annua lorda", "grundgehalt", "gehalt", "salario base", "salario", "sueldo", "wynagrodzenie zasadnicze", "pensja"]],
   ["role", false, ["job title", "job", "position", "ruolo", "mansione", "posizione", "qualifica", "stanowisko", "rolle", "puesto"]],
   ["category", false, ["category of workers", "job grade", "pay grade", "grade", "band", "categoria", "livello", "grado", "kategoria", "entgeltgruppe"]],
   ["country", false, ["paese", "nazione", "country code", "kraj", "land", "pais"]],
-  ["weekly_hours", false, ["hours per week", "contractual weekly hours", "weekly working hours", "ore settimanali", "orario settimanale", "wochenstunden", "horas semanales", "wymiar godzin"]],
+  ["annual_hours", false, ["annual contractual hours", "contractual hours in year", "contracted hours in calendar year", "ore contrattuali annue", "ore contrattuali anno"]],
+  ["weekly_hours", false, ["hours per week", "contractual weekly hours", "weekly working hours", "average weekly hours", "average contractual hours per week", "ore settimanali", "ore settimanali medie", "ore contrattuali medie", "orario settimanale", "wochenstunden", "horas semanales", "wymiar godzin"]],
   ["fte", false, ["full time equivalent", "fte %", "part time", "percentuale part time", "etat", "arbeitszeitanteil"]],
 ].map(([key, required, aliases]) => ({ key, required, aliases }));
 const GRIGLIA = [["role", true, ["ruolo", "mansione", "job title", "position"]], ["skills", true, ["competenze", "skill"]],
@@ -207,11 +226,23 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const L = () => UI[i18n.lang];
 const pct = (x) => (x == null || Number.isNaN(x) ? "–" : i18n.percent(x, 1).replace(/^-/, "−"));
+const workingData = new Map();
 const store = {
-  get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* private mode: fine */ } },
+  get(k, d) { return workingData.has(k) ? workingData.get(k) : d; },
+  set(k, v) { workingData.set(k, v); },
+  clear() { workingData.clear(); },
 };
-// remembered per file, so one client's scores and justifications never show up in another client's results
+function clearLegacyWorkingData() {
+  try {
+    const prefixes = ["strumenti.pt.griglia.", "strumenti.pt.giustificazioni.", "strumenti.colonne.pt."];
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key && prefixes.some((prefix) => key.startsWith(prefix))) localStorage.removeItem(key);
+    }
+  } catch { /* storage unavailable */ }
+}
+clearLegacyWorkingData();
+// Scores and justifications stay in page memory and clear when source files change
 const chiaveFile = () => (esempio ? "esempio" : normalise(files.paghe?.name || "").slice(0, 80));
 const K_GRIGLIA = () => `strumenti.pt.griglia.${chiaveFile()}`, K_GIUST = () => `strumenti.pt.giustificazioni.${chiaveFile()}`;
 
@@ -226,10 +257,26 @@ const soldi = (x, d = 0) => {
 };
 
 $("ore").value = CFG.full_time_weekly_hours;
+$("anno-paghe").value = new Date().getFullYear() - 1;
 function opzioni() {
   const p = $("paese").value || "IT", q = $("periodo").value || "pAnnuale";
   $("paese").innerHTML = Object.entries(L().paesi).map(([k, v]) => `<option value="${k}" ${k === p ? "selected" : ""}>${esc(v)}</option>`).join("");
   $("periodo").innerHTML = Object.keys(PERIODI).map((k) => `<option value="${k}" ${k === q ? "selected" : ""}>${esc(t(k))}</option>`).join("");
+  aggiornaBaseDatiUI();
+}
+function annoValido() {
+  const y = Number($("anno-paghe").value), basis = $("base-dati").value;
+  const max = basis === "actual" ? new Date().getFullYear() - 1 : new Date().getFullYear();
+  return Number.isInteger(y) && y >= 2000 && y <= max;
+}
+function aggiornaBaseDatiUI() {
+  const actual = $("base-dati").value === "actual";
+  if (actual) $("periodo").value = "pAnnuale";
+  $("periodo").disabled = actual;
+  $("periodo-label").textContent = t(actual ? "periodoActual" : "periodo");
+  $("periodo-sub").textContent = t(actual ? "periodoActualSub" : "periodoAnnualizedSub");
+  $("base-dati-sub").textContent = t(actual ? "annoPagheSub" : "periodoAnnualizedSub");
+  $("campo-ore").style.display = actual || mapping.weekly_hours ? "none" : "block";
 }
 opzioni();
 
@@ -245,9 +292,15 @@ async function prendiFile(slot, file) {
     const table = await readTable(file);
     if (!table.rows.length) throw new Error(t("eVuoto"));
     files[slot] = { name: file.name, ...table };
+    store.clear();
+    punteggi = {};
     if (slot === "paghe") {
-      esempio = false; generi = {};
-      punteggi = store.get(K_GRIGLIA(), {});
+      clearMappings();
+      files.griglia = null;
+      $("file-griglia").value = "";
+      $("nome-griglia").textContent = "";
+      $("drop-griglia").classList.remove("is-done", "is-over");
+      esempio = false; generi = {}; entita = null;
       document.querySelector('input[name="fonte"][value="file"]').checked = true;    // a new file: its own categories first
     }
     if (slot === "griglia") leggiGriglia();
@@ -291,11 +344,17 @@ $("esempio").addEventListener("click", async () => {
       if (!r.ok) throw new Error(`${u}: ${r.status}`);
       return r.text();
     }));
+    ["paghe", "griglia"].forEach((slot) => { $("file-" + slot).value = ""; });
     files.paghe = { name: "payroll_extract.csv", ...parseCsv(p) };
     files.griglia = { name: "job_evaluation.csv", ...parseCsv(g) };
     esempio = true;
   } catch (e) { messaggio(t("eFile", { f: "sample", e: e.message })); return; }
+  store.clear();
+  clearMappings();
   punteggi = {};
+  $("base-dati").value = "annualized";
+  $("anno-paghe").value = "2026";
+  aggiornaBaseDatiUI();
   leggiGriglia();
   $("nome-paghe").textContent = `payroll_extract.csv · ${files.paghe.rows.length}`;
   $("nome-griglia").textContent = `job_evaluation.csv · ${files.griglia.rows.length}`;
@@ -339,7 +398,7 @@ function disegnaGeneri() {
   $("generi").querySelectorAll("select").forEach((s) => s.addEventListener("change", () => { generi[s.dataset.g] = s.value; nascondi(); }));
 }
 
-const mancanti = () => CAMPI.filter((c) => c.required && !mapping[c.key]).map((c) => c.key);
+const mancanti = () => CAMPI.filter((c) => (c.required || ($("base-dati").value === "actual" && c.key === "annual_hours")) && !mapping[c.key]).map((c) => c.key);
 function disegnaMappa(apri) {
   const f = files.paghe;
   const manca = mancanti().length + (mapping.role || mapping.category ? 0 : 1);
@@ -348,11 +407,13 @@ function disegnaMappa(apri) {
   const aperta = manca || apri === "forza";
   $("riepilogo-colonne").style.display = aperta ? "none" : "block";
   $("mappa").style.display = aperta ? "grid" : "none";
+  $("campo-ore").style.display = $("base-dati").value === "actual" || mapping.weekly_hours ? "none" : "block";
   $("mappa").innerHTML = CAMPI.map((c) => {
     const scelta = mapping[c.key] || "";
-    const rosso = (c.required && !scelta) || ((c.key === "role" || c.key === "category") && !mapping.role && !mapping.category);
+    const richiesto = c.required || ($("base-dati").value === "actual" && c.key === "annual_hours");
+    const rosso = (richiesto && !scelta) || ((c.key === "role" || c.key === "category") && !mapping.role && !mapping.category);
     return `<div class="s-map-row${rosso ? " is-missing" : ""}"><div class="need">${esc(t(`f_${c.key}`))}
-      ${c.required ? "" : `<small>${esc(t("facoltativa"))}</small>`}</div>
+      ${richiesto ? "" : `<small>${esc(t("facoltativa"))}</small>`}</div>
       <select class="s-select" data-key="${c.key}" aria-label="${esc(t(`f_${c.key}`))}">
         <option value="">${esc(t("nonPresente"))}</option>
         ${f.headers.map((h) => `<option ${h === scelta ? "selected" : ""}>${esc(h)}</option>`).join("")}
@@ -447,7 +508,9 @@ function disegnaGriglia() {
 
 function pronto() {
   const f = files.paghe;
-  $("esegui").disabled = !(f && !mancanti().length && (mapping.role || mapping.category)
+  const yearOk = annoValido();
+  $("avviso-impostazioni").textContent = f && !yearOk ? t("eAnno") : "";
+  $("esegui").disabled = !(f && yearOk && !mancanti().length && (mapping.role || mapping.category)
     && (fonte() === "file" || ruoli().every(([r]) => valutato(r))));
 }
 
@@ -475,14 +538,22 @@ function paese(v) {
 function calcola() {
   try {
     messaggio("");
-    const f = files.paghe, dc = f.decimalComma, mult = PERIODI[$("periodo").value], ore = Number($("ore").value);
+    const f = files.paghe, dc = f.decimalComma, basis = $("base-dati").value, year = Number($("anno-paghe").value);
+    if (!annoValido()) throw new Error(t("eAnno"));
+    if (basis === "actual" && !mapping.annual_hours) throw new Error(t("eOreColonna"));
+    const mult = basis === "actual" ? 1 : PERIODI[$("periodo").value], ore = Number($("ore").value);
     const roles = fonte() === "griglia" ? evaluate(ruoli().map(([role]) => ({ role, ...punteggi[role] })), CFG) : null;
     const cols = [...componenti];
     let esclusi = 0;
     const altri = {};
     const rows = [];
+    const workerIds = new Set();
     f.rows.forEach((raw, i) => {
       const err = (e) => { throw new Error(t("eRiga", { r: i + 2, e })); };
+      const workerId = String(raw[mapping.worker_id] ?? "").trim();
+      if (!workerId) err(t("eWorkerId"));
+      if (workerIds.has(workerId)) err(t("eWorkerIdDuplicate"));
+      workerIds.add(workerId);
       const g = generi[String(raw[mapping.gender] ?? "").trim()] || null;
       if (!g) {
         esclusi++;
@@ -493,13 +564,19 @@ function calcola() {
       const num = (v) => { try { return number(v, dc); } catch { return err(t("eNumero", { e: v })); } };
       if (String(raw[mapping.base_pay] ?? "").trim() === "") err(t("ePaga"));
       let hours = ore;
-      if (mapping.weekly_hours) hours = num(raw[mapping.weekly_hours]);
+      if (mapping.annual_hours) {
+        const annualHours = num(raw[mapping.annual_hours]);
+        if (!(annualHours > 0)) err(t("eOre"));
+        // derive() accepts weekly hours and multiplies by weeks_per_year; convert annual hours back to its input convention.
+        hours = annualHours / CFG.weeks_per_year;
+      } else if (basis === "actual") err(t("eOreColonna"));
+      else if (mapping.weekly_hours) hours = num(raw[mapping.weekly_hours]);
       else if (mapping.fte) { const x = num(raw[mapping.fte]); hours = (x > 1.5 ? x / 100 : x) * ore; }
       if (!(hours > 0)) err(t("eOre"));
       let category;
       if (roles) category = roles.get(String(raw[mapping.role] ?? "").trim())?.category ?? err(t("eRuolo", { r: raw[mapping.role] }));
       else category = String(raw[mapping.category] ?? "").trim() || err(t("eCategoria"));
-      rows.push({ worker_id: String(raw[mapping.worker_id]), country: mapping.country ? paese(raw[mapping.country]) : $("paese").value,
+      rows.push({ worker_id: workerId, country: mapping.country ? paese(raw[mapping.country]) : $("paese").value,
         gender: g, category, role: mapping.role ? String(raw[mapping.role] ?? "").trim() : "",
         base_pay: num(raw[mapping.base_pay]) * mult, components: cols.map((c) => num(raw[c])), fixed: cols.map((c) => fisse.has(c)),
         weekly_hours: hours });
@@ -511,7 +588,7 @@ function calcola() {
     const ordine = categoryOrder(w, CFG);
     risultato = { w, countries, esclusi, items: byEntity(w, countries), screen: screen(w, countries, ordine, CFG),
       national: national(w, countries, CFG), nscreen: screen(w, countries, ordine, CFG, "national"), fisse: cols.filter((c) => fisse.has(c)),
-      duties: obligations(w, countries, CFG, altri), roles, file: f.name, oggi: new Date().toISOString().slice(0, 10) };
+      duties: obligations(w, countries, CFG, altri), roles, basis, year, oggi: new Date().toISOString().slice(0, 10) };
     if (!countries.includes(entita) && !(entita === "Group" && countries.length > 1)) entita = countries[0];
     mostra();
     if (esclusi) messaggio(t("esclusi", { n: esclusi }), "info");
@@ -521,8 +598,48 @@ function calcola() {
   }
 }
 $("esegui").addEventListener("click", calcola);
-["paese", "periodo", "ore"].forEach((id) => $(id).addEventListener("change", nascondi));
+["paese", "periodo", "ore", "anno-paghe"].forEach((id) => $(id).addEventListener("change", () => { nascondi(); pronto(); }));
+$("anno-paghe").addEventListener("input", pronto);
+$("base-dati").addEventListener("change", () => {
+  aggiornaBaseDatiUI();
+  if (files.paghe) { disegnaMappa(false); categorie(); }
+  nascondi();
+  pronto();
+});
 $("valuta").addEventListener("change", () => mostra());
+
+$("pulisci").addEventListener("click", () => {
+  store.clear();
+  clearMappings();
+  clearLegacyWorkingData();
+  Object.keys(files).forEach((slot) => {
+    files[slot] = null;
+    $("file-" + slot).value = "";
+    $("nome-" + slot).textContent = "";
+    $("drop-" + slot).classList.remove("is-done", "is-over");
+  });
+  numeriche = []; esempio = false; mapping = {}; componenti = new Set(); fisse = new Set();
+  punteggi = {}; generi = {}; risultato = null; entita = null;
+  ["mappa", "componenti", "fisse", "generi", "griglia", "entita", "kpis", "tab-obblighi", "tab-voci",
+    "grafico-quartili", "grafico-categorie", "tab-categorie", "tab-italia-voci", "tab-italia-cat"]
+    .forEach((id) => { $(id).innerHTML = ""; });
+  ["colonne-ok", "colonne-sub", "cat-sub", "voci-sub", "stampa-meta", "avviso-base", "nota-piccole", "nota-italia"]
+    .forEach((id) => { $(id).textContent = ""; });
+  $("passo-colonne").style.display = "none";
+  $("passo-categorie").style.display = "none";
+  $("risultati").style.display = "none";
+  $("esegui").disabled = true;
+  $("paese").value = "IT";
+  $("base-dati").value = "actual";
+  $("anno-paghe").value = new Date().getFullYear() - 1;
+  $("periodo").value = "pAnnuale";
+  $("valuta").value = "EUR";
+  $("ore").value = CFG.full_time_weekly_hours;
+  aggiornaBaseDatiUI();
+  $("avviso-impostazioni").textContent = "";
+  document.querySelector("input[name=\"fonte\"][value=\"file\"]").checked = true;
+  messaggio(t("cleared"), "info");
+});
 
 // ---- results ------------------------------------------------------------------------------------------------
 const nomePaese = (c) => L().paesi[c] || c;
@@ -550,7 +667,9 @@ function mostra() {
   $("kpis").innerHTML = [[t("kLavoratori"), i18n.number(it.workers), ""], [t("kDivario"), pct(it.a_mean_gap_hourly), Math.abs(it.a_mean_gap_hourly) >= CFG.threshold ? "is-bad" : "is-good"],
     [t("kCategorie"), `${flag.length} / ${cats.length}`, flag.length ? "is-bad" : "is-good"], [t("kCosto"), soldi(costo) + (fuori ? `<div class="note">${esc(t("notaCosto", { n: fuori }))}</div>` : ""), ""]]
     .map(([k, v, c]) => `<div class="s-kpi ${c}"><div class="k">${esc(k)}</div><div class="v">${v}</div></div>`).join("");
-  $("stampa-meta").textContent = `${nomeEntita(entita)} · ${t("stampaMeta", { f: risultato.file, oggi: data(risultato.oggi), n: i18n.number(it.workers) })}`;
+  const basisLabel = t(risultato.basis === "actual" ? "basisActual" : "basisAnnualized");
+  $("stampa-meta").textContent = nomeEntita(entita) + " · " + t("stampaMeta", { f: t("payrollFileLabel"), basis: basisLabel, year: risultato.year, oggi: data(risultato.oggi), n: i18n.number(it.workers) });
+  $("avviso-base").textContent = t(risultato.basis === "actual" ? "basisActualNote" : "basisAnnualizedNote", { year: risultato.year });
 
   $("tab-obblighi").innerHTML = `<tr><th class="l">${esc(t("hPaese"))}</th><th>${esc(t("hLavoratori"))}</th><th class="l">${esc(t("hFascia"))}</th><th class="l">${esc(t("hFrequenza"))}</th><th>${esc(t("hPrimo"))}</th><th>${esc(t("hRimedio"))}</th><th class="l">${esc(t("hStato"))}</th></tr>` +
     duties.map((o) => {
@@ -712,8 +831,11 @@ $("scarica-xlsx").addEventListener("click", () => {
       ...[...roles].map(([role, v]) => [role, n.get(role) || 0, ...CFG.factors.map((f) => punteggi[role][f]), v.points, v.category])],
       widths: [30, 12, 14, 12, 16, 20, 10, 12] });
   }
-  sheets.push({ name: t("x_impostazioni"), rows: [[t("x_impostazioni"), ""], [t("xFile"), risultato.file], [t("xData"), risultato.oggi],
-    [t("xPeriodo"), t($("periodo").value)], [t("xOre"), Number($("ore").value)], [t("xSoglia"), i18n.percent(CFG.threshold, 0)],
+  sheets.push({ name: t("x_impostazioni"), rows: [[t("x_impostazioni"), ""], [t("xFile"), t("payrollFileLabel")], [t("xData"), risultato.oggi],
+    [t("xYear"), risultato.year], [t("xBasis"), t(risultato.basis === "actual" ? "basisActual" : "basisAnnualized")],
+    [t("xHoursBasis"), t(mapping.annual_hours ? "xAnnualHours" : "xWeeklyHours")],
+    [t("xPeriodo"), t(risultato.basis === "actual" ? "periodoActual" : $("periodo").value)],
+    [t("xOre"), mapping.annual_hours || mapping.weekly_hours ? "—" : Number($("ore").value)], [t("xSoglia"), i18n.percent(CFG.threshold, 0)],
     [t("xMinimo"), CFG.min_cell], [t("xEsclusi"), esclusi], [t("valuta"), $("valuta").value || "—"], [t("xFonte"), "https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/blob/main/docs/method.md"]],
     widths: [44, 70] });
   download(writeXlsx(sheets), `${i18n.lang === "it" ? "verifica_divario" : "pay_gap_assessment"}_${risultato.oggi}.xlsx`,
@@ -721,6 +843,7 @@ $("scarica-xlsx").addEventListener("click", () => {
 });
 
 i18n.apply();
+aggiornaBaseDatiUI();
 i18n.onChange(() => {
   opzioni();
   if (files.paghe) { disegnaMappa(false); disegnaFisse(); categorie(); }
