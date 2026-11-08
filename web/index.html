@@ -61,7 +61,7 @@
 
   <div class="s-privacy" role="note">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-    <span data-i18n="privacy">The payroll file stays on this computer: the calculations run in this page and nothing is sent anywhere. You can check by going offline once the page has loaded.</span>
+    <span data-i18n="privacy">Remove direct identifiers before import and use pseudonymous worker IDs. Payroll and role files are processed in this page and are not uploaded. Working data stay in memory; only language is saved. Downloaded reports remain confidential company data.</span>
   </div>
 
   <section class="s-card" aria-labelledby="h-file">
@@ -110,12 +110,12 @@
   <section class="s-card" id="passo-categorie" aria-labelledby="h-cat">
     <h2 id="h-cat"><span class="s-step">3</span><span data-i18n="step3">Work of equal value</span></h2>
     <p class="s-sub" id="cat-sub"></p>
+    <p class="s-why" data-i18n="grigliaSub">Score each role 1–5 on the four displayed criteria. The illustrative grid is exploratory only and does not decide legal categories.</p>
     <div class="scelta" id="scelta-categorie" role="radiogroup">
       <label><input type="radio" name="fonte" value="file" checked> <span data-i18n="usaFile">Use the categories in the file</span></label>
       <label><input type="radio" name="fonte" value="griglia"> <span data-i18n="usaGriglia">Score the roles here, on the four criteria of Article 4</span></label>
     </div>
     <div id="griglia-wrap">
-      <p class="s-why" data-i18n="grigliaSub">Score each role from 1 to 5. Points = skills × 35 + effort × 15 + responsibility × 35 + working conditions × 15; the points set the category. Your scores are remembered on this computer.</p>
       <div class="s-table-wrap"><table class="s-table grid-table" id="griglia"></table></div>
       <div class="s-actions"><button type="button" class="s-btn is-small" id="scarica-griglia" data-i18n="scaricaGriglia">Download the grid</button></div>
     </div>
@@ -126,20 +126,27 @@
     <div class="s-fields">
       <div class="s-field" id="campo-paese"><label for="paese" data-i18n="paese">Country of the employer</label>
         <select id="paese"></select><small data-i18n="paeseSub">Used when the file has no country column.</small></div>
-      <div class="s-field"><label for="periodo" data-i18n="periodo">Base pay in the file is</label>
-        <select id="periodo"></select><small data-i18n="periodoSub">Complementary and variable pay is read as annual.</small></div>
+      <div class="s-field"><label for="base-dati" data-i18n="baseDati">Pay data basis</label>
+        <select id="base-dati"><option value="actual" data-i18n="basisActual">Actual amounts paid in the selected calendar year</option><option value="annualized" data-i18n="basisAnnualized">Annualized contract amount (simulation only)</option></select><small id="base-dati-sub" data-i18n="baseDatiSub">Choose actual payments for a completed calendar year or an annualized simulation.</small></div>
+      <div class="s-field"><label for="anno-paghe" data-i18n="annoPaghe">Calendar year covered by the payroll data</label>
+        <input type="number" id="anno-paghe" min="2000" step="1"><small data-i18n="annoPagheSub">Actual mode requires amounts paid from 1 January to 31 December. The default is the previous calendar year.</small></div>
+      <div class="s-field"><label for="periodo" id="periodo-label" data-i18n="periodo">Base pay in the file is</label>
+        <select id="periodo"></select><small id="periodo-sub" data-i18n="periodoSub">Complementary and variable pay is read as annual.</small></div>
       <div class="s-field"><label for="valuta" data-i18n="valuta">Currency of the pay in the file</label>
         <select id="valuta"><option value="EUR">EUR €</option><option value="PLN">PLN zł</option><option value="CHF">CHF</option><option value="SEK">SEK</option><option value="CZK">CZK</option><option value="">—</option></select></div>
-      <div class="s-field"><label for="ore" data-i18n="ore">Full-time weekly hours</label>
-        <input type="number" id="ore" min="1" max="60" step="0.5"><small data-i18n="oreSub">Used when the file has no weekly hours: full-time share × these hours.</small></div>
+      <div class="s-field" id="campo-ore"><label for="ore" data-i18n="ore">Standard full-time weekly hours</label>
+        <input type="number" id="ore" min="1" max="60" step="0.5"><small data-i18n="oreSubPilot">Use average contractual hours per week across the selected year. For FTE exports, set the full-time weekly hours used to convert FTE.</small></div>
     </div>
+    <p class="note" id="avviso-impostazioni" role="status"></p>
     <div class="s-actions">
+      <button type="button" class="s-btn" id="pulisci" data-i18n="pulisci">Clear files and working data</button>
       <button type="button" class="s-btn is-primary" id="esegui" disabled data-i18n="esegui">Run the assessment</button>
     </div>
   </section>
 
   <section id="risultati" aria-live="polite">
     <div class="print-only"><h2 data-i18n="stampaTitolo">Pay gap assessment</h2><p id="stampa-meta"></p></div>
+    <p class="note" id="avviso-base" role="note"></p>
     <div class="seg" id="entita" role="group" data-i18n-attr="aria-label:entitaLabel"></div>
     <div class="s-kpis" id="kpis"></div>
 
