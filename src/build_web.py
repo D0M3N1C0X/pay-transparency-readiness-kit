@@ -68,7 +68,13 @@ def write_inputs() -> None:
     WEB.mkdir(exist_ok=True)
     (WEB / "inputs.json").write_text(json.dumps(cfg(), indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     extract = pd.read_csv(PAYROLL_EXTRACT)
-    extract[COLUMNS].head(3).to_csv(WEB / "template_payroll.csv", index=False)
+    template = extract[COLUMNS].head(3).copy()
+    template.insert(
+        template.columns.get_loc("weekly_hours") + 1,
+        "annual_hours",
+        template["weekly_hours"] * WEEKS_PER_YEAR,
+    )
+    template.to_csv(WEB / "template_payroll.csv", index=False)
     grid = load_job_evaluation()[["role", *FACTORS]]
     grid.head(3).to_csv(WEB / "template_job_evaluation.csv", index=False)
 
