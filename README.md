@@ -46,11 +46,14 @@ gaps and why, and what would closing them cost.
 
 ## Run it on a client's payroll
 
-The same assessment runs in the browser on any payroll export, Excel or CSV. Columns are matched by name, gender
-codes are confirmed by the user, roles are scored on the four Article 4 criteria (or categories come from the file),
-and the result downloads as an Excel workbook with, for every flag, the justification written on the page and
-columns for an owner and a due date.
-**The file never leaves the computer.**
+The browser tool reads Excel or CSV locally. Remove direct identifiers and use unique pseudonymous worker IDs before import; blank or duplicate IDs are rejected. For an actual-pay run, use the total amounts paid from 1 January
+through 31 December in the selected year and include each worker's total contractual hours for that year.
+Those fields are required; the tool does not substitute a default full-time week. The hourly calculation uses the
+worker-specific annual contractual hours mapped from the payroll file; confirm they correspond to the paid period. Average weekly hours are optional context and are not used to replace or validate the annual total.
+Annualized contract amounts are available for simulations only and are labelled as such. The role-scoring grid is exploratory; validate categories
+with HR and worker representatives, and for Italy start from the applicable CCNL classification.
+Payroll, scores and notes stay in page memory until cleared or reloaded; only the language choice is saved. The
+report labels the source generically and does not include the original filename. The downloaded workbook remains confidential company data. See the [pilot data contract](docs/pilot-data-contract.md).
 
 <p align="center"><a href="https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/"><img alt="The browser tool on the sample employer: obligations by country, the seven reporting items and the category screen." src="site-assets/tool.webp" width="100%"></a></p>
 
@@ -59,7 +62,7 @@ columns for an owner and a due date.
 | Deliverable | For | What is in it |
 |---|---|---|
 | [`pay_transparency_model.xlsx`](deliverables/pay_transparency_model.xlsx) | the client team | Eleven sheets: summary, the seven Article 9 items per employer, the Article 10 screen with space for justifications, Italy's report on livello retributivo, obligations and deadlines, readiness checklist, job evaluation, payroll, settings, and a reconciliation sheet. **Every figure is a live formula**: change a salary, a score or a threshold and the model recalculates. |
-| [Browser tool](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/) | the consultant, on the client's own file | The assessment on any payroll export, Excel or CSV, in the page: columns matched by name, roles scored on the four Article 4 criteria (or categories taken from the file), the seven items per employer, the category screen with a justification per flag, the cost ceiling, the reporting dates per country, and for an Italian employer the same figures on livello retributivo. Downloads an Excel workbook; **the file never leaves the computer**. English and Italian. |
+| [Browser tool](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/) | the consultant, on the client's own file | Locally reads the payroll export, requires actual prior-year pay totals and worker-specific annual contractual hours for an actual-pay run, and exports an Excel assessment. Annualized contract amounts are labelled as simulation only. Data and notes stay in page memory until cleared or reloaded; the downloaded workbook remains confidential. English and Italian. |
 | [`board_briefing.pptx`](deliverables/board_briefing.pptx) | the board | Eleven slides, answer first, native charts, three decisions to take. |
 | [`readiness_report.md`](reports/readiness_report.md) | HR and Legal | The written read-out: obligations, the seven items, where the gap comes from, flagged categories with their main driver and cost, how much they depend on the job evaluation weights, Italy's narrower measure, a 90-day plan. |
 | [`tableau/`](tableau/) | a live dashboard | Tidy extracts and a build sheet for Tableau Public. |
