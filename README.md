@@ -55,6 +55,12 @@ with HR and worker representatives, and for Italy start from the applicable CCNL
 Payroll, scores and notes stay in page memory until cleared or reloaded; only the language choice is saved. The
 report labels the source generically and does not include the original filename. The downloaded workbook remains confidential company data. See the [pilot data contract](docs/pilot-data-contract.md).
 
+For an Italian actual-pay run with supplementary pay, also import the pay-code dictionary. Use one row per pay code
+with `pay_code`, `column_header` (the exact payroll export heading), `description` and `classification`
+(`fixed_continuing`, `variable` or `one_off`). The browser preselects mapped components and marks fixed and
+continuing items for Italy's separate measure; variable and one-off components remain in total pay. Review
+unmatched likely component columns before running. Start from [the CSV template](web/template_pay_code_map.csv).
+
 <p align="center"><a href="https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/"><img alt="The browser tool on the sample employer: obligations by country, the seven reporting items and the category screen." src="site-assets/tool.webp" width="100%"></a></p>
 
 ## What you get
@@ -62,7 +68,7 @@ report labels the source generically and does not include the original filename.
 | Deliverable | For | What is in it |
 |---|---|---|
 | [`pay_transparency_model.xlsx`](deliverables/pay_transparency_model.xlsx) | the client team | Eleven sheets: summary, the seven Article 9 items per employer, the Article 10 screen with space for justifications, Italy's report on livello retributivo, obligations and deadlines, readiness checklist, job evaluation, payroll, settings, and a reconciliation sheet. **Every figure is a live formula**: change a salary, a score or a threshold and the model recalculates. |
-| [Browser tool](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/) | the consultant, on the client's own file | Locally reads the payroll export, requires actual prior-year pay totals and worker-specific annual contractual hours for an actual-pay run, and exports an Excel assessment. Annualized contract amounts are labelled as simulation only. Data and notes stay in page memory until cleared or reloaded; the downloaded workbook remains confidential. English and Italian. |
+| [Browser tool](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/) | the consultant, on the client's own file | Locally reads the payroll export and optional pay-code dictionary, requires actual prior-year pay totals and worker-specific annual contractual hours for an actual-pay run, and exports an Excel assessment with the map used. Annualized contract amounts are labelled as simulation only. Data and notes stay in page memory until cleared or reloaded; the downloaded workbook remains confidential. English and Italian. |
 | [`board_briefing.pptx`](deliverables/board_briefing.pptx) | the board | Eleven slides, answer first, native charts, three decisions to take. |
 | [`readiness_report.md`](reports/readiness_report.md) | HR and Legal | The written read-out: obligations, the seven items, where the gap comes from, flagged categories with their main driver and cost, how much they depend on the job evaluation weights, Italy's narrower measure, a 90-day plan. |
 | [`tableau/`](tableau/) | a live dashboard | Tidy extracts and a build sheet for Tableau Public. |
