@@ -24,6 +24,7 @@ flowchart LR
     A9 --> TB["build_tableau.py<br>Tableau extracts"]
     A9 --> C["build_catalogue.py<br>catalogue"]
     A9 --> WB["build_web.py<br>tool inputs and test cases"]
+    M["Client pay-code dictionary<br>column mapping and classes"] --> JS
     WB --> JS["web/engine.js<br>the same assessment in the browser"]
 ```
 
@@ -53,6 +54,10 @@ weights, band limits) live in `src/config.py`.
 
 Real data never goes into this repository: work in a private copy.
 
-**Or, without Python:** open the [browser tool](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/) on the client's computer and load the extract there. It
-reads Excel or CSV in the page, matches the columns by name, and the file is never uploaded. The page loads no
-script from another site and has no visit counter; `tests/test_web.py` keeps it that way.
+**Or, without Python:** open the [browser tool](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/) on the client's computer and load the payroll export and pay-code dictionary there. It
+reads both Excel/CSV files in the page and does not upload them. Actual-pay mode requires the year’s paid base and
+component amounts plus each worker's annual contractual hours; the dictionary maps exact payroll headings and pre-fills component classes. Annualized amounts are explicitly simulations.
+Files, column mappings, scores and notes stay in page memory until cleared or reloaded; the language preference
+is the only browser-storage value. Known old app keys for scores, notes and mappings are cleared on page load. The downloaded workbook remains confidential; `docs/pilot-data-contract.md`
+sets out the minimum input and the method limits. The page loads no script from another site and has no visit
+counter; `tests/test_web.py` keeps that boundary.

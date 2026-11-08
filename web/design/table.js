@@ -5,7 +5,7 @@
 //   readTable(file)                       -> { headers, rows, decimalComma, sheet }
 //   parseCsv(text)                        -> { headers, rows, decimalComma }
 //   matchColumns(headers, fields, saved)  -> { mapping, missing }
-//   rememberMapping(key, headers, mapping) / savedMapping(key, headers)
+//   rememberMapping(key, headers, mapping) / savedMapping(key, headers); choices stay in memory only
 
 import { readXlsx } from "./xlsx.js";
 
@@ -90,13 +90,11 @@ export function matchColumns(headers, fields, saved = {}) {
 export const applyMapping = (rows, mapping) => rows.map((r) =>
   Object.fromEntries(Object.entries(mapping).filter(([, h]) => h).map(([k, h]) => [k, r[h]])));
 
-const storageKey = (key, headers) => `strumenti.colonne.${key}.${normalise([...headers].sort().join("|")).slice(0, 180)}`;
-export function savedMapping(key, headers) {
-  try { return JSON.parse(localStorage.getItem(storageKey(key, headers)) || "{}"); } catch { return {}; }
-}
-export function rememberMapping(key, headers, mapping) {
-  try { localStorage.setItem(storageKey(key, headers), JSON.stringify(mapping)); } catch { /* private mode: fine */ }
-}
+const mappings = new Map();
+const mappingKey = (key, headers) => key + "." + normalise([...headers].sort().join("|")).slice(0, 180);
+export function savedMapping(key, headers) { return mappings.get(mappingKey(key, headers)) || {}; }
+export function rememberMapping(key, headers, mapping) { mappings.set(mappingKey(key, headers), { ...mapping }); }
+export function clearMappings() { mappings.clear(); }
 
 export function download(bytes, filename, type) {
   const url = URL.createObjectURL(new Blob([bytes], { type }));

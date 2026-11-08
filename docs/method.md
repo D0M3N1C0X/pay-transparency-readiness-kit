@@ -21,9 +21,17 @@ in the Official Journal (see [verification.md](verification.md)).
   pay are not modelled.
 - **Pay level** (Article 3(1)(b)) is "gross annual pay and the corresponding gross hourly pay",
   so items (a) and (c) are reported both ways.
-- **Hourly pay** = annual pay ÷ annual contractual hours, where annual hours = weekly
-  contractual hours × 52. The synthetic organisation has a 40-hour full-time week in every
-  country; part-time workers are on 32 hours.
+- **Hourly pay** = annual pay ÷ annual contractual hours. In the synthetic organisation, annual
+  hours = weekly contractual hours × 52; the full-time week is 40 hours in every country and
+  part-time workers are on 32 hours.
+
+For a client file, the browser's **actual-pay** mode requires actual amounts paid in the selected
+calendar year and a worker-specific annual contractual-hours column. It uses those annual hours
+directly as the denominator. An optional weekly-hours field is context only and is not used to validate annual hours. It blocks the calculation if that column is missing; the 40-hour
+setting is not used as a fallback. The **annualized** mode is a simulation. It uses annual hours if mapped; otherwise it keeps the
+weekly-hours/FTE conversion. Neither mode validates whether a national reporting method accepts
+the chosen input definition; confirm this with employment counsel before statutory use. The
+[pilot data contract](pilot-data-contract.md) explains the required fields and browser-memory behavior.
 
 ### Italy: livello retributivo
 

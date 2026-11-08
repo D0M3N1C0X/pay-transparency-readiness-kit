@@ -5,6 +5,17 @@ in [docs/roadmap.md](docs/roadmap.md).
 
 ## [Unreleased]
 
+### Added
+
+- **Actual-pay browser mode**: captures the completed calendar year, requires amounts actually paid and worker-specific annual contractual hours, validates pseudonymous ID uniqueness, omits the source filename from exported reports, and records the basis and year in the print view and workbook. Annualized contract amounts remain labelled simulations.
+- **Pilot data contract** for a local Italian-company payroll run, including pseudonymous IDs, minimum columns, CCNL category review, storage behavior and calculation limits.
+- **Pay-code dictionary import** in the browser: validates pay codes against exact payroll column headers, pre-fills component and fixed-continuing classes, and records the map in the downloaded workbook.
+
+### Changed
+
+- Payroll files, column mappings, role scores and notes now remain in page memory and can be cleared with one action. Existing local storage keys for old scores, notes and mappings are removed on page load; the language choice is preserved.
+- The role-scoring grid is labelled exploratory; Italy-specific copy points HR to the applicable CCNL classification.
+
 ## [1.3.1] - 2026-10-24
 
 ### Fixed
@@ -93,7 +104,7 @@ After an independent review of v1.3.0:
 First complete release: Article 9 reporting items, the Article 10 screen, a live Excel model reconciled with
 pandas on 460 checks, a board briefing, a written report and a verification register.
 
-[Unreleased]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/compare/v1.3.1...HEAD
 [1.2.1]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/releases/tag/v1.2.1
 [1.2.0]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/releases/tag/v1.2.0
 [1.1.0]: https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/releases/tag/v1.1.0
