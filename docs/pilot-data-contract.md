@@ -20,8 +20,11 @@ Usare un file Excel (.xlsx) o CSV, una riga per lavoratore e nessuna riga di tot
 | category oppure role | almeno uno | Categoria di pari valore già verificata, oppure ruolo da usare nella griglia esplorativa. In Italia partire dalla classificazione applicabile del CCNL. |
 | country | no | Codice paese del datore di lavoro; per questo pilot usare IT. Se assente, indicare il paese nelle impostazioni. |
 | componenti retributive | se presenti | Una colonna numerica per componente, con gli importi lordi effettivamente pagati nello stesso anno di base_pay. Non includere costi datoriali. |
+| mappa codici paga | se sono presenti componenti | Un file Excel/CSV, una riga per voce, con `pay_code`, `column_header`, `description` e `classification`. `column_header` deve coincidere esattamente con l’intestazione nell’export paghe. |
 
-Valori monetari e ore devono essere numerici, senza totali per persona duplicati. Un file pilota italiano deve usare EUR. Se si caricano componenti, distinguere quelle fisse e continuative pagate per regola generale da bonus, provvigioni, importi personali o una tantum; la selezione delle componenti incide sul confronto nazionale italiano e va confermata con HR/consulenza del lavoro.
+Valori monetari e ore devono essere numerici, senza totali per persona duplicati. Un file pilota italiano deve usare EUR.
+
+Per ogni codice paga, salvare `pay_code` come testo per preservare eventuali zeri iniziali. La mappa deve riportare l’intestazione esatta della relativa colonna nell’export, una descrizione e una classificazione: `fixed_continuing`, `variable` oppure `one_off`. I codici e le intestazioni devono essere univoci; la colonna mappata deve esistere nell’export e contenere importi numerici. Il [modello CSV](../web/template_pay_code_map.csv) usa questi nomi di colonna. La pagina importa la mappa localmente e precompila le componenti e la selezione fissa/continuativa; l’Excel scaricato include il foglio della mappa usata. Le componenti variabili e una tantum restano nella retribuzione totale; soltanto quelle fisse e continuative entrano nella misura italiana specifica. HR/Compensation deve confermare codici e classificazioni: l’importazione non certifica la natura legale della voce.
 
 ## Limite del denominatore orario
 
@@ -38,7 +41,7 @@ Un identificativo pseudonimo resta dato personale se l’azienda può ricondurlo
 ## Trattamento locale e chiusura della sessione
 
 - La pagina legge i file con l’API File del browser; non invia il file paghe al server.
-- Le righe, i punteggi dei ruoli, le giustificazioni e le mappature restano nella memoria della pagina fino alla cancellazione o al ricaricamento.
+- Le righe, i punteggi dei ruoli, le giustificazioni, la mappa codici paga e le mappature restano nella memoria della pagina fino alla cancellazione o al ricaricamento.
 - La scelta della lingua è l’unico dato salvato in localStorage.
 - Il pulsante “Svuota file e dati di lavoro” azzera i dati e le impostazioni della sessione. Chiudere la scheda al termine.
 - Il report non riporta il nome originale del file. L’Excel scaricato resta comunque un documento aziendale riservato: conservarlo solo in una posizione autorizzata e cancellare eventuali copie di lavoro secondo le regole del cliente.
@@ -49,7 +52,7 @@ Un identificativo pseudonimo resta dato personale se l’azienda può ricondurlo
 2. Verificare che base_pay e ogni componente siano somme effettivamente pagate fra il 1° gennaio e il 31 dicembre dello stesso anno.
 3. Rimuovere identificativi diretti e colonne estranee.
 4. Verificare che worker_id sia univoco e che ogni persona compaia una sola volta.
-5. Controllare codici di genere, importi negativi/anomali e ore annue; trattare l’eventuale media settimanale come dato di contesto.
+5. Controllare codici di genere, codici paga, classificazioni, importi negativi/anomali e ore annue; trattare l’eventuale media settimanale come dato di contesto.
 6. Confermare le categorie con HR e rappresentanti dei lavoratori; per l’Italia partire dal CCNL.
 7. Riconciliare un campione di righe e i totali aggregati con l’export sorgente prima di discutere i risultati.
 
