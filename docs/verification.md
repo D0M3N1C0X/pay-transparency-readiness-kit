@@ -110,3 +110,6 @@ npm run test:e2e
 The tests cover semicolon-delimited CSV with Italian decimal commas and compressed XLSX payroll/code-map files in Chromium. They check the prior-calendar-year default, annual contractual hours, pay-code preselection, the Italian fixed-and-continuing selection, the guard for an unmapped component, computed hourly results, the downloadable pay-code map, clearing working data, same-origin requests, and the absence of synthetic payroll markers in local storage. Fixtures and browser traces are written under test-results/. No employer payroll file is used or uploaded.
 
 Payroll validation coverage also exercises duplicate and missing worker IDs, missing pay and categories, malformed and non-finite numeric values, zero/negative annual hours, blank component amounts, a missing annual-hours mapping, the 4-versus-5 small-cell suppression boundary in the downloaded workbook, and workers with unclassified gender still included in employer-size counts.
+
+
+XLSX import tests also cover a cover worksheet and a title row above the data headers, duplicate normalized headers, two equally matching payroll worksheets, ambiguous base-pay aliases that require an explicit choice, and a corrupt ZIP archive. The importer stops with a visible error when it cannot identify one safe worksheet or unique headers.
