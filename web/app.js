@@ -25,7 +25,9 @@ const UI = {
     generi: "How gender is written in the file", generiSub: "Check each code. Exports differ: in Spanish files M can mean mujer, in German files d means divers. Workers marked \"not compared\" still count for the employer's size.",
     gDonna: "Woman", gUomo: "Man", gNo: "Not compared", valuta: "Currency of the pay in the file", hDivComp: "Gap, complementary and variable",
     notaCosto: "excluding {n} small categories kept back", colonneSub: "Check the matches below, or change them.",
-    colonneMancano: "Choose the column for {n} item(s) marked in red.", ruoloOCategoria: "The file needs a role or a category column.",
+    colonneMancano: "Choose the column for {n} item(s) marked in red.",
+    colonneAmbigue: "More than one column could match {fields}. Choose the correct column for each item.",
+    ruoloOCategoria: "The file needs a role or a category column.",
     componenti: "Complementary or variable pay",
     componentiSub: "Review numeric columns paid on top of base pay, using amounts for the same period selected below. An imported dictionary preselects and locks mapped components; in an Italian actual-pay run, add any other component to the dictionary first.",
     nessunaColonna: "No other numeric columns in the file.",
@@ -135,7 +137,9 @@ const UI = {
     generi: "Come è scritto il genere nel file", generiSub: "Controlla ogni codice. Gli export cambiano: nei file spagnoli M può voler dire mujer, in quelli tedeschi d vuol dire divers. Chi è \"non confrontato\" conta comunque per la dimensione dell'azienda.",
     gDonna: "Donna", gUomo: "Uomo", gNo: "Non confrontato", valuta: "Valuta della retribuzione nel file", hDivComp: "Divario, componenti complementari e variabili",
     notaCosto: "escluse {n} categorie piccole riservate", colonneSub: "Controlla gli abbinamenti qui sotto, o cambiali.",
-    colonneMancano: "Scegli la colonna per {n} voce/i in rosso.", ruoloOCategoria: "Al file serve una colonna con il ruolo o con la categoria.",
+    colonneMancano: "Scegli la colonna per {n} voce/i in rosso.",
+    colonneAmbigue: "Più colonne possono corrispondere a {fields}. Scegli la colonna corretta per ciascuna voce.",
+    ruoloOCategoria: "Al file serve una colonna con il ruolo o con la categoria.",
     componenti: "Componenti complementari o variabili",
     componentiSub: "Controlla le colonne numeriche pagate oltre alla retribuzione base, con importi dello stesso periodo scelto qui sotto. La mappa importa e blocca le componenti classificate; nei pagamenti effettivi italiani aggiungi prima alla mappa ogni altra componente.",
     nessunaColonna: "Nel file non ci sono altre colonne numeriche.",
@@ -361,7 +365,7 @@ const K_GRIGLIA = () => `strumenti.pt.griglia.${chiaveFile()}`, K_GIUST = () => 
 // state: the files the user gave, the column choices, the role scores and the result of the last run
 const files = { paghe: null, griglia: null, codici: null };
 let numeriche = [];      // the file's numeric columns not used by a mapped field: the candidates for components
-let esempio = false, mapping = {}, componenti = new Set(), fisse = new Set(), punteggi = {}, generi = {}, risultato = null, entita = null;
+let esempio = false, mapping = {}, mappatureAmbigue = {}, componenti = new Set(), fisse = new Set(), punteggi = {}, generi = {}, risultato = null, entita = null;
 let payCodeByHeader = new Map();
 const soldi = (x, d = 0) => {
   const v = $("valuta").value;
@@ -402,7 +406,8 @@ function messaggio(text, kind = "error") {
 // ---- files --------------------------------------------------------------------------------------------------
 async function prendiFile(slot, file) {
   try {
-    const table = await readTable(file);
+    const fields = slot === "paghe" ? CAMPI : slot === "codici" ? CODICI : GRIGLIA;
+    const table = await readTable(file, { fields });
     if (!table.rows.length) throw new Error(t("eVuoto"));
     if (slot === "codici") {
       if (!files.paghe) throw new Error(t("payCodeNeedsPayroll"));
@@ -502,6 +507,7 @@ function colonne() {
   if (!f) return;
   const m = matchColumns(f.headers, CAMPI, savedMapping("pt", f.headers));
   mapping = m.mapping;
+  mappatureAmbigue = m.ambiguous;
   const usate = new Set(Object.values(mapping));
   numeriche = f.headers.filter((h) => !usate.has(h) && f.rows.slice(0, 50).every((r) => {
     try { number(r[h], f.decimalComma); return true; } catch { return false; }
@@ -533,9 +539,17 @@ function disegnaGeneri() {
 const mancanti = () => CAMPI.filter((c) => (c.required || ($("base-dati").value === "actual" && c.key === "annual_hours")) && !mapping[c.key]).map((c) => c.key);
 function disegnaMappa(apri) {
   const f = files.paghe;
-  const manca = mancanti().length + (mapping.role || mapping.category ? 0 : 1);
+  const mancantiAttuali = mancanti();
+  const manca = mancantiAttuali.length + (mapping.role || mapping.category ? 0 : 1);
+  const ambigue = [...new Set([
+    ...mancantiAttuali.filter((key) => mappatureAmbigue[key]),
+    ...(!mapping.role && !mapping.category ? ["role", "category"].filter((key) => mappatureAmbigue[key]) : [])
+  ])];
   $("colonne-ok").textContent = t("colonneOk", { n: CAMPI.filter((c) => mapping[c.key]).length });
-  $("colonne-sub").textContent = manca ? (mancanti().length ? t("colonneMancano", { n: mancanti().length }) : t("ruoloOCategoria")) : t("colonneSub");
+  $("colonne-sub").textContent = ambigue.length
+    ? t("colonneAmbigue", { fields: ambigue.map((key) => t(`f_${key}`)).join(", ") })
+    : manca ? (mancantiAttuali.length ? t("colonneMancano", { n: mancantiAttuali.length }) : t("ruoloOCategoria"))
+      : t("colonneSub");
   const aperta = manca || apri === "forza";
   $("riepilogo-colonne").style.display = aperta ? "none" : "block";
   $("mappa").style.display = aperta ? "grid" : "none";
@@ -543,7 +557,9 @@ function disegnaMappa(apri) {
   $("mappa").innerHTML = CAMPI.map((c) => {
     const scelta = mapping[c.key] || "";
     const richiesto = c.required || ($("base-dati").value === "actual" && c.key === "annual_hours");
-    const rosso = (richiesto && !scelta) || ((c.key === "role" || c.key === "category") && !mapping.role && !mapping.category);
+    const ambiguo = Boolean(mappatureAmbigue[c.key]) &&
+      (richiesto || ((c.key === "role" || c.key === "category") && !mapping.role && !mapping.category));
+    const rosso = (richiesto && !scelta) || ambiguo || ((c.key === "role" || c.key === "category") && !mapping.role && !mapping.category);
     return `<div class="s-map-row${rosso ? " is-missing" : ""}"><div class="need">${esc(t(`f_${c.key}`))}
       ${richiesto ? "" : `<small>${esc(t("facoltativa"))}</small>`}</div>
       <select class="s-select" data-key="${c.key}" aria-label="${esc(t(`f_${c.key}`))}">
@@ -552,6 +568,7 @@ function disegnaMappa(apri) {
       </select></div>`;
   }).join("");
   $("mappa").querySelectorAll("select").forEach((sel) => sel.addEventListener("change", () => {
+    if (sel.value) delete mappatureAmbigue[sel.dataset.key];
     mapping = { ...mapping, [sel.dataset.key]: sel.value };
     rememberMapping("pt", f.headers, mapping);
     // a column now read as a field cannot also be a component, or it would be counted twice
@@ -796,7 +813,7 @@ $("pulisci").addEventListener("click", () => {
     $("nome-" + slot).textContent = "";
     $("drop-" + slot).classList.remove("is-done", "is-over");
   });
-  numeriche = []; esempio = false; mapping = {}; componenti = new Set(); fisse = new Set(); payCodeByHeader = new Map();
+  numeriche = []; esempio = false; mapping = {}; mappatureAmbigue = {}; componenti = new Set(); fisse = new Set(); payCodeByHeader = new Map();
   punteggi = {}; generi = {}; risultato = null; entita = null;
   ["mappa", "componenti", "fisse", "generi", "griglia", "entita", "kpis", "tab-obblighi", "tab-voci",
     "grafico-quartili", "grafico-categorie", "tab-categorie", "tab-italia-voci", "tab-italia-cat"]
