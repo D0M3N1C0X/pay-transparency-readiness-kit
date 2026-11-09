@@ -94,3 +94,17 @@ the 9 October recheck; it now carries this date. Source:
   countries; where it exists, it overrides the choices in [method.md](method.md).
 - The kit does not model leavers, pay actually paid in a calendar year, overtime, pay in kind
   other than a car allowance, or pay improvements after leave (Article 10(2)(e)).
+
+
+## Browser end-to-end verification
+
+The browser flow is exercised with generated synthetic data only. From the repository root:
+
+~~~sh
+python3 -m pip install openpyxl==3.1.5
+npm ci
+npx playwright install chromium
+npm run test:e2e
+~~~
+
+The tests cover semicolon-delimited CSV with Italian decimal commas and compressed XLSX payroll/code-map files in Chromium. They check the prior-calendar-year default, annual contractual hours, pay-code preselection, the Italian fixed-and-continuing selection, the guard for an unmapped component, computed hourly results, the downloadable pay-code map, clearing working data, same-origin requests, and the absence of synthetic payroll markers in local storage. Fixtures and browser traces are written under test-results/. No employer payroll file is used or uploaded.
