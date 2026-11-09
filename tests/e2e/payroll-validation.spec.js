@@ -443,7 +443,8 @@ test("reconciles all payroll rows, including unclassified gender, and exports on
 test("reports total-pay differences without blocking the assessment", async ({ page }) => {
   const rows = payrollRowsWithGrossTotal();
   const totalIndex = rows[0].indexOf("gross_total_paid");
-  rows[1][totalIndex] = "48000,05";
+  rows[1][totalIndex] = "48100,05";
+  rows[2][totalIndex] = "48100,01";
   const observed = await openApp(page);
   await uploadPayroll(page, rows);
   await uploadPayCodeMap(page, true);
