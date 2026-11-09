@@ -74,6 +74,11 @@ def write_inputs() -> None:
         "annual_hours",
         template["weekly_hours"] * WEEKS_PER_YEAR,
     )
+    template.insert(
+        template.columns.get_loc("base_pay") + 1,
+        "payroll_total",
+        template["base_pay"] + template[COMPONENTS].sum(axis=1),
+    )
     template.to_csv(WEB / "template_payroll.csv", index=False)
     grid = load_job_evaluation()[["role", *FACTORS]]
     grid.head(3).to_csv(WEB / "template_job_evaluation.csv", index=False)
