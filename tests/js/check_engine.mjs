@@ -56,6 +56,12 @@ for (const [v, comma, n] of [["1.234,50", true, 1234.5], ["1,234.50", false, 123
   expect(number(v, comma) === n, `number(${v}) = ${number(v, comma)}`);
 expect(obligations([{ country: "IT" }], ["IT"], V.cfg, { IT: 150 })[0].band === 1, "size band counts everyone");
 expect(number("80%", false) === 80, "number strips the percent sign");
+
+for (const value of ["Infinity", "-Infinity", Infinity, -Infinity, "1e309"]) {
+  let rejected = false;
+  try { number(value, false); } catch { rejected = true; }
+  expect(rejected, "number rejects non-finite value " + value);
+}
 for (const [d, m, r] of [["2027-06-07", 6, "2027-12-07"], ["2027-09-30", 4, "2028-01-30"], ["2031-06-07", 6, "2031-12-07"]])
   expect(addMonths(d, m) === r, `addMonths(${d}, ${m}) = ${addMonths(d, m)}`);
 console.log(`${checks - failures} of ${checks} values agree with pandas in ${V.cases.length} cases`);
