@@ -311,3 +311,73 @@ test("rejects an XLSX column with data but no header", async ({ page }) => {
   await expect(page.locator("#esegui")).toBeDisabled();
   await expectLocalRequests(observed);
 });
+
+
+test("finds payroll headers after a long metadata preamble", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-late-header.xlsx");
+  await expect(page.locator('#mappa select[data-key="annual_hours"]')).toHaveValue("annual_hours");
+  await uploadPayCodeMap(page);
+  await expect(page.locator("#esegui")).toBeEnabled();
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  await expect(page.locator("#tab-categorie tr").nth(1).locator("td").nth(1)).toHaveText("5");
+  await expectLocalRequests(observed);
+});
+
+test("ignores hidden archive worksheets when a visible payroll sheet is available", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-visible-and-hidden.xlsx");
+  await expect(page.locator('#mappa select[data-key="annual_hours"]')).toHaveValue("annual_hours");
+  await uploadPayCodeMap(page);
+  await expect(page.locator("#esegui")).toBeEnabled();
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  await expectLocalRequests(observed);
+});
+
+test("asks the user to unhide a payroll worksheet instead of silently importing a visible cover", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-hidden-only.xlsx");
+  await expect(page.locator("#errore")).toContainText("matching payroll data is in a hidden worksheet");
+  await expect(page.locator("#errore")).toContainText("unhide it and retry");
+  await expect(page.locator("#esegui")).toBeDisabled();
+  await expectLocalRequests(observed);
+});
+
+test("requires explicit choices for multiple ambiguous XLSX fields", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-ambiguous-id-and-base-pay.xlsx");
+  await expect(page.locator('#mappa select[data-key="worker_id"]')).toHaveValue("");
+  await expect(page.locator('#mappa select[data-key="base_pay"]')).toHaveValue("");
+  await expect(page.locator("#colonne-sub")).toContainText("More than one column could match");
+
+  await page.locator('#mappa select[data-key="base_pay"]').selectOption("salary");
+  await page.locator('#mappa select[data-key="worker_id"]').selectOption("pseudonymous id");
+  await uploadPayCodeMap(page);
+  await expect(page.locator("#esegui")).toBeEnabled();
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  const categoryRow = page.locator("#tab-categorie tr").nth(1);
+  await expect(categoryRow.locator("td").nth(3)).toContainText("23.08");
+  await expectLocalRequests(observed);
+});
+
+test("reports a truncated XLSX central directory as a controlled file error", async ({ page }) => {
+  const observed = await openApp(page);
+  const bytes = new Uint8Array(22);
+  const view = new DataView(bytes.buffer);
+  view.setUint32(0, 0x06054b50, true);
+  view.setUint16(8, 1, true);
+  view.setUint16(10, 1, true);
+  view.setUint32(12, 46, true);
+  view.setUint32(16, 21, true);
+  await page.locator("#file-paghe").setInputFiles({
+    name: "synthetic-truncated-directory.xlsx",
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    buffer: Buffer.from(bytes)
+  });
+  await expect(page.locator("#errore")).toContainText("damaged zip archive");
+  await expect(page.locator("#esegui")).toBeDisabled();
+  await expectLocalRequests(observed);
+});
