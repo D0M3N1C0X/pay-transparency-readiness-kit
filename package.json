@@ -1,0 +1,12 @@
+{
+  "name": "pay-transparency-readiness-kit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "python3 tests/e2e/generate_xlsx_fixtures.py && playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}
