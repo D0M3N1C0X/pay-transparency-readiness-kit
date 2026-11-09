@@ -1,6 +1,5 @@
-from pathlib import Path
-
 from openpyxl import Workbook
+from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
