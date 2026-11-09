@@ -88,12 +88,17 @@
       </label>
     </div>
     <p class="s-why" id="codici-sub" aria-live="polite"></p>
+    <div class="s-actions" id="pay-code-draft-actions" hidden>
+      <button type="button" class="s-btn is-small" id="scarica-bozza-codici" data-i18n="payCodeDraftButton">Download a prefilled pay-code map</button>
+      <span class="s-why" id="pay-code-draft-hint"></span>
+    </div>
     <div class="s-actions">
       <button type="button" class="s-btn" id="esempio" data-i18n="esempio">Try it with the sample employer</button>
       <span class="s-why"><span data-i18n="modelli">Templates:</span>
         <a href="template_payroll.csv" download data-i18n="modelloPaghe">payroll</a> ·
         <a href="template_job_evaluation.csv" download data-i18n="modelloGriglia">job evaluation</a> ·
-        <a href="template_pay_code_map.csv" download data-i18n="modelloCodici">pay-code map</a></span>
+        <a href="template_pay_code_map.csv" download data-i18n="modelloCodici">pay-code map</a> ·
+        <a href="https://github.com/D0M3N1C0X/pay-transparency-readiness-kit/blob/main/docs/pilot-runbook-it.md" target="_blank" rel="noreferrer" data-i18n="pilotRunbook">Italian pilot runbook</a></span>
     </div>
     <div class="s-msg is-error" id="errore" role="alert"></div>
   </section>
@@ -157,6 +162,11 @@
     <div class="print-only"><h2 data-i18n="stampaTitolo">Pay gap assessment</h2><p id="stampa-meta"></p></div>
     <p class="note" id="avviso-base" role="note"></p>
     <p class="note" id="payroll-reconciliation-result" role="status" aria-live="polite"></p>
+    <section class="s-card" id="reconciliation-category-section" hidden aria-labelledby="reconciliation-categories-title">
+      <h2 id="reconciliation-categories-title" data-i18n="reconCategoriesTitle">Payroll reconciliation by worker category</h2>
+      <p class="s-sub" id="reconciliation-categories-note"></p>
+      <div class="s-table-wrap"><table class="s-table" id="payroll-reconciliation-categories"></table></div>
+    </section>
     <div class="seg" id="entita" role="group" data-i18n-attr="aria-label:entitaLabel"></div>
     <div class="s-kpis" id="kpis"></div>
 

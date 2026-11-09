@@ -53,13 +53,15 @@ worker-specific annual contractual hours mapped from the payroll file; confirm t
 Annualized contract amounts are available for simulations only and are labelled as such. The role-scoring grid is exploratory; validate categories
 with HR and worker representatives, and for Italy start from the applicable CCNL classification.
 Payroll, scores and notes stay in page memory until cleared or reloaded; only the language choice is saved. The
-report labels the source generically and does not include the original filename. The downloaded workbook remains confidential company data. See the [pilot data contract](docs/pilot-data-contract.md).
+report labels the source generically and does not include the original filename. The downloaded workbook remains confidential company data. For the pilot, include a separate annual gross total per worker when available: the browser checks it against base pay and selected components, including non-comparable gender rows, and reports mismatches without blocking the assessment. Small worker categories stay suppressed in the category breakdown. See the [pilot data contract](docs/pilot-data-contract.md) and [Italian pilot runbook](docs/pilot-runbook-it.md).
 
 For an Italian actual-pay run with supplementary pay, also import the pay-code dictionary. Use one row per pay code
 with `pay_code`, `column_header` (the exact payroll export heading), `description` and `classification`
 (`fixed_continuing`, `variable` or `one_off`). The browser preselects mapped components and marks fixed and
 continuing items for Italy's separate measure; variable and one-off components remain in total pay. Review
-unmatched likely component columns before running. Start from [the CSV template](web/template_pay_code_map.csv).
+unmatched likely component columns before running. After uploading payroll, the browser can download a draft map
+with the exact numeric column headings; HR completes and confirms it locally before upload. Start from
+[the CSV template](web/template_pay_code_map.csv).
 
 <p align="center"><a href="https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/"><img alt="The browser tool on the sample employer: obligations by country, the seven reporting items and the category screen." src="site-assets/tool.webp" width="100%"></a></p>
 

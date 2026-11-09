@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { readXlsx } from "../../web/design/xlsx.js";
+import { parseCsv } from "../../web/design/table.js";
 
 const BASE_URL = "http://127.0.0.1:4173";
 
@@ -178,6 +179,30 @@ test("CSV actual-pay workflow classifies pay codes, blocks unmapped components a
   await expect(page.locator("#risultati")).toBeHidden();
   await expect(page.locator("#file-paghe")).toHaveValue("");
   await expect(page.locator("#file-codici")).toHaveValue("");
+});
+
+
+test("downloads a local pay-code draft with exact numeric payroll headers", async ({ page }) => {
+  const observed = await openApp(page);
+  await page.locator("#file-paghe").setInputFiles({
+    name: "synthetic-payroll.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(syntheticPayrollCsv(), "utf8")
+  });
+  await expect(page.locator("#scarica-bozza-codici")).toBeVisible();
+  const downloadPromise = page.waitForEvent("download");
+  await page.locator("#scarica-bozza-codici").click();
+  const download = await downloadPromise;
+  const filePath = await download.path();
+  expect(filePath).toBeTruthy();
+  const draftText = await readFile(filePath, "utf8");
+  const draft = parseCsv(draftText);
+  expect(draft.headers).toEqual(["pay_code", "column_header", "description", "classification"]);
+  expect(draft.rows.map((row) => row.column_header)).toEqual(["fixed_allowance", "bonus", "one_off", "commission"]);
+  expect(draft.rows.every((row) => !row.pay_code && !row.description && !row.classification)).toBe(true);
+  expect(draftText).not.toContain("SYN-F-");
+  expect(draftText).not.toContain("40000");
+  await expectLocalProcessing(observed, page);
 });
 
 test("compressed XLSX payroll and code-map files run through the same local assessment", async ({ page }) => {

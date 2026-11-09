@@ -48,6 +48,14 @@ const UI = {
     reconInvalid: "Rows with invalid amounts", reconTolerance: "Tolerance", reconMaxDifference: "Maximum absolute difference",
     reconComponents: "Included component columns", reconOtherColumns: "Other numeric columns not included",
     reconPrivacy: "Privacy", reconNoIds: "No worker IDs or row-level pay values are included on this sheet.",
+    x_reconciliationCategories: "Reconciliation by category",
+    reconCategoriesTitle: "Payroll reconciliation by worker category",
+    reconCategoriesNote: "Includes all payroll rows, also workers not compared by gender. Groups below {min} workers and categories protected by the pay-gap screen are withheld. No worker IDs or individual pay amounts are shown.",
+    reconCategoryEmployer: "Employer", reconCategory: "Worker category", reconCategoryRows: "Payroll rows",
+    reconCategoryMatched: "Within tolerance", reconCategoryMismatched: "Over tolerance",
+    reconCategoryMissing: "Missing total", reconCategoryInvalid: "Invalid amount",
+    reconCategoryEmpty: "No category details meet the display threshold, or reconciliation was not available.",
+    reconUnclassifiedCategory: "Unclassified category",
     nessunaColonna: "No other numeric columns in the file.",
     payCodeOptional: "Upload the payroll first. The dictionary maps pay codes to exact payroll column headers and pre-fills component classes.",
     payCodeRequired: "For Italian actual-pay runs, classify every included pay component in the pay-code dictionary.",
@@ -57,6 +65,10 @@ const UI = {
     payCodeLoaded: "Loaded {n} pay-code entries; component and fixed-pay selections are prefilled from the dictionary.",
     payCodeMismatch: "Pay-code dictionary needs attention: {details}",
     payCodeCandidates: "{n} likely component column(s) remain unchecked; review them before running.",
+    payCodeDraftButton: "Download a prefilled pay-code map",
+    payCodeDraftHint: "The draft uses exact numeric payroll headers. Remove non-pay columns, then fill pay_code, description and the HR-confirmed classification before uploading it.",
+    payCodeNoNumeric: "No unmapped numeric payroll columns are available for a draft.",
+    pilotRunbook: "Italian pilot runbook",
     payCodeEmptyCode: "row {r}: pay_code is blank",
     payCodeEmptyHeader: "row {r}: column_header is blank",
     payCodeEmptyDescription: "row {r}: description is blank",
@@ -179,6 +191,14 @@ const UI = {
     reconInvalid: "Righe con importi non validi", reconTolerance: "Tolleranza", reconMaxDifference: "Scarto assoluto massimo",
     reconComponents: "Colonne componente incluse", reconOtherColumns: "Altre colonne numeriche escluse",
     reconPrivacy: "Privacy", reconNoIds: "Questo foglio non include ID dei lavoratori né importi a livello individuale.",
+    x_reconciliationCategories: "Riconciliazione per categoria",
+    reconCategoriesTitle: "Riconciliazione paghe per categoria di lavoratori",
+    reconCategoriesNote: "Include tutte le righe paghe, anche quelle non confrontate per genere. Sono omessi i gruppi con meno di {min} lavoratori e le categorie riservate dal controllo del divario. Non mostra ID né importi individuali.",
+    reconCategoryEmployer: "Datore di lavoro", reconCategory: "Categoria di lavoratori", reconCategoryRows: "Righe paghe",
+    reconCategoryMatched: "Entro tolleranza", reconCategoryMismatched: "Oltre tolleranza",
+    reconCategoryMissing: "Senza totale", reconCategoryInvalid: "Importo non valido",
+    reconCategoryEmpty: "Nessun dettaglio di categoria supera la soglia di visualizzazione o la riconciliazione non è disponibile.",
+    reconUnclassifiedCategory: "Categoria non classificata",
     nessunaColonna: "Nel file non ci sono altre colonne numeriche.",
     payCodeOptional: "Carica prima l'export paghe. La mappa collega i codici paga alle intestazioni esatte e precompila le classificazioni delle componenti.",
     payCodeRequired: "Per i pagamenti effettivi italiani, classifica ogni componente retributiva inclusa nella mappa dei codici paga.",
@@ -188,6 +208,10 @@ const UI = {
     payCodeLoaded: "Caricate {n} voci: componenti e retribuzione fissa sono precompilate dalla mappa.",
     payCodeMismatch: "La mappa dei codici paga richiede una correzione: {details}",
     payCodeCandidates: "Restano deselezionate {n} probabili colonne componente: controllale prima di elaborare.",
+    payCodeDraftButton: "Scarica una bozza precompilata della mappa",
+    payCodeDraftHint: "La bozza riporta le intestazioni numeriche esatte delle paghe. Elimina le colonne non retributive e completa pay_code, descrizione e classificazione confermata da HR prima di ricaricarla.",
+    payCodeNoNumeric: "Non ci sono colonne numeriche non mappate da inserire nella bozza.",
+    pilotRunbook: "Guida al pilot italiano",
     payCodeEmptyCode: "riga {r}: pay_code vuoto",
     payCodeEmptyHeader: "riga {r}: column_header vuoto",
     payCodeEmptyDescription: "riga {r}: description vuota",
@@ -747,6 +771,27 @@ function italiaPresente() {
   const f = files.paghe;
   return mapping.country && f ? f.rows.some((r) => paese(r[mapping.country]) === "IT") : $("paese").value === "IT";
 }
+function aggiornaBozzaCodici() {
+  const actions = $("pay-code-draft-actions");
+  if (!actions) return;
+  actions.hidden = !files.paghe;
+  $("scarica-bozza-codici").disabled = !numeriche.length;
+  $("pay-code-draft-hint").textContent = files.paghe
+    ? numeriche.length ? t("payCodeDraftHint") : t("payCodeNoNumeric")
+    : "";
+}
+function serializzaCampoCsv(value) { return `"${String(value ?? "").replace(/"/g, '""')}"`; }
+function scaricaBozzaCodici() {
+  if (!files.paghe || !numeriche.length) return;
+  const rows = [
+    ["pay_code", "column_header", "description", "classification"],
+    ...numeriche.map((header) => ["", header, "", ""]),
+  ];
+  const csv = rows.map((row) => row.map(serializzaCampoCsv).join(",")).join("\r\n") + "\r\n";
+  download("\uFEFF" + csv, "pay_code_map_draft.csv", "text/csv;charset=utf-8");
+}
+$("scarica-bozza-codici").addEventListener("click", scaricaBozzaCodici);
+
 function erroriPayCode() {
   const isItalianActual = $("base-dati").value === "actual" && italiaPresente();
   if (!files.codici) return isItalianActual && componenti.size ? [t("payCodeRequired")] : [];
@@ -756,6 +801,7 @@ function erroriPayCode() {
   return issues.length ? [t("payCodeMismatch", { details: [...new Set(issues)].join("; ") })] : [];
 }
 function aggiornaStatoPayCode() {
+  aggiornaBozzaCodici();
   const el = $("codici-sub");
   if (!el) return;
   const errors = erroriPayCode();
@@ -775,7 +821,8 @@ function applicaMappaCodici() {
   fisse = new Set(files.codici.items.filter((item) => item.classification === "fixed_continuing").map((item) => item.column_header));
 }
 
-function calcolaRiconciliazione(f, cols, basis) {
+const chiaveCategoriaRiconciliazione = (country, category) => JSON.stringify([country, category]);
+function calcolaRiconciliazione(f, cols, basis, roles, smallCategoryKeys = new Set()) {
   const currency = $("valuta").value;
   const digits = currency
     ? new Intl.NumberFormat(i18n.lang === "it" ? "it-IT" : "en-GB", { style: "currency", currency })
@@ -798,6 +845,7 @@ function calcolaRiconciliazione(f, cols, basis) {
     missing: null,
     invalid: null,
     maxDifference: null,
+    categoryBreakdown: [],
   };
   if (basis !== "actual" || !mapping.payroll_total) return result;
 
@@ -808,9 +856,25 @@ function calcolaRiconciliazione(f, cols, basis) {
   result.invalid = 0;
   let maxDifference = 0;
   let compared = 0;
+  const groups = new Map();
   for (const raw of f.rows) {
+    const country = mapping.country ? paese(raw[mapping.country]) : $("paese").value;
+    const role = mapping.role ? String(raw[mapping.role] ?? "").trim() : "";
+    const category = roles
+      ? roles.get(role)?.category || ""
+      : mapping.category ? String(raw[mapping.category] ?? "").trim() : "";
+    const key = chiaveCategoriaRiconciliazione(country, category);
+    if (!groups.has(key)) groups.set(key, {
+      key, country, category, rowCount: 0, matched: 0, mismatched: 0, missing: 0, invalid: 0,
+    });
+    const group = groups.get(key);
+    group.rowCount += 1;
     const totalText = String(raw[mapping.payroll_total] ?? "").trim();
-    if (!totalText) { result.missing += 1; continue; }
+    if (!totalText) {
+      result.missing += 1;
+      group.missing += 1;
+      continue;
+    }
     try {
       const baseText = String(raw[mapping.base_pay] ?? "").trim();
       if (!baseText) throw new Error("base pay missing");
@@ -821,13 +885,23 @@ function calcolaRiconciliazione(f, cols, basis) {
       if (!Number.isFinite(difference)) throw new Error("invalid amount");
       compared += 1;
       maxDifference = Math.max(maxDifference, difference);
-      if (difference <= tolerance + 1e-9) result.matched += 1;
-      else result.mismatched += 1;
+      if (difference <= tolerance + 1e-9) {
+        result.matched += 1;
+        group.matched += 1;
+      } else {
+        result.mismatched += 1;
+        group.mismatched += 1;
+      }
     } catch {
       result.invalid += 1;
+      group.invalid += 1;
     }
   }
   result.maxDifference = compared ? maxDifference : null;
+  result.categoryBreakdown = [...groups.values()].map((group) => ({
+    ...group,
+    suppressed: group.rowCount < CFG.min_cell || smallCategoryKeys.has(group.key),
+  }));
   return result;
 }
 
@@ -841,6 +915,30 @@ function testoRiconciliazione(r) {
   ];
   if (r.otherNumericColumns.length) parts.push(t("reconOther", { n: r.otherNumericColumns.length }));
   return parts.join(" ");
+}
+
+function mostraRiconciliazioneCategorie(r) {
+  const section = $("reconciliation-category-section");
+  const table = $("payroll-reconciliation-categories");
+  if (r.status !== "checked") {
+    section.hidden = true;
+    table.innerHTML = "";
+    return;
+  }
+  section.hidden = false;
+  $("reconciliation-categories-note").textContent = t("reconCategoriesNote", { min: CFG.min_cell });
+  const rows = r.categoryBreakdown.filter((group) => !group.suppressed);
+  const includeEmployer = true;
+  const headers = [
+    ...(includeEmployer ? [t("reconCategoryEmployer")] : []),
+    t("reconCategory"), t("reconCategoryRows"), t("reconCategoryMatched"),
+    t("reconCategoryMismatched"), t("reconCategoryMissing"), t("reconCategoryInvalid"),
+  ];
+  table.innerHTML = `<tr>${headers.map((label) => `<th class="l">${esc(label)}</th>`).join("")}</tr>` + (rows.length
+    ? rows.map((group) => `<tr>${includeEmployer ? `<td class="l">${esc(nomeEntita(group.country))}</td>` : ""}
+        <td class="l">${esc(group.category || t("reconUnclassifiedCategory"))}</td><td>${group.rowCount}</td>
+        <td>${group.matched}</td><td>${group.mismatched}</td><td>${group.missing}</td><td>${group.invalid}</td></tr>`).join("")
+    : `<tr><td colspan="${headers.length}">${esc(t("reconCategoryEmpty"))}</td></tr>`);
 }
 
 function aggiornaRiconciliazioneHint() {
@@ -905,9 +1003,12 @@ function calcola() {
     const noti = Object.keys(CFG.entities);
     const countries = [...noti.filter((c) => w.some((r) => r.country === c)), ...[...new Set(w.map((r) => r.country))].filter((c) => !noti.includes(c))];
     const ordine = categoryOrder(w, CFG);
-    risultato = { w, countries, esclusi, items: byEntity(w, countries), screen: screen(w, countries, ordine, CFG),
+    const screenRows = screen(w, countries, ordine, CFG);
+    const smallCategoryKeys = new Set(screenRows.filter((row) => row.small_cell)
+      .map((row) => chiaveCategoriaRiconciliazione(row.country, row.category)));
+    risultato = { w, countries, esclusi, items: byEntity(w, countries), screen: screenRows,
       national: national(w, countries, CFG), nscreen: screen(w, countries, ordine, CFG, "national"), fisse: cols.filter((c) => fisse.has(c)),
-      duties: obligations(w, countries, CFG, altri), reconciliation: calcolaRiconciliazione(f, cols, basis),
+      duties: obligations(w, countries, CFG, altri), reconciliation: calcolaRiconciliazione(f, cols, basis, roles, smallCategoryKeys),
       roles, basis, year, oggi: new Date().toISOString().slice(0, 10) };
     if (!countries.includes(entita) && !(entita === "Group" && countries.length > 1)) entita = countries[0];
     mostra();
@@ -943,10 +1044,13 @@ $("pulisci").addEventListener("click", () => {
   numeriche = []; esempio = false; mapping = {}; mappatureAmbigue = {}; componenti = new Set(); fisse = new Set(); payCodeByHeader = new Map();
   punteggi = {}; generi = {}; risultato = null; entita = null;
   ["mappa", "componenti", "fisse", "generi", "griglia", "entita", "kpis", "tab-obblighi", "tab-voci",
-    "grafico-quartili", "grafico-categorie", "tab-categorie", "tab-italia-voci", "tab-italia-cat"]
+    "grafico-quartili", "grafico-categorie", "tab-categorie", "tab-italia-voci", "tab-italia-cat",
+    "payroll-reconciliation-categories"]
     .forEach((id) => { $(id).innerHTML = ""; });
-  ["colonne-ok", "colonne-sub", "codici-sub", "cat-sub", "voci-sub", "stampa-meta", "avviso-base", "nota-piccole", "nota-italia", "reconciliation-hint", "payroll-reconciliation-result"]
+  ["colonne-ok", "colonne-sub", "codici-sub", "cat-sub", "voci-sub", "stampa-meta", "avviso-base", "nota-piccole", "nota-italia", "reconciliation-hint", "payroll-reconciliation-result", "reconciliation-categories-note"]
     .forEach((id) => { $(id).textContent = ""; });
+  $("reconciliation-category-section").hidden = true;
+  $("pay-code-draft-actions").hidden = true;
   $("passo-colonne").style.display = "none";
   $("passo-categorie").style.display = "none";
   $("risultati").style.display = "none";
@@ -993,6 +1097,7 @@ function mostra() {
   $("stampa-meta").textContent = nomeEntita(entita) + " · " + t("stampaMeta", { f: t("payrollFileLabel"), basis: basisLabel, year: risultato.year, oggi: data(risultato.oggi), n: i18n.number(it.workers) });
   $("avviso-base").textContent = t(risultato.basis === "actual" ? "basisActualNote" : "basisAnnualizedNote", { year: risultato.year });
   $("payroll-reconciliation-result").textContent = testoRiconciliazione(risultato.reconciliation);
+  mostraRiconciliazioneCategorie(risultato.reconciliation);
 
   $("tab-obblighi").innerHTML = `<tr><th class="l">${esc(t("hPaese"))}</th><th>${esc(t("hLavoratori"))}</th><th class="l">${esc(t("hFascia"))}</th><th class="l">${esc(t("hFrequenza"))}</th><th>${esc(t("hPrimo"))}</th><th>${esc(t("hRimedio"))}</th><th class="l">${esc(t("hStato"))}</th></tr>` +
     duties.map((o) => {
@@ -1151,6 +1256,20 @@ $("scarica-xlsx").addEventListener("click", () => {
     [t("reconOtherColumns"), reconciliation.otherNumericColumns.join(", ")],
     [t("reconPrivacy"), t("reconNoIds")],
   ], widths: [42, 82] });
+  const reconciliationCategories = reconciliation.categoryBreakdown.filter((group) => !group.suppressed);
+  const reconciliationCategoryRows = [
+    [t("reconCategoryEmployer"), t("reconCategory"), t("reconCategoryRows"), t("reconCategoryMatched"),
+      t("reconCategoryMismatched"), t("reconCategoryMissing"), t("reconCategoryInvalid")],
+    ...(reconciliation.status === "checked" ? reconciliationCategories.map((group) => [
+      nomeEntita(group.country), group.category || t("reconUnclassifiedCategory"), group.rowCount,
+      group.matched, group.mismatched, group.missing, group.invalid,
+    ]) : []),
+  ];
+  if (reconciliation.status !== "checked" || !reconciliationCategories.length) {
+    reconciliationCategoryRows.push([t("reconCategoryEmpty")]);
+  }
+  reconciliationCategoryRows.push([], [t("reconPrivacy"), t("reconCategoriesNote", { min: CFG.min_cell })]);
+  sheets.push({ name: t("x_reconciliationCategories"), rows: reconciliationCategoryRows, widths: [22, 34, 14, 18, 18, 16, 18] });
   if (files.codici) sheets.push({ name: t("x_paycodes"), rows: [
     [t("hPayCode"), t("hPayHeader"), t("hPayDescription"), t("hPayClassification"), t("hPayInTotal"), t("hPayFixed")],
     ...files.codici.items.map((item) => [item.pay_code, item.column_header, item.description, payClassLabel(item.classification),

@@ -1,1 +1,5 @@
 pay_code,column_header,description,classification
+DEMO-BONUS,bonus,Annual bonus (example; confirm with HR),variable
+DEMO-COMM,commission,Sales commission (example; confirm with HR),variable
+DEMO-SHIFT,shift_allowance,Shift allowance (example; confirm with HR),fixed_continuing
+DEMO-CAR,car_allowance,Car allowance (example; confirm with HR),fixed_continuing
