@@ -78,6 +78,14 @@ def payroll_with_duplicate_headers() -> list[list[object]]:
     return rows
 
 
+def payroll_with_populated_blank_header() -> list[list[object]]:
+    rows = payroll_rows()
+    rows[0].append("")
+    for row in rows[1:]:
+        row.append("unmapped value")
+    return rows
+
+
 def payroll_with_ambiguous_base_pay() -> list[list[object]]:
     rows = payroll_rows()
     base_index = rows[0].index("base_pay")
@@ -103,6 +111,11 @@ def main() -> None:
         OUTPUT / "synthetic-payroll-ambiguous-base-pay.xlsx",
         "Payroll",
         payroll_with_ambiguous_base_pay(),
+    )
+    write_workbook(
+        OUTPUT / "synthetic-payroll-blank-header-with-data.xlsx",
+        "Payroll",
+        payroll_with_populated_blank_header(),
     )
     write_multisheet_workbook(
         OUTPUT / "synthetic-payroll-cover.xlsx",
