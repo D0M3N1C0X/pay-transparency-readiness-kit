@@ -50,8 +50,8 @@ function completePayCodeCsv() {
   ].join("\n");
 }
 
-function payrollRowsWithGrossTotal() {
-  const rows = syntheticPayrollRows().map((row) => [...row]);
+function payrollRowsWithGrossTotal(options) {
+  const rows = syntheticPayrollRows(options).map((row) => [...row]);
   const amountColumns = ["base_pay", "fixed_allowance", "bonus", "one_off", "commission"].map((name) => rows[0].indexOf(name));
   rows[0].push("gross_total_paid");
   for (const row of rows.slice(1)) {
@@ -219,8 +219,10 @@ test("treats a blank mapped component amount as zero", async ({ page }) => {
 });
 
 test("keeps category statistics below the five-person threshold out of the table and Excel export", async ({ page }) => {
-  const rows = syntheticPayrollRows({ women: 4, men: 4, category: "Confidential cohort" });
-  const observed = await loadValidPayroll(page, rows);
+  const rows = payrollRowsWithGrossTotal({ women: 4, men: 4, category: "Confidential cohort" });
+  const observed = await openApp(page);
+  await uploadPayroll(page, rows);
+  await uploadPayCodeMap(page, true);
   await page.locator("#esegui").click();
   await expect(page.locator("#risultati")).toBeVisible();
   await expect(page.locator("#nota-piccole")).toContainText("fewer than 5 women or men");
@@ -233,6 +235,8 @@ test("keeps category statistics below the five-person threshold out of the table
   for (const index of [3, 4, 5, 6, 7, 8]) expect(visibleCells[index]).toContain("kept back");
   expect(visibleCells[10]).toContain("kept back");
   await expect(page.locator("#grafico-categorie")).not.toContainText("Confidential cohort");
+  await expect(page.locator("#reconciliation-category-section")).toBeVisible();
+  await expect(page.locator("#payroll-reconciliation-categories")).not.toContainText("Confidential cohort");
 
   const downloadPromise = page.waitForEvent("download");
   await page.locator("#scarica-xlsx").click();
@@ -244,6 +248,9 @@ test("keeps category statistics below the five-person threshold out of the table
   const sheets = await readXlsx(arrayBuffer);
   const categories = sheets.find((sheet) => sheet.name === "Categories");
   expect(categories).toBeTruthy();
+  const reconciliationCategories = sheets.find((sheet) => sheet.name === "Reconciliation by category");
+  expect(reconciliationCategories).toBeTruthy();
+  expect(JSON.stringify(reconciliationCategories.rows)).not.toContain("Confidential cohort");
   const exportedRow = categories.rows.find((row) => row[1] === "Confidential cohort");
   expect(exportedRow).toBeTruthy();
   expect(exportedRow.slice(4, 10).every((value) => value === "kept back")).toBe(true);
@@ -420,6 +427,8 @@ test("reconciles all payroll rows, including unclassified gender, and exports on
   await expect(page.locator("#payroll-reconciliation-result")).toContainText("11 payroll rows checked");
   await expect(page.locator("#payroll-reconciliation-result")).toContainText("11 within tolerance");
   await expect(page.locator("#payroll-reconciliation-result")).toContainText("0 over tolerance");
+  await expect(page.locator("#payroll-reconciliation-categories")).toContainText("Professional");
+  await expect(page.locator("#payroll-reconciliation-categories")).toContainText("11");
 
   const downloadPromise = page.waitForEvent("download");
   await page.locator("#scarica-xlsx").click();
@@ -431,6 +440,10 @@ test("reconciles all payroll rows, including unclassified gender, and exports on
   const sheets = await readXlsx(arrayBuffer);
   const reconciliation = sheets.find((sheet) => sheet.name === "Payroll reconciliation");
   expect(reconciliation).toBeTruthy();
+  const categoryReconciliation = sheets.find((sheet) => sheet.name === "Reconciliation by category");
+  expect(categoryReconciliation).toBeTruthy();
+  expect(categoryReconciliation.rows.some((row) => row[1] === "Professional" && row[2] === 11)).toBe(true);
+  expect(JSON.stringify(categoryReconciliation.rows)).not.toContain("SYN-");
   const value = (label) => reconciliation.rows.find((row) => row[0] === label)?.[1];
   expect(value("Payroll rows checked")).toBe(11);
   expect(value("Rows within tolerance")).toBe(11);

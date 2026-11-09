@@ -1,4 +1,4 @@
-worker_id,country,role,gender,weekly_hours,annual_hours,base_pay,bonus,commission,shift_allowance,car_allowance
-W00001,PL,Customer Service L2,F,40,2080,24050,0,0,0,0
-W00002,PL,Sales L1,M,40,2080,21800,0,3760,0,0
-W00003,ES,Customer Service L2,M,40,2080,29450,0,0,0,0
+worker_id,country,role,gender,weekly_hours,annual_hours,base_pay,payroll_total,bonus,commission,shift_allowance,one_off
+W00001,IT,Customer Service L2,F,40,2080,24050,24050,0,0,0,0
+W00002,IT,Sales L1,M,40,2080,21800,25560,0,3760,0,0
+W00003,IT,Customer Service L2,M,40,2080,29450,29450,0,0,0,0

@@ -8,13 +8,14 @@ La Direttiva (UE) 2023/970 definisce il livello retributivo come retribuzione lo
 
 ## Formato minimo
 
-Usare un file Excel (.xlsx) o CSV, una riga per lavoratore e nessuna riga di totale. L’importazione avviene nella pagina del browser.
+Usare un file Excel (.xlsx) o CSV, una riga per lavoratore e nessuna riga di totale. L’importazione avviene nella pagina del browser. Per il pilot è preferibile includere il totale lordo annuo separato così da eseguire il controllo di riconciliazione.
 
 | Campo | Richiesto | Contenuto |
 |---|---:|---|
 | worker_id | sì | Identificativo casuale e univoco nel file, ad esempio W0001. Non inserire nome, matricola aziendale, codice fiscale o e-mail. |
 | gender | sì | Codice concordato con HR e verificato nella schermata di mappatura. Questa versione confronta solo i codici mappati come donna o uomo; gli altri valori restano fuori dai confronti, pur contando nel numero di lavoratori. |
 | base_pay | sì | Retribuzione base lorda effettivamente pagata nell’intero anno civile selezionato, nella valuta del datore di lavoro. Non inserire RAL contrattuale o mensilità da moltiplicare in modalità pagamenti effettivi. |
+| payroll_total | consigliato per il pilot | Totale lordo annuo effettivamente pagato alla persona nell’anno selezionato, fornito separatamente dal sistema paghe. Deve coprire lo stesso periodo e le stesse voci di base_pay e delle componenti. Il controllo è diagnostico e non certifica la completezza legale della retribuzione. |
 | annual_hours | sì per pagamenti effettivi | Ore contrattuali totali per lavoratore nell’anno civile selezionato, coerenti con il periodo di retribuzione pagato. |
 | weekly_hours | no | Media settimanale facoltativa come contesto. Non entra nel calcolo quando annual_hours è presente e non viene confrontata automaticamente con il totale annuo. |
 | category oppure role | almeno uno | Categoria di pari valore già verificata, oppure ruolo da usare nella griglia esplorativa. In Italia partire dalla classificazione applicabile del CCNL. |
@@ -22,7 +23,7 @@ Usare un file Excel (.xlsx) o CSV, una riga per lavoratore e nessuna riga di tot
 | componenti retributive | se presenti | Una colonna numerica per componente, con gli importi lordi effettivamente pagati nello stesso anno di base_pay. Non includere costi datoriali. |
 | mappa codici paga | se sono presenti componenti | Un file Excel/CSV, una riga per voce, con `pay_code`, `column_header`, `description` e `classification`. `column_header` deve coincidere esattamente con l’intestazione nell’export paghe. |
 
-Valori monetari e ore devono essere numerici, senza totali per persona duplicati. Un file pilota italiano deve usare EUR.
+Valori monetari e ore devono essere numerici. Un file pilota italiano deve usare EUR. Il campo payroll_total è una sola colonna separata, con il lordo annuo effettivamente pagato per persona; non usare un totale aziendale ripetuto su ogni riga. Il controllo confronta payroll_total con base_pay più tutte le componenti selezionate, con tolleranza pari a un’unità minima della valuta (un centesimo per EUR). Le differenze non bloccano l’analisi: vanno chiarite con HR prima di interpretare i risultati. La riconciliazione è disponibile solo per pagamenti effettivi di un anno civile concluso; non si applica alle simulazioni annualizzate.
 
 Per ogni codice paga, salvare `pay_code` come testo per preservare eventuali zeri iniziali. La mappa deve riportare l’intestazione esatta della relativa colonna nell’export, una descrizione e una classificazione: `fixed_continuing`, `variable` oppure `one_off`. I codici e le intestazioni devono essere univoci; la colonna mappata deve esistere nell’export e contenere importi numerici. Il [modello CSV](../web/template_pay_code_map.csv) usa questi nomi di colonna. La pagina importa la mappa localmente e precompila le componenti e la selezione fissa/continuativa; l’Excel scaricato include il foglio della mappa usata. Le componenti variabili e una tantum restano nella retribuzione totale; soltanto quelle fisse e continuative entrano nella misura italiana specifica. HR/Compensation deve confermare codici e classificazioni: l’importazione non certifica la natura legale della voce.
 
@@ -53,7 +54,8 @@ Un identificativo pseudonimo resta dato personale se l’azienda può ricondurlo
 3. Rimuovere identificativi diretti e colonne estranee.
 4. Verificare che worker_id sia univoco e che ogni persona compaia una sola volta.
 5. Controllare codici di genere, codici paga, classificazioni, importi negativi/anomali e ore annue; trattare l’eventuale media settimanale come dato di contesto.
-6. Confermare le categorie con HR e rappresentanti dei lavoratori; per l’Italia partire dal CCNL.
-7. Riconciliare un campione di righe e i totali aggregati con l’export sorgente prima di discutere i risultati.
+6. Verificare il totale lordo separato contro base_pay e le componenti incluse; chiarire ogni scarto oltre la tolleranza con HR/Compensation.
+7. Confermare le categorie con HR e rappresentanti dei lavoratori; per l’Italia partire dal CCNL.
+8. Riconciliare un campione di righe e i totali aggregati con l’export sorgente prima di discutere i risultati.
 
 Non caricare il file reale in GitHub, issue, pull request, email o strumenti di assistenza. Condividere soltanto dati sintetici o aggregati approvati.
