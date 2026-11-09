@@ -12,6 +12,47 @@ import { readXlsx } from "./xlsx.js";
 export const normalise = (s) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[łŁ]/g, "l").toLowerCase()
   .replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 
+function assertHeaders(headers, rows) {
+  const seen = new Map();
+  const issues = [];
+  headers.forEach((raw, index) => {
+    const header = String(raw ?? "").trim();
+    const key = normalise(header);
+    if (!key) {
+      if (rows.some((row) => row[index] !== "" && row[index] !== null && row[index] !== undefined)) {
+        issues.push(`blank column header at position ${index + 1} contains data`);
+      }
+      return;
+    }
+    if (seen.has(key)) {
+      issues.push(`duplicate or ambiguous column headers: "${seen.get(key)}" and "${header}" normalize to the same name`);
+    } else seen.set(key, header);
+  });
+  if (issues.length) throw new Error(issues.join("; "));
+}
+
+function recognizedFields(headers, fields = []) {
+  const available = new Set(headers.map(normalise).filter(Boolean));
+  return fields.filter((field) => [field.key, ...(field.aliases || [])]
+    .some((candidate) => available.has(normalise(candidate)))).length;
+}
+
+function candidateForSheet(sheet, fields) {
+  let best = null;
+  const limit = Math.min(sheet.rows.length, 30);
+  for (let index = 0; index < limit; index += 1) {
+    const row = sheet.rows[index] || [];
+    if (!row.some((value) => value !== "" && value !== null && value !== undefined)) continue;
+    const headers = row.map((value) => String(value ?? "").trim());
+    const recognized = recognizedFields(headers, fields);
+    const width = headers.filter((header) => normalise(header)).length;
+    if (!best || recognized > best.recognized || (recognized === best.recognized && width > best.width)) {
+      best = { sheet, headerIndex: index, headers, recognized, width };
+    }
+  }
+  return best;
+}
+
 export function parseCsv(text) {
   text = text.replace(/^﻿/, "");
   const first = text.split(/\r?\n/, 1)[0];
@@ -36,6 +77,7 @@ export function parseCsv(text) {
   row.push(field);
   if (row.some((v) => v !== "")) records.push(row);
   const headers = (records.shift() || []).map((h) => h.trim());
+  assertHeaders(headers, records);
   const rows = records.map((r) => Object.fromEntries(headers.map((h, i) => [h, (r[i] ?? "").trim()])));
   return { headers, rows, decimalComma: decimalMark(rows, sep === ";") };
 }
@@ -55,18 +97,47 @@ export function decimalMark(rows, fallback) {
   return comma === dot ? fallback : comma > dot;
 }
 
-export async function readTable(file, { sheet } = {}) {
+export async function readTable(file, { sheet, fields } = {}) {
   const name = (file.name || "").toLowerCase();
   if (name.endsWith(".xlsx") || name.endsWith(".xlsm")) {
     const sheets = await readXlsx(await file.arrayBuffer());
-    const chosen = sheets.find((s) => s.name === sheet) || sheets.find((s) => s.rows.length > 1) || sheets[0];
-    if (!chosen) throw new Error("empty workbook");
-    const start = chosen.rows.findIndex((r) => r.some((v) => v !== "" && v !== null));   // a title row or two above
-    const [head = [], ...body] = chosen.rows.slice(Math.max(0, start));
-    const headers = head.map((h) => String(h ?? "").trim());
-    const rows = body.filter((r) => r.some((v) => v !== "" && v !== null))
-      .map((r) => Object.fromEntries(headers.map((h, i) => [h, r[i] ?? ""])));
-    return { headers, rows, decimalComma: false, sheet: chosen.name, sheets: sheets.map((s) => s.name) };
+    if (!sheets.length) throw new Error("empty workbook");
+
+    let chosen;
+    if (sheet) {
+      const selected = sheets.find((item) => item.name === sheet);
+      if (!selected) throw new Error(`worksheet "${sheet}" not found`);
+      chosen = candidateForSheet(selected, fields);
+      if (!chosen) throw new Error(`worksheet "${sheet}" is empty`);
+    } else {
+      const candidates = sheets.map((item) => candidateForSheet(item, fields)).filter(Boolean);
+      if (!candidates.length) throw new Error("empty workbook");
+      if (!fields?.length) {
+        chosen = candidates.find((candidate) => candidate.sheet.rows.length > 1) || candidates[0];
+      } else {
+        const mostRecognized = Math.max(...candidates.map((candidate) => candidate.recognized));
+        if (mostRecognized > 0) {
+          const matches = candidates.filter((candidate) => candidate.recognized === mostRecognized);
+          if (matches.length > 1) {
+            throw new Error(`multiple worksheets match the file's expected columns: ${matches.map((candidate) => candidate.sheet.name).join(", ")}; keep only the worksheet you want to import and retry`);
+          }
+          [chosen] = matches;
+        } else {
+          const widest = Math.max(...candidates.map((candidate) => candidate.width));
+          const matches = candidates.filter((candidate) => candidate.width === widest);
+          if (matches.length > 1) {
+            throw new Error(`multiple worksheets have equally plausible headers: ${matches.map((candidate) => candidate.sheet.name).join(", ")}; keep one data worksheet`);
+          }
+          [chosen] = matches;
+        }
+      }
+    }
+
+    const body = chosen.sheet.rows.slice(chosen.headerIndex + 1)
+      .filter((row) => row.some((value) => value !== "" && value !== null && value !== undefined));
+    assertHeaders(chosen.headers, body);
+    const rows = body.map((row) => Object.fromEntries(chosen.headers.map((header, index) => [header, row[index] ?? ""])));
+    return { headers: chosen.headers, rows, decimalComma: false, sheet: chosen.sheet.name, sheets: sheets.map((item) => item.name) };
   }
   if (name.endsWith(".xls")) throw new Error("old .xls format: save the file as .xlsx or CSV");
   return { ...parseCsv(await file.text()), sheet: null, sheets: [] };
@@ -75,15 +146,19 @@ export async function readTable(file, { sheet } = {}) {
 // fields: [{ key, required, aliases: [...] }]. A header matches a field when its normalised form equals the key or
 // one of the aliases. Saved choices win over guesses.
 export function matchColumns(headers, fields, saved = {}) {
-  const byNorm = new Map(headers.map((h) => [normalise(h), h]));
   const mapping = {};
+  const ambiguous = {};
+  let recognized = 0;
   for (const f of fields) {
+    const accepted = new Set([f.key, ...(f.aliases || [])].map(normalise).filter(Boolean));
+    const hits = headers.filter((header) => accepted.has(normalise(header)));
+    if (hits.length) recognized += 1;
     if (saved[f.key] && headers.includes(saved[f.key])) { mapping[f.key] = saved[f.key]; continue; }
-    const hit = [f.key, ...(f.aliases || [])].map(normalise).find((n) => byNorm.has(n));
-    if (hit) mapping[f.key] = byNorm.get(hit);
+    if (hits.length === 1) mapping[f.key] = hits[0];
+    else if (hits.length > 1) ambiguous[f.key] = hits;
   }
   const missing = fields.filter((f) => f.required && !mapping[f.key]).map((f) => f.key);
-  return { mapping, missing };
+  return { mapping, missing, ambiguous, recognized };
 }
 
 // Renames each row's columns to the tool's own keys; fields left unmapped are simply absent.
