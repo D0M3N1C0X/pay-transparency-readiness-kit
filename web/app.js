@@ -25,9 +25,29 @@ const UI = {
     generi: "How gender is written in the file", generiSub: "Check each code. Exports differ: in Spanish files M can mean mujer, in German files d means divers. Workers marked \"not compared\" still count for the employer's size.",
     gDonna: "Woman", gUomo: "Man", gNo: "Not compared", valuta: "Currency of the pay in the file", hDivComp: "Gap, complementary and variable",
     notaCosto: "excluding {n} small categories kept back", colonneSub: "Check the matches below, or change them.",
-    colonneMancano: "Choose the column for {n} item(s) marked in red.", ruoloOCategoria: "The file needs a role or a category column.",
+    colonneMancano: "Choose the column for {n} item(s) marked in red.",
+    colonneAmbigue: "More than one column could match {fields}. Choose the correct column for each item.",
+    ruoloOCategoria: "The file needs a role or a category column.",
     componenti: "Complementary or variable pay",
     componentiSub: "Review numeric columns paid on top of base pay, using amounts for the same period selected below. An imported dictionary preselects and locks mapped components; in an Italian actual-pay run, add any other component to the dictionary first.",
+    reconHintActual: "If the payroll file has a separate gross annual total, map it here. The check compares that total with base pay and the selected component columns.",
+    reconHintMapped: "Gross annual total mapped from «{column}». Results will compare it with base pay and the selected components.",
+    reconHintAnnualized: "Payroll reconciliation is available only for actual payments in a completed calendar year.",
+    reconHintAmbiguous: "Several columns could be the gross annual total. Choose one or explicitly mark that no separate total is available.",
+    reconChooseColumn: "Choose a gross total column…",
+    reconSkipColumn: "No separate gross total column",
+    reconNotMapped: "No separate annual gross total is mapped. The assessment ran without reconciliation.",
+    reconAnnualized: "This is an annualized simulation. Reconciliation requires actual payments for a completed calendar year.",
+    reconCounts: "{rows} payroll rows checked: {matched} within tolerance, {mismatched} over tolerance, {missing} missing totals, {invalid} invalid amounts.",
+    reconScope: "Compared base pay plus {components} selected component column(s). All payroll rows are included, including workers not compared by gender.",
+    reconMax: "Maximum absolute difference: {difference}; tolerance: {tolerance}.",
+    reconOther: "{n} other numeric column(s) were not included; review whether any are pay.",
+    reconLabel: "Reconciliation field", reconValue: "Value", reconStatusLabel: "Status", reconChecked: "Checked",
+    reconYear: "Calendar year", reconTotalColumn: "Gross total column", reconRows: "Payroll rows checked",
+    reconMatches: "Rows within tolerance", reconMismatches: "Rows over tolerance", reconMissing: "Rows missing total",
+    reconInvalid: "Rows with invalid amounts", reconTolerance: "Tolerance", reconMaxDifference: "Maximum absolute difference",
+    reconComponents: "Included component columns", reconOtherColumns: "Other numeric columns not included",
+    reconPrivacy: "Privacy", reconNoIds: "No worker IDs or row-level pay values are included on this sheet.",
     nessunaColonna: "No other numeric columns in the file.",
     payCodeOptional: "Upload the payroll first. The dictionary maps pay codes to exact payroll column headers and pre-fills component classes.",
     payCodeRequired: "For Italian actual-pay runs, classify every included pay component in the pay-code dictionary.",
@@ -74,6 +94,7 @@ const UI = {
     f_worker_id: "Pseudonymous worker ID", f_gender: "Gender (woman or man)", f_base_pay: "Base pay", f_role: "Role or job title",
     f_category: "Reviewed category of equal value / internal grade (Italy: CCNL level)", f_country: "Country of the employer", f_weekly_hours: "Average contractual weekly hours (optional context; not used when annual hours are mapped)",
     f_fte: "Full-time share (FTE)", f_annual_hours: "Contractual hours in the selected calendar year",
+    f_payroll_total: "Separate gross total paid in the selected year",
     entitaLabel: "Employer", gruppo: "Group (not a statutory figure)",
     kLavoratori: "Workers", kDivario: "Mean hourly pay gap", kCategorie: "Categories to justify or remedy", kCosto: "Cost ceiling to close them, a year",
     obblighi: "What each employer owes, and when",
@@ -100,7 +121,7 @@ const UI = {
     footer: "The same calculations as the kit's Python pipeline and Excel model, checked against each other on every change. Not legal advice.",
     rapporto: "Report", metodo: "Method", codice: "Code",
     x_sintesi: "Summary", x_categorie: "Categories", x_obblighi: "Obligations", x_griglia: "Job evaluation", x_impostazioni: "Settings",
-    x_italia: "Italy", x_paycodes: "Pay-code map",
+    x_italia: "Italy", x_paycodes: "Pay-code map", x_reconciliation: "Payroll reconciliation",
     hPayCode: "Pay code", hPayHeader: "Payroll column header", hPayDescription: "Description", hPayClassification: "Classification",
     hPayInTotal: "Included in components", hPayFixed: "Included in fixed and continuing pay (Italy)", yes: "Yes", no: "No",
     fisse: "Fixed and continuing pay (Italy)",
@@ -135,9 +156,29 @@ const UI = {
     generi: "Come è scritto il genere nel file", generiSub: "Controlla ogni codice. Gli export cambiano: nei file spagnoli M può voler dire mujer, in quelli tedeschi d vuol dire divers. Chi è \"non confrontato\" conta comunque per la dimensione dell'azienda.",
     gDonna: "Donna", gUomo: "Uomo", gNo: "Non confrontato", valuta: "Valuta della retribuzione nel file", hDivComp: "Divario, componenti complementari e variabili",
     notaCosto: "escluse {n} categorie piccole riservate", colonneSub: "Controlla gli abbinamenti qui sotto, o cambiali.",
-    colonneMancano: "Scegli la colonna per {n} voce/i in rosso.", ruoloOCategoria: "Al file serve una colonna con il ruolo o con la categoria.",
+    colonneMancano: "Scegli la colonna per {n} voce/i in rosso.",
+    colonneAmbigue: "Più colonne possono corrispondere a {fields}. Scegli la colonna corretta per ciascuna voce.",
+    ruoloOCategoria: "Al file serve una colonna con il ruolo o con la categoria.",
     componenti: "Componenti complementari o variabili",
     componentiSub: "Controlla le colonne numeriche pagate oltre alla retribuzione base, con importi dello stesso periodo scelto qui sotto. La mappa importa e blocca le componenti classificate; nei pagamenti effettivi italiani aggiungi prima alla mappa ogni altra componente.",
+    reconHintActual: "Se l’export paghe ha un totale lordo annuo separato, abbina qui la colonna. Il controllo lo confronta con la retribuzione base e le componenti selezionate.",
+    reconHintMapped: "Totale lordo annuo abbinato alla colonna «{column}». I risultati lo confronteranno con retribuzione base e componenti selezionate.",
+    reconHintAnnualized: "La riconciliazione delle paghe è disponibile solo sui pagamenti effettivi di un anno civile concluso.",
+    reconHintAmbiguous: "Più colonne potrebbero contenere il totale lordo annuo. Scegline una o indica esplicitamente che il totale separato non è disponibile.",
+    reconChooseColumn: "Scegli la colonna del totale lordo…",
+    reconSkipColumn: "Non c’è un totale lordo separato",
+    reconNotMapped: "Non è mappato un totale lordo annuo separato. La verifica è stata eseguita senza riconciliazione.",
+    reconAnnualized: "Questa è una simulazione annualizzata. La riconciliazione richiede i pagamenti effettivi di un anno civile concluso.",
+    reconCounts: "{rows} righe paghe controllate: {matched} entro la tolleranza, {mismatched} oltre la tolleranza, {missing} senza totale, {invalid} con importi non validi.",
+    reconScope: "Confrontate retribuzione base e {components} colonne componente selezionate. Sono incluse tutte le righe, anche quelle non confrontate per genere.",
+    reconMax: "Scarto assoluto massimo: {difference}; tolleranza: {tolerance}.",
+    reconOther: "{n} altre colonne numeriche non sono incluse; verifica se contengono voci retributive.",
+    reconLabel: "Campo di riconciliazione", reconValue: "Valore", reconStatusLabel: "Esito", reconChecked: "Controllo eseguito",
+    reconYear: "Anno civile", reconTotalColumn: "Colonna totale lordo", reconRows: "Righe paghe controllate",
+    reconMatches: "Righe entro tolleranza", reconMismatches: "Righe oltre tolleranza", reconMissing: "Righe senza totale",
+    reconInvalid: "Righe con importi non validi", reconTolerance: "Tolleranza", reconMaxDifference: "Scarto assoluto massimo",
+    reconComponents: "Colonne componente incluse", reconOtherColumns: "Altre colonne numeriche escluse",
+    reconPrivacy: "Privacy", reconNoIds: "Questo foglio non include ID dei lavoratori né importi a livello individuale.",
     nessunaColonna: "Nel file non ci sono altre colonne numeriche.",
     payCodeOptional: "Carica prima l'export paghe. La mappa collega i codici paga alle intestazioni esatte e precompila le classificazioni delle componenti.",
     payCodeRequired: "Per i pagamenti effettivi italiani, classifica ogni componente retributiva inclusa nella mappa dei codici paga.",
@@ -184,6 +225,7 @@ const UI = {
     f_worker_id: "ID pseudonimo del lavoratore", f_gender: "Genere (donna o uomo)", f_base_pay: "Retribuzione base", f_role: "Ruolo o mansione",
     f_category: "Categoria di pari valore verificata / livello interno (Italia: livello CCNL)", f_country: "Paese del datore di lavoro", f_weekly_hours: "Media delle ore contrattuali settimanali (contesto facoltativo; non usata se sono mappate le ore annue)",
     f_fte: "Quota di tempo pieno (FTE)", f_annual_hours: "Ore contrattuali nell’anno civile selezionato",
+    f_payroll_total: "Totale lordo separato pagato nell’anno selezionato",
     entitaLabel: "Datore di lavoro", gruppo: "Gruppo (non è un dato da comunicare)",
     kLavoratori: "Lavoratori", kDivario: "Divario medio, paga oraria", kCategorie: "Categorie da giustificare o correggere", kCosto: "Tetto del costo per chiuderle, l'anno",
     obblighi: "Cosa deve fare ogni datore di lavoro, e quando",
@@ -210,7 +252,7 @@ const UI = {
     footer: "Gli stessi calcoli della pipeline Python e del modello Excel del kit, verificati tra loro a ogni modifica. Non è consulenza legale.",
     rapporto: "Rapporto", metodo: "Metodo", codice: "Codice",
     x_sintesi: "Sintesi", x_categorie: "Categorie", x_obblighi: "Obblighi", x_griglia: "Valutazione dei ruoli", x_impostazioni: "Impostazioni",
-    x_italia: "Italia", x_paycodes: "Mappa codici paga",
+    x_italia: "Italia", x_paycodes: "Mappa codici paga", x_reconciliation: "Riconciliazione paghe",
     hPayCode: "Codice paga", hPayHeader: "Intestazione colonna paghe", hPayDescription: "Descrizione", hPayClassification: "Classificazione",
     hPayInTotal: "Inclusa nelle componenti", hPayFixed: "Inclusa nella retribuzione fissa e continuativa (Italia)", yes: "Sì", no: "No",
     fisse: "Retribuzione fissa e continuativa (Italia)",
@@ -252,6 +294,7 @@ const CAMPI = [
   ["worker_id", true, ["pseudonymous worker id", "pseudonymous id", "worker pseudonym", "employee pseudonym", "id pseudonimo", "codice pseudonimo"]],
   ["gender", true, ["sex", "sesso", "genere", "plec", "geschlecht", "sexo", "gender code"]],
   ["base_pay", true, ["base salary", "annual base pay", "annual base salary", "salary", "ral", "retribuzione base", "stipendio base", "retribuzione annua lorda", "grundgehalt", "gehalt", "salario base", "salario", "sueldo", "wynagrodzenie zasadnicze", "pensja"]],
+  ["payroll_total", false, ["annual gross total", "gross annual total", "annual gross pay total", "total gross annual pay", "gross pay total", "total gross pay", "total gross paid", "gross total paid", "total annual gross pay", "total gross remuneration", "total gross compensation", "total compensation paid", "gross_total_paid", "total_gross_pay", "totale lordo annuo", "totale lordo pagato", "totale retribuzione lorda", "retribuzione lorda totale", "retribuzione annua lorda totale", "retribuzione lorda complessiva", "totale retribuzione annua"]],
   ["role", false, ["job title", "job", "position", "ruolo", "mansione", "posizione", "qualifica", "stanowisko", "rolle", "puesto"]],
   ["category", false, ["category of workers", "job grade", "pay grade", "grade", "band", "categoria", "livello", "grado", "kategoria", "entgeltgruppe"]],
   ["country", false, ["paese", "nazione", "country code", "kraj", "land", "pais"]],
@@ -361,7 +404,7 @@ const K_GRIGLIA = () => `strumenti.pt.griglia.${chiaveFile()}`, K_GIUST = () => 
 // state: the files the user gave, the column choices, the role scores and the result of the last run
 const files = { paghe: null, griglia: null, codici: null };
 let numeriche = [];      // the file's numeric columns not used by a mapped field: the candidates for components
-let esempio = false, mapping = {}, componenti = new Set(), fisse = new Set(), punteggi = {}, generi = {}, risultato = null, entita = null;
+let esempio = false, mapping = {}, mappatureAmbigue = {}, componenti = new Set(), fisse = new Set(), punteggi = {}, generi = {}, risultato = null, entita = null;
 let payCodeByHeader = new Map();
 const soldi = (x, d = 0) => {
   const v = $("valuta").value;
@@ -402,7 +445,8 @@ function messaggio(text, kind = "error") {
 // ---- files --------------------------------------------------------------------------------------------------
 async function prendiFile(slot, file) {
   try {
-    const table = await readTable(file);
+    const fields = slot === "paghe" ? CAMPI : slot === "codici" ? CODICI : GRIGLIA;
+    const table = await readTable(file, { fields });
     if (!table.rows.length) throw new Error(t("eVuoto"));
     if (slot === "codici") {
       if (!files.paghe) throw new Error(t("payCodeNeedsPayroll"));
@@ -502,6 +546,7 @@ function colonne() {
   if (!f) return;
   const m = matchColumns(f.headers, CAMPI, savedMapping("pt", f.headers));
   mapping = m.mapping;
+  mappatureAmbigue = m.ambiguous;
   const usate = new Set(Object.values(mapping));
   numeriche = f.headers.filter((h) => !usate.has(h) && f.rows.slice(0, 50).every((r) => {
     try { number(r[h], f.decimalComma); return true; } catch { return false; }
@@ -512,6 +557,7 @@ function colonne() {
   $("passo-colonne").style.display = "block";
   disegnaMappa(false);
   disegnaComponenti(numeriche);
+  aggiornaRiconciliazioneHint();
   disegnaGeneri();
   categorie();
   aggiornaStatoPayCode();
@@ -533,36 +579,54 @@ function disegnaGeneri() {
 const mancanti = () => CAMPI.filter((c) => (c.required || ($("base-dati").value === "actual" && c.key === "annual_hours")) && !mapping[c.key]).map((c) => c.key);
 function disegnaMappa(apri) {
   const f = files.paghe;
-  const manca = mancanti().length + (mapping.role || mapping.category ? 0 : 1);
+  const mancantiAttuali = mancanti();
+  const manca = mancantiAttuali.length + (mapping.role || mapping.category ? 0 : 1);
+  const riconciliazioneAmbigua = $("base-dati").value === "actual" && Boolean(mappatureAmbigue.payroll_total);
+  const ambigue = [...new Set([
+    ...mancantiAttuali.filter((key) => mappatureAmbigue[key]),
+    ...(!mapping.role && !mapping.category ? ["role", "category"].filter((key) => mappatureAmbigue[key]) : []),
+    ...(riconciliazioneAmbigua ? ["payroll_total"] : [])
+  ])];
   $("colonne-ok").textContent = t("colonneOk", { n: CAMPI.filter((c) => mapping[c.key]).length });
-  $("colonne-sub").textContent = manca ? (mancanti().length ? t("colonneMancano", { n: mancanti().length }) : t("ruoloOCategoria")) : t("colonneSub");
-  const aperta = manca || apri === "forza";
+  $("colonne-sub").textContent = ambigue.length
+    ? t("colonneAmbigue", { fields: ambigue.map((key) => t(`f_${key}`)).join(", ") })
+    : manca ? (mancantiAttuali.length ? t("colonneMancano", { n: mancantiAttuali.length }) : t("ruoloOCategoria"))
+      : t("colonneSub");
+  const aperta = manca || riconciliazioneAmbigua || apri === "forza";
   $("riepilogo-colonne").style.display = aperta ? "none" : "block";
   $("mappa").style.display = aperta ? "grid" : "none";
   $("campo-ore").style.display = $("base-dati").value === "actual" || mapping.weekly_hours ? "none" : "block";
   $("mappa").innerHTML = CAMPI.map((c) => {
     const scelta = mapping[c.key] || "";
     const richiesto = c.required || ($("base-dati").value === "actual" && c.key === "annual_hours");
-    const rosso = (richiesto && !scelta) || ((c.key === "role" || c.key === "category") && !mapping.role && !mapping.category);
+    const ambiguo = Boolean(mappatureAmbigue[c.key]) &&
+      (richiesto || ((c.key === "role" || c.key === "category") && !mapping.role && !mapping.category)
+        || (c.key === "payroll_total" && $("base-dati").value === "actual"));
+    const rosso = (richiesto && !scelta) || ambiguo || ((c.key === "role" || c.key === "category") && !mapping.role && !mapping.category);
     return `<div class="s-map-row${rosso ? " is-missing" : ""}"><div class="need">${esc(t(`f_${c.key}`))}
       ${richiesto ? "" : `<small>${esc(t("facoltativa"))}</small>`}</div>
       <select class="s-select" data-key="${c.key}" aria-label="${esc(t(`f_${c.key}`))}">
-        <option value="">${esc(t("nonPresente"))}</option>
+        ${c.key === "payroll_total" && mappatureAmbigue[c.key] && $("base-dati").value === "actual"
+          ? `<option value="">${esc(t("reconChooseColumn"))}</option><option value="__skip_payroll_total__">${esc(t("reconSkipColumn"))}</option>`
+          : `<option value="">${esc(t("nonPresente"))}</option>`}
         ${f.headers.map((h) => `<option ${h === scelta ? "selected" : ""}>${esc(h)}</option>`).join("")}
       </select></div>`;
   }).join("");
   $("mappa").querySelectorAll("select").forEach((sel) => sel.addEventListener("change", () => {
-    mapping = { ...mapping, [sel.dataset.key]: sel.value };
+    const skipPayrollTotal = sel.dataset.key === "payroll_total" && sel.value === "__skip_payroll_total__";
+    const selectedColumn = skipPayrollTotal ? "" : sel.value;
+    if (sel.value || skipPayrollTotal) delete mappatureAmbigue[sel.dataset.key];
+    mapping = { ...mapping, [sel.dataset.key]: selectedColumn };
     rememberMapping("pt", f.headers, mapping);
     // a column now read as a field cannot also be a component, or it would be counted twice
-    componenti.delete(sel.value); fisse.delete(sel.value);
+    componenti.delete(selectedColumn); fisse.delete(selectedColumn);
     applicaMappaCodici();
     disegnaComponenti(numeriche.filter((h) => !Object.values(mapping).includes(h)));
     nascondi();
     disegnaMappa("forza");
     disegnaGeneri();
     categorie();
-    aggiornaStatoPayCode(); pronto();
+    aggiornaStatoPayCode(); aggiornaRiconciliazioneHint(); pronto();
   }));
 }
 $("mostra-colonne").addEventListener("click", () => disegnaMappa("forza"));
@@ -654,8 +718,9 @@ function pronto() {
   const yearOk = annoValido();
   $("avviso-impostazioni").textContent = f && !yearOk ? t("eAnno") : "";
   const payCodeErrors = erroriPayCode();
+  const unresolvedPayrollTotal = $("base-dati").value === "actual" && Boolean(mappatureAmbigue.payroll_total);
   $("esegui").disabled = !(f && yearOk && !mancanti().length && (mapping.role || mapping.category)
-    && (fonte() === "file" || ruoli().every(([r]) => valutato(r))) && !payCodeErrors.length);
+    && (fonte() === "file" || ruoli().every(([r]) => valutato(r))) && !payCodeErrors.length && !unresolvedPayrollTotal);
 }
 
 $("scarica-griglia").addEventListener("click", () => {
@@ -708,6 +773,83 @@ function applicaMappaCodici() {
   payCodeByHeader = new Map(files.codici.items.map((item) => [item.column_header, item]));
   componenti = new Set(files.codici.items.map((item) => item.column_header));
   fisse = new Set(files.codici.items.filter((item) => item.classification === "fixed_continuing").map((item) => item.column_header));
+}
+
+function calcolaRiconciliazione(f, cols, basis) {
+  const currency = $("valuta").value;
+  const digits = currency
+    ? new Intl.NumberFormat(i18n.lang === "it" ? "it-IT" : "en-GB", { style: "currency", currency })
+      .resolvedOptions().maximumFractionDigits
+    : 2;
+  const tolerance = 1 / (10 ** digits);
+  const otherNumericColumns = numeriche.filter((h) => !cols.includes(h) && !Object.values(mapping).includes(h));
+  const result = {
+    status: basis === "actual" ? "not_mapped" : "annualized",
+    year: Number($("anno-paghe").value),
+    currency,
+    digits,
+    tolerance,
+    rowCount: f.rows.length,
+    totalColumn: mapping.payroll_total || "",
+    selectedComponents: [...cols],
+    otherNumericColumns,
+    matched: null,
+    mismatched: null,
+    missing: null,
+    invalid: null,
+    maxDifference: null,
+  };
+  if (basis !== "actual" || !mapping.payroll_total) return result;
+
+  result.status = "checked";
+  result.matched = 0;
+  result.mismatched = 0;
+  result.missing = 0;
+  result.invalid = 0;
+  let maxDifference = 0;
+  let compared = 0;
+  for (const raw of f.rows) {
+    const totalText = String(raw[mapping.payroll_total] ?? "").trim();
+    if (!totalText) { result.missing += 1; continue; }
+    try {
+      const baseText = String(raw[mapping.base_pay] ?? "").trim();
+      if (!baseText) throw new Error("base pay missing");
+      const total = number(raw[mapping.payroll_total], f.decimalComma);
+      const base = number(raw[mapping.base_pay], f.decimalComma);
+      const expected = base + cols.reduce((sum, column) => sum + number(raw[column], f.decimalComma), 0);
+      const difference = Math.abs(total - expected);
+      if (!Number.isFinite(difference)) throw new Error("invalid amount");
+      compared += 1;
+      maxDifference = Math.max(maxDifference, difference);
+      if (difference <= tolerance + 1e-9) result.matched += 1;
+      else result.mismatched += 1;
+    } catch {
+      result.invalid += 1;
+    }
+  }
+  result.maxDifference = compared ? maxDifference : null;
+  return result;
+}
+
+function testoRiconciliazione(r) {
+  if (r.status === "annualized") return t("reconAnnualized");
+  if (r.status === "not_mapped") return t("reconNotMapped");
+  const parts = [
+    t("reconCounts", { rows: r.rowCount, matched: r.matched, mismatched: r.mismatched, missing: r.missing, invalid: r.invalid }),
+    t("reconScope", { components: r.selectedComponents.length }),
+    t("reconMax", { difference: r.maxDifference == null ? "—" : soldi(r.maxDifference, r.digits), tolerance: soldi(r.tolerance, r.digits) }),
+  ];
+  if (r.otherNumericColumns.length) parts.push(t("reconOther", { n: r.otherNumericColumns.length }));
+  return parts.join(" ");
+}
+
+function aggiornaRiconciliazioneHint() {
+  const el = $("reconciliation-hint");
+  if (!el || !files.paghe) return;
+  if ($("base-dati").value !== "actual") el.textContent = t("reconHintAnnualized");
+  else if (mappatureAmbigue.payroll_total) el.textContent = t("reconHintAmbiguous");
+  else if (mapping.payroll_total) el.textContent = t("reconHintMapped", { column: mapping.payroll_total });
+  else el.textContent = t("reconHintActual");
 }
 
 function calcola() {
@@ -765,7 +907,8 @@ function calcola() {
     const ordine = categoryOrder(w, CFG);
     risultato = { w, countries, esclusi, items: byEntity(w, countries), screen: screen(w, countries, ordine, CFG),
       national: national(w, countries, CFG), nscreen: screen(w, countries, ordine, CFG, "national"), fisse: cols.filter((c) => fisse.has(c)),
-      duties: obligations(w, countries, CFG, altri), roles, basis, year, oggi: new Date().toISOString().slice(0, 10) };
+      duties: obligations(w, countries, CFG, altri), reconciliation: calcolaRiconciliazione(f, cols, basis),
+      roles, basis, year, oggi: new Date().toISOString().slice(0, 10) };
     if (!countries.includes(entita) && !(entita === "Group" && countries.length > 1)) entita = countries[0];
     mostra();
     if (esclusi) messaggio(t("esclusi", { n: esclusi }), "info");
@@ -781,6 +924,7 @@ $("base-dati").addEventListener("change", () => {
   aggiornaBaseDatiUI();
   if (files.paghe) { disegnaMappa(false); categorie(); }
   aggiornaStatoPayCode();
+  aggiornaRiconciliazioneHint();
   nascondi();
   pronto();
 });
@@ -796,12 +940,12 @@ $("pulisci").addEventListener("click", () => {
     $("nome-" + slot).textContent = "";
     $("drop-" + slot).classList.remove("is-done", "is-over");
   });
-  numeriche = []; esempio = false; mapping = {}; componenti = new Set(); fisse = new Set(); payCodeByHeader = new Map();
+  numeriche = []; esempio = false; mapping = {}; mappatureAmbigue = {}; componenti = new Set(); fisse = new Set(); payCodeByHeader = new Map();
   punteggi = {}; generi = {}; risultato = null; entita = null;
   ["mappa", "componenti", "fisse", "generi", "griglia", "entita", "kpis", "tab-obblighi", "tab-voci",
     "grafico-quartili", "grafico-categorie", "tab-categorie", "tab-italia-voci", "tab-italia-cat"]
     .forEach((id) => { $(id).innerHTML = ""; });
-  ["colonne-ok", "colonne-sub", "codici-sub", "cat-sub", "voci-sub", "stampa-meta", "avviso-base", "nota-piccole", "nota-italia"]
+  ["colonne-ok", "colonne-sub", "codici-sub", "cat-sub", "voci-sub", "stampa-meta", "avviso-base", "nota-piccole", "nota-italia", "reconciliation-hint", "payroll-reconciliation-result"]
     .forEach((id) => { $(id).textContent = ""; });
   $("passo-colonne").style.display = "none";
   $("passo-categorie").style.display = "none";
@@ -848,6 +992,7 @@ function mostra() {
   const basisLabel = t(risultato.basis === "actual" ? "basisActual" : "basisAnnualized");
   $("stampa-meta").textContent = nomeEntita(entita) + " · " + t("stampaMeta", { f: t("payrollFileLabel"), basis: basisLabel, year: risultato.year, oggi: data(risultato.oggi), n: i18n.number(it.workers) });
   $("avviso-base").textContent = t(risultato.basis === "actual" ? "basisActualNote" : "basisAnnualizedNote", { year: risultato.year });
+  $("payroll-reconciliation-result").textContent = testoRiconciliazione(risultato.reconciliation);
 
   $("tab-obblighi").innerHTML = `<tr><th class="l">${esc(t("hPaese"))}</th><th>${esc(t("hLavoratori"))}</th><th class="l">${esc(t("hFascia"))}</th><th class="l">${esc(t("hFrequenza"))}</th><th>${esc(t("hPrimo"))}</th><th>${esc(t("hRimedio"))}</th><th class="l">${esc(t("hStato"))}</th></tr>` +
     duties.map((o) => {
@@ -987,6 +1132,25 @@ $("scarica-xlsx").addEventListener("click", () => {
     { name: t("x_categorie"), rows: categorieX, widths: [18, 12, 9, 9, 16, 16, 14, 16, 14, 14, 20, 14, 50, 18, 14] },
     { name: t("x_obblighi"), rows: obblighi, widths: [18, 12, 16, 22, 14, 18, 20, 50, 60, 14] },
   ];
+  const reconciliation = risultato.reconciliation;
+  const reconciliationStatus = reconciliation.status === "checked" ? t("reconChecked")
+    : reconciliation.status === "annualized" ? t("reconAnnualized") : t("reconNotMapped");
+  sheets.push({ name: t("x_reconciliation"), rows: [
+    [t("reconLabel"), t("reconValue")],
+    [t("reconStatusLabel"), reconciliationStatus],
+    [t("reconYear"), reconciliation.year],
+    [t("reconTotalColumn"), reconciliation.totalColumn],
+    [t("reconRows"), reconciliation.rowCount],
+    [t("reconMatches"), reconciliation.matched ?? ""],
+    [t("reconMismatches"), reconciliation.mismatched ?? ""],
+    [t("reconMissing"), reconciliation.missing ?? ""],
+    [t("reconInvalid"), reconciliation.invalid ?? ""],
+    [t("reconTolerance"), reconciliation.status === "checked" ? reconciliation.tolerance : ""],
+    [t("reconMaxDifference"), reconciliation.maxDifference ?? ""],
+    [t("reconComponents"), reconciliation.selectedComponents.join(", ")],
+    [t("reconOtherColumns"), reconciliation.otherNumericColumns.join(", ")],
+    [t("reconPrivacy"), t("reconNoIds")],
+  ], widths: [42, 82] });
   if (files.codici) sheets.push({ name: t("x_paycodes"), rows: [
     [t("hPayCode"), t("hPayHeader"), t("hPayDescription"), t("hPayClassification"), t("hPayInTotal"), t("hPayFixed")],
     ...files.codici.items.map((item) => [item.pay_code, item.column_header, item.description, payClassLabel(item.classification),
@@ -1031,5 +1195,6 @@ i18n.onChange(() => {
   opzioni();
   if (files.paghe) { disegnaMappa(false); disegnaFisse(); categorie(); }
   aggiornaStatoPayCode();
+  aggiornaRiconciliazioneHint();
   mostra();
 });

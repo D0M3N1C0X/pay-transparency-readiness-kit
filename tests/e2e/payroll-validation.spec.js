@@ -39,6 +39,28 @@ function payCodeCsv() {
   ].join("\n");
 }
 
+function completePayCodeCsv() {
+  return [
+    "pay_code;column_header;description;classification",
+    "001;fixed_allowance;Contractual fixed allowance;fixed_continuing",
+    "002;bonus;Annual bonus;variable",
+    "003;one_off;One-time amount;one_off",
+    "004;commission;Sales commission;variable",
+    ""
+  ].join("\n");
+}
+
+function payrollRowsWithGrossTotal() {
+  const rows = syntheticPayrollRows().map((row) => [...row]);
+  const amountColumns = ["base_pay", "fixed_allowance", "bonus", "one_off", "commission"].map((name) => rows[0].indexOf(name));
+  rows[0].push("gross_total_paid");
+  for (const row of rows.slice(1)) {
+    const total = amountColumns.reduce((sum, index) => sum + Number(row[index].replace(",", ".")), 0);
+    row.push(total.toFixed(2).replace(".", ","));
+  }
+  return rows;
+}
+
 function watchPage(page) {
   const requests = [];
   const errors = [];
@@ -68,13 +90,19 @@ async function uploadPayroll(page, rows, annualHoursExpected = true) {
     .toHaveValue(annualHoursExpected ? "annual_hours" : "");
 }
 
-async function uploadPayCodeMap(page) {
+async function uploadXlsxPayroll(page, filename) {
+  await page.locator("#file-paghe").setInputFiles("test-results/e2e-fixtures/" + filename);
+}
+
+async function uploadPayCodeMap(page, complete = false) {
+  const csv = complete ? completePayCodeCsv() : payCodeCsv();
+  const expected = complete ? 4 : 3;
   await page.locator("#file-codici").setInputFiles({
     name: "synthetic-pay-codes.csv",
     mimeType: "text/csv",
-    buffer: Buffer.from(payCodeCsv(), "utf8")
+    buffer: Buffer.from(csv, "utf8")
   });
-  await expect(page.locator("#codici-sub")).toContainText("Loaded 3 pay-code entries");
+  await expect(page.locator("#codici-sub")).toContainText(`Loaded ${expected} pay-code entries`);
 }
 
 async function loadValidPayroll(page, rows = syntheticPayrollRows()) {
@@ -234,5 +262,238 @@ test("counts workers with unclassified gender toward employer size but excludes 
   await expect(page.locator("#tab-obblighi tr").nth(1).locator("td").nth(1)).toHaveText("11");
   await expect(page.locator("#errore")).toContainText("1 worker(s)");
   await expect(page.locator("#errore")).toContainText("count for the employer's size");
+  await expectLocalRequests(observed);
+});
+
+
+test("reads the payroll tab when an XLSX contains a cover sheet and a title row", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-cover.xlsx");
+  await expect(page.locator('#mappa select[data-key="annual_hours"]')).toHaveValue("annual_hours");
+  await uploadPayCodeMap(page);
+  await expect(page.locator("#esegui")).toBeEnabled();
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  await expect(page.locator("#tab-categorie tr").nth(1).locator("td").nth(1)).toHaveText("5");
+  await expectLocalRequests(observed);
+});
+
+test("rejects duplicate XLSX headers that normalize to the same name", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-duplicate-headers.xlsx");
+  await expect(page.locator("#errore")).toContainText("duplicate or ambiguous column headers");
+  await expect(page.locator("#errore")).toContainText("worker_id");
+  await expect(page.locator("#errore")).toContainText("Worker ID");
+  await expect(page.locator("#esegui")).toBeDisabled();
+  await expectLocalRequests(observed);
+});
+
+test("rejects a workbook when two worksheets match payroll columns equally", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-two-matching-sheets.xlsx");
+  await expect(page.locator("#errore")).toContainText("multiple worksheets match");
+  await expect(page.locator("#errore")).toContainText("Payroll 2025");
+  await expect(page.locator("#errore")).toContainText("Payroll 2024");
+  await expect(page.locator("#esegui")).toBeDisabled();
+  await expectLocalRequests(observed);
+});
+
+test("requires an explicit choice when two XLSX headers could mean base pay", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-ambiguous-base-pay.xlsx");
+  await expect(page.locator('#mappa select[data-key="base_pay"]')).toHaveValue("");
+  await expect(page.locator("#colonne-sub")).toContainText("More than one column could match Base pay");
+  await expect(page.locator("#esegui")).toBeDisabled();
+
+  await page.locator('#mappa select[data-key="base_pay"]').selectOption("salary");
+  await uploadPayCodeMap(page);
+  await expect(page.locator("#esegui")).toBeEnabled();
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  const directiveRow = page.locator("#tab-categorie tr").nth(1);
+  await expect(directiveRow.locator("td").nth(3)).toContainText("23.08");
+  await expectLocalRequests(observed);
+});
+
+test("shows an error for a corrupt XLSX archive without a browser exception", async ({ page }) => {
+  const observed = await openApp(page);
+  await page.locator("#file-paghe").setInputFiles({
+    name: "synthetic-corrupt.xlsx",
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    buffer: Buffer.from("not an xlsx archive", "utf8")
+  });
+  await expect(page.locator("#errore")).toContainText("not a zip file");
+  await expect(page.locator("#esegui")).toBeDisabled();
+  await expectLocalRequests(observed);
+});
+
+
+test("rejects an XLSX column with data but no header", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-blank-header-with-data.xlsx");
+  await expect(page.locator("#errore")).toContainText("blank column header at position 12 contains data");
+  await expect(page.locator("#esegui")).toBeDisabled();
+  await expectLocalRequests(observed);
+});
+
+
+test("finds payroll headers after a long metadata preamble", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-late-header.xlsx");
+  await expect(page.locator('#mappa select[data-key="annual_hours"]')).toHaveValue("annual_hours");
+  await uploadPayCodeMap(page);
+  await expect(page.locator("#esegui")).toBeEnabled();
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  await expect(page.locator("#tab-categorie tr").nth(1).locator("td").nth(1)).toHaveText("5");
+  await expectLocalRequests(observed);
+});
+
+test("ignores hidden archive worksheets when a visible payroll sheet is available", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-visible-and-hidden.xlsx");
+  await expect(page.locator('#mappa select[data-key="annual_hours"]')).toHaveValue("annual_hours");
+  await uploadPayCodeMap(page);
+  await expect(page.locator("#esegui")).toBeEnabled();
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  await expectLocalRequests(observed);
+});
+
+test("asks the user to unhide a payroll worksheet instead of silently importing a visible cover", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-hidden-only.xlsx");
+  await expect(page.locator("#errore")).toContainText("matching payroll data is in a hidden worksheet");
+  await expect(page.locator("#errore")).toContainText("unhide it and retry");
+  await expect(page.locator("#esegui")).toBeDisabled();
+  await expectLocalRequests(observed);
+});
+
+test("requires explicit choices for multiple ambiguous XLSX fields", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-ambiguous-id-and-base-pay.xlsx");
+  await expect(page.locator('#mappa select[data-key="worker_id"]')).toHaveValue("");
+  await expect(page.locator('#mappa select[data-key="base_pay"]')).toHaveValue("");
+  await expect(page.locator("#colonne-sub")).toContainText("More than one column could match");
+
+  await page.locator('#mappa select[data-key="base_pay"]').selectOption("salary");
+  await page.locator('#mappa select[data-key="worker_id"]').selectOption("pseudonymous id");
+  await uploadPayCodeMap(page);
+  await expect(page.locator("#esegui")).toBeEnabled();
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  const categoryRow = page.locator("#tab-categorie tr").nth(1);
+  await expect(categoryRow.locator("td").nth(3)).toContainText("23.08");
+  await expectLocalRequests(observed);
+});
+
+test("reports a truncated XLSX central directory as a controlled file error", async ({ page }) => {
+  const observed = await openApp(page);
+  const bytes = new Uint8Array(22);
+  const view = new DataView(bytes.buffer);
+  view.setUint32(0, 0x06054b50, true);
+  view.setUint16(8, 1, true);
+  view.setUint16(10, 1, true);
+  view.setUint32(12, 46, true);
+  view.setUint32(16, 21, true);
+  await page.locator("#file-paghe").setInputFiles({
+    name: "synthetic-truncated-directory.xlsx",
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    buffer: Buffer.from(bytes)
+  });
+  await expect(page.locator("#errore")).toContainText("damaged zip archive");
+  await expect(page.locator("#esegui")).toBeDisabled();
+  await expectLocalRequests(observed);
+});
+
+
+test("reconciles all payroll rows, including unclassified gender, and exports only aggregates", async ({ page }) => {
+  const rows = payrollRowsWithGrossTotal();
+  rows.push(["SYN-X-01", "X", "30000,00", "Professional", "IT", "2080", "40", "0,00", "0,00", "0,00", "0,00", "30000,00"]);
+  const observed = await openApp(page);
+  await uploadPayroll(page, rows);
+  await uploadPayCodeMap(page, true);
+  await page.locator("#mostra-colonne").click();
+  await expect(page.locator('#mappa select[data-key="payroll_total"]')).toHaveValue("gross_total_paid");
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  await expect(page.locator("#payroll-reconciliation-result")).toContainText("11 payroll rows checked");
+  await expect(page.locator("#payroll-reconciliation-result")).toContainText("11 within tolerance");
+  await expect(page.locator("#payroll-reconciliation-result")).toContainText("0 over tolerance");
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.locator("#scarica-xlsx").click();
+  const download = await downloadPromise;
+  const filePath = await download.path();
+  expect(filePath).toBeTruthy();
+  const bytes = await readFile(filePath);
+  const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+  const sheets = await readXlsx(arrayBuffer);
+  const reconciliation = sheets.find((sheet) => sheet.name === "Payroll reconciliation");
+  expect(reconciliation).toBeTruthy();
+  const value = (label) => reconciliation.rows.find((row) => row[0] === label)?.[1];
+  expect(value("Payroll rows checked")).toBe(11);
+  expect(value("Rows within tolerance")).toBe(11);
+  expect(value("Rows over tolerance")).toBe(0);
+  expect(value("Gross total column")).toBe("gross_total_paid");
+  expect(JSON.stringify(reconciliation.rows)).not.toContain("SYN-");
+  await expectLocalRequests(observed);
+});
+
+test("reports total-pay differences without blocking the assessment", async ({ page }) => {
+  const rows = payrollRowsWithGrossTotal();
+  const totalIndex = rows[0].indexOf("gross_total_paid");
+  rows[1][totalIndex] = "48100,05";
+  rows[2][totalIndex] = "48100,01";
+  const observed = await openApp(page);
+  await uploadPayroll(page, rows);
+  await uploadPayCodeMap(page, true);
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  await expect(page.locator("#payroll-reconciliation-result")).toContainText("9 within tolerance");
+  await expect(page.locator("#payroll-reconciliation-result")).toContainText("1 over tolerance");
+  await expect(page.locator("#errore")).toBeHidden();
+  await expectLocalRequests(observed);
+});
+
+test("counts missing and invalid annual gross totals separately", async ({ page }) => {
+  const rows = payrollRowsWithGrossTotal();
+  const totalIndex = rows[0].indexOf("gross_total_paid");
+  rows[1][totalIndex] = "";
+  rows[2][totalIndex] = "not-money";
+  const observed = await openApp(page);
+  await uploadPayroll(page, rows);
+  await uploadPayCodeMap(page, true);
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  await expect(page.locator("#payroll-reconciliation-result")).toContainText("8 within tolerance");
+  await expect(page.locator("#payroll-reconciliation-result")).toContainText("1 missing totals");
+  await expect(page.locator("#payroll-reconciliation-result")).toContainText("1 invalid amounts");
+  await expectLocalRequests(observed);
+});
+
+test("allows assessment without a gross total and clearly skips reconciliation", async ({ page }) => {
+  const observed = await loadValidPayroll(page);
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  await expect(page.locator("#payroll-reconciliation-result")).toContainText("No separate annual gross total is mapped");
+  await expectLocalRequests(observed);
+});
+
+test("requires an explicit choice between ambiguous gross total columns", async ({ page }) => {
+  const rows = payrollRowsWithGrossTotal();
+  const totalIndex = rows[0].indexOf("gross_total_paid");
+  rows[0].splice(totalIndex + 1, 0, "total gross pay");
+  for (const row of rows.slice(1)) row.splice(totalIndex + 1, 0, row[totalIndex]);
+  const observed = await openApp(page);
+  await uploadPayroll(page, rows);
+  await uploadPayCodeMap(page, true);
+  await expect(page.locator('#mappa select[data-key="payroll_total"]')).toHaveValue("");
+  await expect(page.locator("#colonne-sub")).toContainText("More than one column could match");
+  await expect(page.locator("#esegui")).toBeDisabled();
+  await page.locator('#mappa select[data-key="payroll_total"]').selectOption("gross_total_paid");
+  await expect(page.locator("#esegui")).toBeEnabled();
+  await page.locator("#esegui").click();
+  await expect(page.locator("#payroll-reconciliation-result")).toContainText("10 payroll rows checked");
   await expectLocalRequests(observed);
 });

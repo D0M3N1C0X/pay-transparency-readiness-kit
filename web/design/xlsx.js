@@ -20,26 +20,79 @@ async function inflate(bytes) {
 async function unzip(buffer) {
   const b = new Uint8Array(buffer);
   const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  const requireRange = (offset, length) => {
+    if (!Number.isSafeInteger(offset) || !Number.isSafeInteger(length) || offset < 0 || length < 0
+        || offset + length > b.length) throw new Error("damaged zip archive");
+  };
   let eocd = -1;
   for (let i = b.length - 22; i >= Math.max(0, b.length - 65557); i--) {
     if (v.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
   }
   if (eocd < 0) throw new Error("not a zip file");
+  requireRange(eocd, 22);
+  const disk = v.getUint16(eocd + 4, true);
+  const directoryDisk = v.getUint16(eocd + 6, true);
+  const entriesOnDisk = v.getUint16(eocd + 8, true);
   const count = v.getUint16(eocd + 10, true);
+  const directorySize = v.getUint32(eocd + 12, true);
   let p = v.getUint32(eocd + 16, true);
-  const files = {};
+  const commentLength = v.getUint16(eocd + 20, true);
+  requireRange(eocd, 22 + commentLength);
+  if (disk !== 0 || directoryDisk !== 0 || entriesOnDisk !== count) {
+    throw new Error("multi-disk workbook archives are not supported");
+  }
+  if (count === 0xffff || directorySize === 0xffffffff || p === 0xffffffff) {
+    throw new Error("ZIP64 workbook archives are not supported");
+  }
+  const directoryEnd = p + directorySize;
+  requireRange(p, directorySize);
+  if (directoryEnd > eocd) throw new Error("damaged zip archive");
+
+  const files = Object.create(null);
   for (let k = 0; k < count; k++) {
+    requireRange(p, 46);
     if (v.getUint32(p, true) !== 0x02014b50) throw new Error("damaged zip directory");
+    const flags = v.getUint16(p + 8, true);
     const method = v.getUint16(p + 10, true);
-    const size = v.getUint32(p + 20, true);
-    const nameLen = v.getUint16(p + 28, true), extraLen = v.getUint16(p + 30, true), commentLen = v.getUint16(p + 32, true);
+    const checksum = v.getUint32(p + 16, true);
+    const compressedSize = v.getUint32(p + 20, true);
+    const expandedSize = v.getUint32(p + 24, true);
+    const nameLen = v.getUint16(p + 28, true);
+    const extraLen = v.getUint16(p + 30, true);
+    const commentLen = v.getUint16(p + 32, true);
+    const diskStart = v.getUint16(p + 34, true);
     const local = v.getUint32(p + 42, true);
+    requireRange(p + 46, nameLen + extraLen + commentLen);
+    if (diskStart !== 0) throw new Error("multi-disk workbook archives are not supported");
+    if (compressedSize === 0xffffffff || expandedSize === 0xffffffff || local === 0xffffffff) {
+      throw new Error("ZIP64 workbook archives are not supported");
+    }
+    if (flags & 1) throw new Error("password-protected Excel files are not supported");
     const name = td.decode(b.subarray(p + 46, p + 46 + nameLen));
-    const start = local + 30 + v.getUint16(local + 26, true) + v.getUint16(local + 28, true);
-    const data = b.subarray(start, start + size);
-    files[name] = method === 0 ? data : method === 8 ? await inflate(data) : null;
+    if (!name || Object.hasOwn(files, name)) throw new Error("duplicate or invalid zip entry");
+    requireRange(local, 30);
+    if (v.getUint32(local, true) !== 0x04034b50) throw new Error("damaged zip entry");
+    const localNameLen = v.getUint16(local + 26, true);
+    const localExtraLen = v.getUint16(local + 28, true);
+    const dataStart = local + 30 + localNameLen + localExtraLen;
+    requireRange(local + 30, localNameLen + localExtraLen);
+    requireRange(dataStart, compressedSize);
+    const localName = td.decode(b.subarray(local + 30, local + 30 + localNameLen));
+    if (localName !== name) throw new Error("damaged zip entry");
+    const compressed = b.subarray(dataStart, dataStart + compressedSize);
+    let data;
+    if (method === 0) data = compressed;
+    else if (method === 8) {
+      try { data = await inflate(compressed); }
+      catch { throw new Error("damaged compressed data in workbook"); }
+    } else throw new Error("unsupported compression method in workbook");
+    if (data.length !== expandedSize || crc32(data) !== checksum) {
+      throw new Error("damaged or incomplete zip entry");
+    }
+    files[name] = data;
     p += 46 + nameLen + extraLen + commentLen;
   }
+  if (p > directoryEnd) throw new Error("damaged zip directory");
   return files;
 }
 
@@ -163,7 +216,7 @@ export async function readXlsx(buffer) {
       }
       rows.push(row);
     }
-    sheets.push({ name: attr(t, "name"), rows });
+    sheets.push({ name: attr(t, "name"), state: attr(t, "state") || "visible", rows });
   }
   return sheets;
 }
