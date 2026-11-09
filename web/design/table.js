@@ -15,19 +15,20 @@ export const normalise = (s) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ
 function assertHeaders(headers, rows) {
   const seen = new Map();
   const issues = [];
-  headers.forEach((raw, index) => {
-    const header = String(raw ?? "").trim();
+  const width = rows.reduce((max, row) => Math.max(max, row.length), headers.length);
+  for (let index = 0; index < width; index += 1) {
+    const header = String(headers[index] ?? "").trim();
     const key = normalise(header);
     if (!key) {
       if (rows.some((row) => row[index] !== "" && row[index] !== null && row[index] !== undefined)) {
         issues.push(`blank column header at position ${index + 1} contains data`);
       }
-      return;
+      continue;
     }
     if (seen.has(key)) {
       issues.push(`duplicate or ambiguous column headers: "${seen.get(key)}" and "${header}" normalize to the same name`);
     } else seen.set(key, header);
-  });
+  }
   if (issues.length) throw new Error(issues.join("; "));
 }
 
