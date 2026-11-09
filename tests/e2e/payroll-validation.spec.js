@@ -1,0 +1,238 @@
+import { expect, test } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { readXlsx } from "../../web/design/xlsx.js";
+
+const BASE_URL = "http://127.0.0.1:4173";
+const PAYROLL_HEADERS = [
+  "worker_id", "gender", "base_pay", "category", "country", "annual_hours",
+  "weekly_hours", "fixed_allowance", "bonus", "one_off", "commission"
+];
+
+function syntheticPayrollRows({ women = 5, men = 5, category = "Professional" } = {}) {
+  const rows = [PAYROLL_HEADERS];
+  const groups = [
+    ["F", "SYN-F", women, "40000,00", "2080", "2000,00", "5000,00", "1000,00", "100,00"],
+    ["M", "SYN-M", men, "21000,00", "1040", "1000,00", "0,00", "0,00", "200,00"]
+  ];
+  for (const [gender, prefix, count, base, annualHours, fixed, bonus, oneOff, commission] of groups) {
+    for (let index = 1; index <= count; index += 1) {
+      rows.push([
+        prefix + "-" + String(index).padStart(2, "0"), gender, base, category, "IT",
+        annualHours, "40", fixed, bonus, oneOff, commission
+      ]);
+    }
+  }
+  return rows;
+}
+
+function payrollCsv(rows) {
+  return rows.map((row) => row.join(";")).join("\n") + "\n";
+}
+
+function payCodeCsv() {
+  return [
+    "pay_code;column_header;description;classification",
+    "001;fixed_allowance;Contractual fixed allowance;fixed_continuing",
+    "002;bonus;Annual bonus;variable",
+    "003;one_off;One-time amount;one_off",
+    ""
+  ].join("\n");
+}
+
+function watchPage(page) {
+  const requests = [];
+  const errors = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.protocol === "http:" || url.protocol === "https:") {
+      requests.push({ origin: url.origin, method: request.method() });
+    }
+  });
+  page.on("pageerror", (error) => errors.push(error.message));
+  return { requests, errors };
+}
+
+async function openApp(page) {
+  const observed = watchPage(page);
+  await page.goto("/index.html?lang=en");
+  return observed;
+}
+
+async function uploadPayroll(page, rows, annualHoursExpected = true) {
+  await page.locator("#file-paghe").setInputFiles({
+    name: "synthetic-payroll-validation.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(payrollCsv(rows), "utf8")
+  });
+  await expect(page.locator('#mappa select[data-key="annual_hours"]'))
+    .toHaveValue(annualHoursExpected ? "annual_hours" : "");
+}
+
+async function uploadPayCodeMap(page) {
+  await page.locator("#file-codici").setInputFiles({
+    name: "synthetic-pay-codes.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(payCodeCsv(), "utf8")
+  });
+  await expect(page.locator("#codici-sub")).toContainText("Loaded 3 pay-code entries");
+}
+
+async function loadValidPayroll(page, rows = syntheticPayrollRows()) {
+  const observed = await openApp(page);
+  await uploadPayroll(page, rows);
+  await uploadPayCodeMap(page);
+  return observed;
+}
+
+async function expectLocalRequests(observed) {
+  expect(observed.requests.every((entry) => entry.origin === BASE_URL && entry.method === "GET")).toBe(true);
+  expect(observed.errors).toEqual([]);
+}
+
+async function expectRowError(page, messages) {
+  await expect(page.locator("#esegui")).toBeEnabled();
+  await page.locator("#esegui").click();
+  for (const message of messages) await expect(page.locator("#errore")).toContainText(message);
+  await expect(page.locator("#risultati")).toBeHidden();
+}
+
+const rowValidationCases = [
+  {
+    name: "duplicate pseudonymous worker IDs",
+    messages: ["Row 3", "duplicate pseudonymous worker ID"],
+    mutate(rows) { rows[2][0] = rows[1][0]; }
+  },
+  {
+    name: "a missing pseudonymous worker ID",
+    messages: ["Row 2", "pseudonymous worker ID missing"],
+    mutate(rows) { rows[1][0] = ""; }
+  },
+  {
+    name: "zero annual contractual hours",
+    messages: ["Row 2", "contractual hours missing or zero"],
+    mutate(rows) { rows[1][5] = "0"; }
+  },
+  {
+    name: "negative annual contractual hours",
+    messages: ["Row 2", "contractual hours missing or zero"],
+    mutate(rows) { rows[1][5] = "-1"; }
+  },
+  {
+    name: "malformed base pay",
+    messages: ["Row 2", "not a number: not-money"],
+    mutate(rows) { rows[1][2] = "not-money"; }
+  },
+  {
+    name: "infinite base pay",
+    messages: ["Row 2", "not a number: Infinity"],
+    mutate(rows) { rows[1][2] = "Infinity"; }
+  },
+  {
+    name: "missing base pay",
+    messages: ["Row 2", "base pay missing"],
+    mutate(rows) { rows[1][2] = ""; }
+  },
+  {
+    name: "a missing worker category",
+    messages: ["Row 2", "no category"],
+    mutate(rows) { rows[1][3] = ""; }
+  }
+];
+
+for (const scenario of rowValidationCases) {
+  test("rejects " + scenario.name + " with a row-specific message", async ({ page }) => {
+    const rows = syntheticPayrollRows();
+    scenario.mutate(rows);
+    const observed = await openApp(page);
+    await uploadPayroll(page, rows);
+    await uploadPayCodeMap(page);
+    await expectRowError(page, scenario.messages);
+    await expectLocalRequests(observed);
+  });
+}
+
+test("requires annual-hours mapping before an actual-pay run", async ({ page }) => {
+  const rows = syntheticPayrollRows();
+  const annualHoursIndex = rows[0].indexOf("annual_hours");
+  const withoutAnnualHours = rows.map((row) => row.filter((_, index) => index !== annualHoursIndex));
+  const observed = await openApp(page);
+  await uploadPayroll(page, withoutAnnualHours, false);
+  await uploadPayCodeMap(page);
+  await expect(page.locator("#esegui")).toBeDisabled();
+  await expect(page.locator("#colonne-sub")).toContainText("marked in red");
+  await expectLocalRequests(observed);
+});
+
+test("rejects a non-finite mapped component during pay-code map validation", async ({ page }) => {
+  const rows = syntheticPayrollRows();
+  rows[1][7] = "Infinity";
+  const observed = await openApp(page);
+  await uploadPayroll(page, rows);
+  await page.locator("#file-codici").setInputFiles({
+    name: "synthetic-pay-codes.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(payCodeCsv(), "utf8")
+  });
+  await expect(page.locator("#errore")).toContainText("fixed_allowance");
+  await expect(page.locator("#errore")).toContainText("not numeric");
+  await expect(page.locator("#esegui")).toBeDisabled();
+  await expectLocalRequests(observed);
+});
+
+test("treats a blank mapped component amount as zero", async ({ page }) => {
+  const rows = syntheticPayrollRows();
+  rows[1][9] = "";
+  const observed = await loadValidPayroll(page, rows);
+  await expect(page.locator("#esegui")).toBeEnabled();
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  await expect(page.locator("#errore")).toBeHidden();
+  await expectLocalRequests(observed);
+});
+
+test("keeps category statistics below the five-person threshold out of the table and Excel export", async ({ page }) => {
+  const rows = syntheticPayrollRows({ women: 4, men: 4, category: "Confidential cohort" });
+  const observed = await loadValidPayroll(page, rows);
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  await expect(page.locator("#nota-piccole")).toContainText("fewer than 5 women or men");
+
+  const visibleRow = page.locator("#tab-categorie tr").nth(1);
+  const visibleCells = await visibleRow.locator("td").allTextContents();
+  expect(visibleCells[0]).toBe("Confidential cohort");
+  expect(visibleCells[1]).toBe("4");
+  expect(visibleCells[2]).toBe("4");
+  for (const index of [3, 4, 5, 6, 7, 8]) expect(visibleCells[index]).toContain("kept back");
+  expect(visibleCells[10]).toContain("kept back");
+  await expect(page.locator("#grafico-categorie")).not.toContainText("Confidential cohort");
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.locator("#scarica-xlsx").click();
+  const download = await downloadPromise;
+  const filePath = await download.path();
+  expect(filePath).toBeTruthy();
+  const bytes = await readFile(filePath);
+  const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+  const sheets = await readXlsx(arrayBuffer);
+  const categories = sheets.find((sheet) => sheet.name === "Categories");
+  expect(categories).toBeTruthy();
+  const exportedRow = categories.rows.find((row) => row[1] === "Confidential cohort");
+  expect(exportedRow).toBeTruthy();
+  expect(exportedRow.slice(4, 10).every((value) => value === "kept back")).toBe(true);
+  expect(exportedRow[11]).toBe("kept back");
+  await expectLocalRequests(observed);
+});
+
+test("counts workers with unclassified gender toward employer size but excludes them from comparisons", async ({ page }) => {
+  const rows = syntheticPayrollRows();
+  rows.push(["SYN-X-01", "X", "30000,00", "Professional", "IT", "2080", "40", "0,00", "0,00", "0,00", "0,00"]);
+  const observed = await loadValidPayroll(page, rows);
+  await expect(page.locator('#generi select[data-g="X"]')).toHaveValue("");
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  await expect(page.locator("#kpis .s-kpi .v").nth(0)).toHaveText("10");
+  await expect(page.locator("#tab-obblighi tr").nth(1).locator("td").nth(1)).toHaveText("11");
+  await expect(page.locator("#errore")).toContainText("1 worker(s)");
+  await expect(page.locator("#errore")).toContainText("count for the employer's size");
+  await expectLocalRequests(observed);
+});

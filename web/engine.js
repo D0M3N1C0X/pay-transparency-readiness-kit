@@ -204,12 +204,15 @@ export function sex(v) {
 }
 
 export function number(v, decimalComma) {
-  if (typeof v === "number") return v;
+  if (typeof v === "number") {
+    if (!Number.isFinite(v)) throw new Error('not a number: "' + v + '"');
+    return v;
+  }
   let t = String(v ?? "").replace(/[\s€$£%]|zł|PLN|EUR/gi, "");
   if (t === "") return 0;
   if (decimalComma) t = t.replace(/\./g, "").replace(",", ".");
   else if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(t)) t = t.replace(/,/g, "");
   const n = Number(t);
-  if (Number.isNaN(n)) throw new Error(`not a number: "${v}"`);
+  if (!Number.isFinite(n)) throw new Error('not a number: "' + v + '"');
   return n;
 }
