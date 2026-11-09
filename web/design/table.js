@@ -168,6 +168,7 @@ export function matchColumns(headers, fields, saved = {}) {
     const accepted = new Set([f.key, ...(f.aliases || [])].map(normalise).filter(Boolean));
     const hits = headers.filter((header) => accepted.has(normalise(header)));
     if (hits.length) recognized += 1;
+    if (Object.hasOwn(saved, f.key) && saved[f.key] === "") continue;
     if (saved[f.key] && headers.includes(saved[f.key])) { mapping[f.key] = saved[f.key]; continue; }
     if (hits.length === 1) mapping[f.key] = hits[0];
     else if (hits.length > 1) ambiguous[f.key] = hits;
