@@ -40,10 +40,12 @@ function recognizedFields(headers, fields = []) {
 
 function candidateForSheet(sheet, fields) {
   let best = null;
-  const limit = Math.min(sheet.rows.length, 30);
-  for (let index = 0; index < limit; index += 1) {
+  const maxPopulatedRows = 100;
+  let examined = 0;
+  for (let index = 0; index < sheet.rows.length && examined < maxPopulatedRows; index += 1) {
     const row = sheet.rows[index] || [];
     if (!row.some((value) => value !== "" && value !== null && value !== undefined)) continue;
+    examined += 1;
     const headers = row.map((value) => String(value ?? "").trim());
     const recognized = recognizedFields(headers, fields);
     const width = headers.filter((header) => normalise(header)).length;
@@ -111,12 +113,24 @@ export async function readTable(file, { sheet, fields } = {}) {
       chosen = candidateForSheet(selected, fields);
       if (!chosen) throw new Error(`worksheet "${sheet}" is empty`);
     } else {
-      const candidates = sheets.map((item) => candidateForSheet(item, fields)).filter(Boolean);
-      if (!candidates.length) throw new Error("empty workbook");
+      const hiddenSheets = sheets.filter((item) => item.state === "hidden" || item.state === "veryHidden");
+      const visibleSheets = sheets.filter((item) => item.state !== "hidden" && item.state !== "veryHidden");
+      const candidates = visibleSheets.map((item) => candidateForSheet(item, fields)).filter(Boolean);
+      const hiddenCandidates = hiddenSheets.map((item) => candidateForSheet(item, fields)).filter(Boolean);
+      if (!candidates.length) {
+        if (hiddenCandidates.some((candidate) => candidate.recognized > 0)) {
+          throw new Error("matching payroll data is in a hidden worksheet; unhide it and retry");
+        }
+        throw new Error("empty workbook");
+      }
       if (!fields?.length) {
         chosen = candidates.find((candidate) => candidate.sheet.rows.length > 1) || candidates[0];
       } else {
         const mostRecognized = Math.max(...candidates.map((candidate) => candidate.recognized));
+        const bestHidden = hiddenCandidates.reduce((best, candidate) => Math.max(best, candidate.recognized), 0);
+        if (bestHidden > mostRecognized) {
+          throw new Error("the strongest matching payroll data is in a hidden worksheet; unhide it and retry");
+        }
         if (mostRecognized > 0) {
           const matches = candidates.filter((candidate) => candidate.recognized === mostRecognized);
           if (matches.length > 1) {
