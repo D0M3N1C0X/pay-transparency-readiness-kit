@@ -68,6 +68,10 @@ async function uploadPayroll(page, rows, annualHoursExpected = true) {
     .toHaveValue(annualHoursExpected ? "annual_hours" : "");
 }
 
+async function uploadXlsxPayroll(page, filename) {
+  await page.locator("#file-paghe").setInputFiles("test-results/e2e-fixtures/" + filename);
+}
+
 async function uploadPayCodeMap(page) {
   await page.locator("#file-codici").setInputFiles({
     name: "synthetic-pay-codes.csv",
@@ -234,5 +238,67 @@ test("counts workers with unclassified gender toward employer size but excludes 
   await expect(page.locator("#tab-obblighi tr").nth(1).locator("td").nth(1)).toHaveText("11");
   await expect(page.locator("#errore")).toContainText("1 worker(s)");
   await expect(page.locator("#errore")).toContainText("count for the employer's size");
+  await expectLocalRequests(observed);
+});
+
+
+test("reads the payroll tab when an XLSX contains a cover sheet and a title row", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-cover.xlsx");
+  await expect(page.locator('#mappa select[data-key="annual_hours"]')).toHaveValue("annual_hours");
+  await uploadPayCodeMap(page);
+  await expect(page.locator("#esegui")).toBeEnabled();
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  await expect(page.locator("#tab-categorie tr").nth(1).locator("td").nth(1)).toHaveText("5");
+  await expectLocalRequests(observed);
+});
+
+test("rejects duplicate XLSX headers that normalize to the same name", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-duplicate-headers.xlsx");
+  await expect(page.locator("#errore")).toContainText("duplicate or ambiguous column headers");
+  await expect(page.locator("#errore")).toContainText("worker_id");
+  await expect(page.locator("#errore")).toContainText("Worker ID");
+  await expect(page.locator("#esegui")).toBeDisabled();
+  await expectLocalRequests(observed);
+});
+
+test("rejects a workbook when two worksheets match payroll columns equally", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-two-matching-sheets.xlsx");
+  await expect(page.locator("#errore")).toContainText("multiple worksheets match");
+  await expect(page.locator("#errore")).toContainText("Payroll 2025");
+  await expect(page.locator("#errore")).toContainText("Payroll 2024");
+  await expect(page.locator("#esegui")).toBeDisabled();
+  await expectLocalRequests(observed);
+});
+
+test("requires an explicit choice when two XLSX headers could mean base pay", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-ambiguous-base-pay.xlsx");
+  await expect(page.locator('#mappa select[data-key="base_pay"]')).toHaveValue("");
+  await expect(page.locator("#colonne-sub")).toContainText("More than one column could match Base pay");
+  await expect(page.locator("#esegui")).toBeDisabled();
+
+  await page.locator('#mappa select[data-key="base_pay"]').selectOption("salary");
+  await uploadPayCodeMap(page);
+  await expect(page.locator("#esegui")).toBeEnabled();
+  await page.locator("#esegui").click();
+  await expect(page.locator("#risultati")).toBeVisible();
+  const directiveRow = page.locator("#tab-categorie tr").nth(1);
+  await expect(directiveRow.locator("td").nth(3)).toContainText("23.08");
+  await expectLocalRequests(observed);
+});
+
+test("shows an error for a corrupt XLSX archive without a browser exception", async ({ page }) => {
+  const observed = await openApp(page);
+  await page.locator("#file-paghe").setInputFiles({
+    name: "synthetic-corrupt.xlsx",
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    buffer: Buffer.from("not an xlsx archive", "utf8")
+  });
+  await expect(page.locator("#errore")).toContainText("not a zip file");
+  await expect(page.locator("#esegui")).toBeDisabled();
   await expectLocalRequests(observed);
 });
