@@ -1,6 +1,6 @@
-from openpyxl import Workbook
 from pathlib import Path
 
+from openpyxl import Workbook
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "test-results" / "e2e-fixtures"
