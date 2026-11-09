@@ -302,3 +302,12 @@ test("shows an error for a corrupt XLSX archive without a browser exception", as
   await expect(page.locator("#esegui")).toBeDisabled();
   await expectLocalRequests(observed);
 });
+
+
+test("rejects an XLSX column with data but no header", async ({ page }) => {
+  const observed = await openApp(page);
+  await uploadXlsxPayroll(page, "synthetic-payroll-blank-header-with-data.xlsx");
+  await expect(page.locator("#errore")).toContainText("blank column header at position 12 contains data");
+  await expect(page.locator("#esegui")).toBeDisabled();
+  await expectLocalRequests(observed);
+});
