@@ -122,7 +122,35 @@ What changes, and why it matters for the justification:
 - **Keep both measures on file.** The Directive sets the floor and the Commission is checking national laws for conformity; if the narrower definition does not survive, the total-pay figures are the ones that count. Whether an individual superminimo or a role allowance is "fixed and continuing" is the open question; the ministerial decrees on the data to collect (art. 9(4)(b)) are the likelier place for an answer.
 - **The excluded components stay visible.** Item (g) still breaks each category's gap down into ordinary base pay and complementary or variable components (art. 9(1)(g)), and items (b) and (d) report the components on their own.
 
-## 6. Readiness: what has to be in place
+## 6. How far the flags can be trusted
+
+The 5% test reads a number, and the duty follows from the number: an interval does not lift it. But an employer deciding where to spend its justification effort needs three things the number cannot say: whether the flag would survive a year of hiring and leaving, what the gap is made of, and whether the method finds what is really there. The data are synthetic, so the third can be answered for once: the payroll is rebuilt from the same random draws without the two discriminatory mechanisms planted in it (the 2.1% base-pay residual from hr-people-analytics and the poorer Sales territories), and every result below is scored against that ground truth.
+
+![Flagged categories with their intervals](figures/04_flag_intervals.svg)
+
+- **None of the 12 flags is clear of the 5% line.** Resampling the workers in post 2,000 times, every flagged category's 95% interval reaches below 5%: with one or two hundred people in a category, a handful of hires or exits moves the figure across the threshold. 15 of the 16 categories below 5% could cross it the same way. Prepare a justification for the flagged categories and keep the evidence for those near the line: next year's report may move them.
+- **6 of the 12 flags are caused by the planted mechanisms; 6 would be there without them.** 5 of the 6 structural ones come mostly from women holding the lower-paid roles inside a category of equal value, which is what Article 4 asks an employer to justify, whatever its cause. One effect runs the other way: in DE · Munich Cat B men would be paid 5.3% less without the mechanisms, a flag they hide.
+- **Role mix leads in 9 of the 12 flags.** Each category's gap splits exactly into the part role mix accounts for, the part gender-neutral factors (rating, part-time) account for, and what remains between women and men in the same role with the same rating. The first needs a justification for paying roles of equal value differently; the last needs one for paying the same work differently, and is the harder to give.
+- **Category by category, a within-role gap of about 2% is too small to see; employer by employer it is not.** The within-role part is clearly above zero in 3 of 28 categories, and in 1 of 28 on the payroll without the mechanisms, about the one in twenty chance alone gives. Pooled over each employer it is 1.9% to 2.2%, clearly above zero in 4 of 4 employers; without the mechanisms it is -0.7% to -0.4%, clear of zero in 0. The method finds the planted effect where there are enough people to find it and finds nothing where there is nothing: argue the justification per category, set the pay policy per employer.
+
+| Employer | Category | Women / men | Gap | 95% interval | Role mix | Rating, part-time | Same role (95%) | Gap without planted mechanisms | Ground truth |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| IT · Milan | Cat G | 7 / 20 | 10.5% | -3.1% to 23.3% | 1.1% | 4.9% | 4.4% (-4.0% to 12.9%) | 8.6% | Structure |
+| PL · Kraków | Cat F | 37 / 56 | 8.0% | 1.8% to 13.7% | 5.0% | 0.8% | 2.2% (-3.2% to 7.7%) | 6.1% | Structure |
+| PL · Kraków | Cat E | 49 / 87 | 7.9% | 2.9% to 12.8% | 5.9% | -0.6% | 2.6% (-0.7% to 6.0%) | 5.7% | Structure |
+| IT · Milan | Cat B | 147 / 106 | 7.4% | 0.9% to 13.5% | 6.0% | -0.1% | 1.5% (-1.1% to 4.1%) | 5.5% | Structure |
+| ES · Barcelona | Cat G † * | 4 / 9 | 7.1% | -9.8% to 22.3% | 15.1% | -3.7% | -4.2% (-21.1% to 12.7%) | 5.3% | Structure |
+| ES · Barcelona | Cat D | 56 / 52 | 6.9% | 1.0% to 12.3% | 6.6% | 0.3% | 0.0% (-4.1% to 4.1%) | 4.8% | Planted mechanisms |
+| DE · Munich | Cat E | 47 / 65 | 6.0% | -0.1% to 11.9% | 2.8% | 0.7% | 2.6% (-1.3% to 6.5%) | 3.7% | Planted mechanisms |
+| PL · Kraków | Cat D | 125 / 133 | 5.7% | 2.0% to 9.3% | 4.9% | -0.5% | 1.3% (-1.2% to 3.9%) | 3.4% | Planted mechanisms |
+| IT · Milan | Cat A † | 72 / 55 | 5.4% | 0.5% to 10.1% | 0.9% | 0.8% | 3.7% (-0.1% to 7.6%) | 2.6% | Planted mechanisms |
+| ES · Barcelona | Cat B | 64 / 48 | 5.3% | -4.2% to 13.7% | 2.3% | 0.0% | 3.0% (-2.0% to 7.9%) | 3.3% | Planted mechanisms |
+| ES · Barcelona | Cat E | 28 / 41 | 5.0% | -2.6% to 12.0% | 4.8% | -0.1% | 0.3% (-5.4% to 6.1%) | 2.8% | Planted mechanisms |
+| ES · Barcelona | Cat F | 5 / 24 | -5.2% | -22.2% to 9.7% | -4.8% | 0.6% | -1.0% (-5.9% to 3.9%) | -7.2% | Structure |
+
+*Gap and interval: the measure that triggered the flag (hourly, or annual where marked †). Role mix, rating and part-time, and same role: the split of the hourly gap, from one least-squares fit per category of log pay on sex, role, rating and part-time, scaled to the gap shown so the three add up to it; the same-role interval is heteroskedasticity-robust. Rating counts as gender-neutral only if the ratings are; tenure is not in the extract, so differences in it sit in the same-role part. Gap without planted mechanisms: the same measure, on the payroll rebuilt from the same random draws without them. \* Fewer than 5 of one sex: for workers' representatives and the authorities only (Article 12(3)). Code: src/certainty.py.*
+
+## 7. Readiness: what has to be in place
 
 | Ref | Article | Requirement | Status | Owner |
 |---|---|---|---|---|
@@ -143,7 +171,7 @@ What changes, and why it matters for the justification:
 
 *Statuses are illustrative for the demonstration organisation. Evidence expected for each item is in the workbook's Readiness sheet.*
 
-## 7. The next 90 days
+## 8. The next 90 days
 
 1. **Agree the job evaluation with workers' representatives** in each country, starting from the Italian collective agreement's classification. Categories decide every later number.
 2. **Write or rule out a justification for each flagged category**, beginning with the most expensive, and budget the remedy for the rest before the first report is filed.
@@ -152,7 +180,7 @@ What changes, and why it matters for the justification:
 5. **Build the information-request route** (two-month answer) and the annual notice to workers.
 6. **Rerun this model on calendar-year 2026 payroll** once each country's rules are final, and have management confirm the figures after consulting workers' representatives (Article 9(6)).
 
-## 8. Method, choices and limits
+## 9. Method, choices and limits
 
 - **Two engines, one answer.** Every figure is computed in pandas and again by live formulas in [the workbook](../deliverables/pay_transparency_model.xlsx); its Reconciliation sheet checks each pair, and CI recalculates the workbook with LibreOffice and fails on any mismatch.
 - **Where the Directive leaves a choice, the choice is stated.** Pay includes base, bonus, commission and allowances; hourly pay uses contractual hours; components gaps (b) and (d) are among recipients; quartile bands are four equal groups by hourly pay with ties broken by row order; a category is flagged at 5% in either direction on hourly or annual pay. Full list in [docs/method.md](../docs/method.md).

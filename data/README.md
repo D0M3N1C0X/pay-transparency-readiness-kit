@@ -93,6 +93,10 @@ random numbers of anyone else.
 | Eligibility for bonus and car allowance rises with level | added here | the share receiving components, item (e) |
 | Part-time work at random (about 8% of workers), unrelated to sex | inherited | hourly and annual gaps differing by category |
 
+`src/build_extract.py` can rebuild the extract without the residual and the territory effect, from the same
+random draws (`build(planted=False)`); `src/certainty.py` uses that rebuilt payroll as the ground truth the screen
+is scored against (report section 6).
+
 The territory effect is the one an Article 10 assessment exists to surface: a commission rule
 that is identical for everyone and still pays women less, through how the territories are
 assigned.
