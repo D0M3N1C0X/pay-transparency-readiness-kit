@@ -7,6 +7,13 @@ in [docs/roadmap.md](docs/roadmap.md).
 
 ### Added
 
+- **How far the flags can be trusted** (report section 6, `src/certainty.py`): a bootstrap interval for every
+  category's gap; an exact split of each gap into role mix, rating and part-time, and what remains between women
+  and men in the same role; and both scored against the ground truth, the payroll rebuilt from the same random
+  draws without the two planted mechanisms. None of the 12 flags is clear of the 5% line; 6 are caused by the
+  planted mechanisms and 6 would be there without them, and one category's gap against men is hidden by them. The
+  same-role gap is about 2% in every employer and indistinguishable from zero once the mechanisms are removed.
+
 - **Actual-pay browser mode**: captures the completed calendar year, requires amounts actually paid and worker-specific annual contractual hours, validates pseudonymous ID uniqueness, omits the source filename from exported reports, and records the basis and year in the print view and workbook. Annualized contract amounts remain labelled simulations.
 - **Pilot data contract** for a local Italian-company payroll run, including pseudonymous IDs, minimum columns, CCNL category review, storage behavior and calculation limits.
 - **Pay-code dictionary import** in the browser: validates pay codes against exact payroll column headers, pre-fills component and fixed-continuing classes, and records the map in the downloaded workbook.

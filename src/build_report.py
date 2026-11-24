@@ -8,6 +8,7 @@ import pandas as pd
 
 import article9
 import article10
+import certainty
 import charts
 import obligations
 from config import BANDS, EIGE_WEIGHTS, ENTITIES, FIXED_COMPONENTS, JPA_THRESHOLD, MIN_CELL, REPORTS, SNAPSHOT
@@ -140,6 +141,95 @@ def italy(add, w, ind, nat, cats, ncats) -> None:
         "base pay and complementary or variable components (art. 9(1)(g)), and items (b) and (d) report the "
         "components on their own.")
     add("")
+
+
+def certainty_section(add, w) -> dict:
+    """Section 6: how solid each flag is, what it is made of, and how the method scores against the known truth."""
+    a = certainty.assess(w)
+    full, flagged, pool = a["full"], a["flagged"].copy(), a["pooled"]
+    key = lambda r, col: r[f"{col}_{r['measure']}"] if col in ("low", "high") else r[f"gap_{r['measure']}"]
+    flagged["shown"] = flagged.apply(lambda r: key(r, "gap"), axis=1)
+    flagged["shown_low"] = flagged.apply(lambda r: key(r, "low"), axis=1)
+    flagged["shown_high"] = flagged.apply(lambda r: key(r, "high"), axis=1)
+    flagged["shown_clean"] = flagged.apply(lambda r: r[f"gap_{r['measure']}_clean"], axis=1)
+    flagged = flagged.sort_values("shown", ascending=False)
+    (FIG / "04_flag_intervals.svg").write_text(charts.flag_intervals(
+        [(f"{ENTITIES[r.country]} {r.category}" + (" †" if r.measure == "annual" else ""), r.shown, r.shown_low,
+          r.shown_high, r.cause == "Planted mechanisms") for r in flagged.itertuples()], JPA_THRESHOLD))
+
+    solid = int((flagged["verdict"] == certainty.SOLID).sum())
+    below = full[full["status"] != article10.STATUS_FLAG]
+    near = int((below["verdict"] == certainty.NEAR).sum())
+    causes = flagged["cause"].value_counts()
+    planted_n, structure_n = int(causes.get("Planted mechanisms", 0)), int(causes.get("Structure", 0))
+    hidden = full[full["cause"] == "Hidden by them"]
+    leads = flagged["role"].abs() >= flagged[["within_role", "neutral"]].abs().max(axis=1)
+    role_led = int(leads.sum())
+    structural = flagged["cause"] == "Structure"
+    role_led_structural = int((leads & structural).sum())
+    found = a["found_observed"]
+    false_alarms, cells = a["false_alarms_clean"], a["cells"]
+    rng_obs = f"{pct(pool['within_role'].min())} to {pct(pool['within_role'].max())}"
+    rng_clean = f"{pct(pool['within_role_clean'].min())} to {pct(pool['within_role_clean'].max())}"
+    clear_obs = int((pool["within_low"] > 0).sum())
+    clear_clean = int(((pool["within_low_clean"] > 0) | (pool["within_high_clean"] < 0)).sum())
+
+    add("## 6. How far the flags can be trusted")
+    add("")
+    add("The 5% test reads a number, and the duty follows from the number: an interval does not lift it. But an "
+        "employer deciding where to spend its justification effort needs three things the number cannot say: "
+        "whether the flag would survive a year of hiring and leaving, what the gap is made of, and whether the "
+        "method finds what is really there. The data are synthetic, so the third can be answered for once: the "
+        "payroll is rebuilt from the same random draws without the two discriminatory mechanisms planted in it "
+        "(the 2.1% base-pay residual from hr-people-analytics and the poorer Sales territories), and every result "
+        "below is scored against that ground truth.")
+    add("")
+    add("![Flagged categories with their intervals](figures/04_flag_intervals.svg)")
+    add("")
+    add(f"- **{'None' if solid == 0 else solid} of the {len(flagged)} flags {'is' if solid <= 1 else 'are'} clear of "
+        f"the 5% line.** Resampling the workers in post {certainty.DRAWS:,} times, every flagged category's 95% "
+        "interval reaches below 5%: with one or two hundred people in a category, a handful of hires or exits "
+        f"moves the figure across the threshold. {near} of the {len(below)} categories below 5% could cross it the "
+        "same way. Prepare a justification for the flagged categories and keep the evidence for those near the "
+        "line: next year's report may move them.")
+    add(f"- **{planted_n} of the {len(flagged)} flags are caused by the planted mechanisms; {structure_n} would be "
+        f"there without them.** {role_led_structural} of the {structure_n} structural ones come mostly from women "
+        "holding the lower-paid roles inside a category of equal value, which is what Article 4 asks an employer "
+        "to justify, whatever its cause."
+        + (f" One effect runs the other way: in {', '.join(f'{ENTITIES[r.country]} {r.category}' for r in hidden.itertuples())}"
+           f" men would be paid {pct(-hidden['gap_hourly_clean'].iloc[0])} less without the mechanisms, a flag they hide."
+           if len(hidden) else ""))
+    add(f"- **Role mix leads in {role_led} of the {len(flagged)} flags.** Each category's gap splits exactly into "
+        "the part role mix accounts for, the part gender-neutral factors (rating, part-time) account for, and what "
+        "remains between women and men in the same role with the same rating. The first needs a justification "
+        "for paying roles of equal value differently; the last needs one for paying the same work differently, "
+        "and is the harder to give.")
+    add(f"- **Category by category, a within-role gap of about 2% is too small to see; employer by employer it is "
+        f"not.** The within-role part is clearly above zero in {found} of {cells} categories, and in {false_alarms} "
+        f"of {cells} on the payroll without the mechanisms, about the one in twenty chance alone gives. Pooled over "
+        f"each employer it is {rng_obs}, clearly above zero in {clear_obs} of 4 employers; without the mechanisms "
+        f"it is {rng_clean}, clear of zero in {clear_clean}. The method finds the planted effect where there are "
+        "enough people to find it and finds nothing where there is nothing: argue the justification per category, "
+        "set the pay policy per employer.")
+    add("")
+    rows = [[ENTITIES[r.country], r.category + (" †" if r.measure == "annual" else "") + (" *" if r.small_cell else ""),
+             f"{r.women} / {r.men}",
+             pct(r.shown), f"{pct(r.shown_low)} to {pct(r.shown_high)}", pct(r.role), pct(r.neutral),
+             f"{pct(r.within_role)} ({pct(r.within_low)} to {pct(r.within_high)})", pct(r.shown_clean),
+             r.cause] for r in flagged.itertuples()]
+    add(md_table(["Employer", "Category", "Women / men", "Gap", "95% interval", "Role mix", "Rating, part-time",
+                  "Same role (95%)", "Gap without planted mechanisms", "Ground truth"], rows, "llrrrrrrrl"))
+    add("")
+    add("*Gap and interval: the measure that triggered the flag (hourly, or annual where marked †). Role mix, "
+        "rating and part-time, and same role: the split of the hourly gap, from one least-squares fit per category "
+        "of log pay on sex, role, rating and part-time, scaled to the gap shown so the three add up to it; "
+        "the same-role interval is heteroskedasticity-robust. Rating counts as gender-neutral only if the ratings "
+        "are; tenure is not in the extract, so differences in it sit in the same-role part. Gap without planted "
+        "mechanisms: the same measure, on the payroll rebuilt from the same random draws without them. "
+        f"\\* Fewer than {MIN_CELL} of one sex: for workers' representatives and the authorities only (Article 12(3)). "
+        "Code: src/certainty.py.*")
+    add("")
+    return a
 
 
 def write(w: pd.DataFrame) -> dict:
@@ -331,7 +421,9 @@ def write(w: pd.DataFrame) -> dict:
     if "IT" in nat:
         italy(add, w, ind, nat, cats, ncats)
 
-    add("## 6. Readiness: what has to be in place")
+    f["certainty"] = certainty_section(add, w)
+
+    add("## 7. Readiness: what has to be in place")
     add("")
     add(md_table(["Ref", "Article", "Requirement", "Status", "Owner"],
                  [[r.ref, r.article, r.requirement, r.status, r.owner] for r in ready.itertuples()],
@@ -341,7 +433,7 @@ def write(w: pd.DataFrame) -> dict:
         "the workbook's Readiness sheet.*")
     add("")
 
-    add("## 7. The next 90 days")
+    add("## 8. The next 90 days")
     add("")
     add("1. **Agree the job evaluation with workers' representatives** in each country, starting from the Italian "
         "collective agreement's classification. Categories decide every later number.")
@@ -355,7 +447,7 @@ def write(w: pd.DataFrame) -> dict:
         "management confirm the figures after consulting workers' representatives (Article 9(6)).")
     add("")
 
-    add("## 8. Method, choices and limits")
+    add("## 9. Method, choices and limits")
     add("")
     add("- **Two engines, one answer.** Every figure is computed in pandas and again by live formulas in "
         "[the workbook](../deliverables/pay_transparency_model.xlsx); its Reconciliation sheet checks "

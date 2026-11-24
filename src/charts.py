@@ -164,3 +164,54 @@ def category_grid(entities, categories, cells, threshold) -> str:
     body.append(f'<text x="24" y="{top + ch * len(entities) + 42}" class="muted">† Flagged on annual pay only: '
                 f'the hourly gap is below {threshold * 100:.0f}%, so hours worked are the likely driver.</text>')
     return _svg(W, H, "".join(body), "Hourly pay gap by employer and category of workers, with flagged categories")
+
+
+def flag_intervals(rows, threshold) -> str:
+    """rows: [(label, gap, low, high, planted)] -> one interval per flagged category, the threshold marked."""
+    W, left, right, top = 720, 170, 40, 104
+    band = 30
+    H = top + band * len(rows) + 76
+    lo = min(-0.10, min(r[2] for r in rows))
+    hi = max(0.20, max(r[3] for r in rows))
+    lo, hi = (int(lo * 20) - (lo < 0)) / 20, (int(hi * 20) + 1) / 20
+    scale = (W - left - right) / (hi - lo)
+    X = lambda v: left + (v - lo) * scale
+    solid = sum(1 for _, g, low, high, _ in rows if (low >= threshold if g > 0 else high <= -threshold))
+    headline = (f"None of the {len(rows)} flags is clear of the {threshold * 100:.0f}% line" if solid == 0 else
+                f"{solid} of {len(rows)} flags are clear of the {threshold * 100:.0f}% line")
+    body = [
+        f'<text x="24" y="34" class="title">{escape(headline)}</text>',
+        '<text x="24" y="54" class="sub">Flagged categories: the gap that triggered the flag, with a 95% bootstrap '
+        'interval over the workers in post.</text>',
+        f'<circle cx="{left + 5}" cy="76" r="5" fill="var(--s2)"/><text x="{left + 16}" y="80">Caused by the planted '
+        'mechanisms</text>',
+        f'<circle cx="{left + 250}" cy="76" r="5" fill="var(--s1)"/><text x="{left + 261}" y="80">Would be flagged '
+        'without them</text>',
+    ]
+    base = top + band * len(rows)
+    t = lo
+    while t <= hi + 1e-9:
+        body.append(f'<line x1="{X(t):.1f}" y1="{top - 8}" x2="{X(t):.1f}" y2="{base}" stroke="var(--grid)"/>')
+        body.append(f'<text x="{X(t):.1f}" y="{base + 18}" text-anchor="middle" class="muted num">'
+                    f'{t * 100:.0f}%</text>')
+        t = round(t + 0.05, 10)
+    for edge in (threshold, -threshold):
+        if lo <= edge <= hi:
+            body.append(f'<line x1="{X(edge):.1f}" y1="{top - 8}" x2="{X(edge):.1f}" y2="{base}" stroke="var(--pos)" '
+                        'stroke-dasharray="4 3"/>')
+    body.append(f'<line x1="{X(0):.1f}" y1="{top - 8}" x2="{X(0):.1f}" y2="{base}" stroke="var(--axis)"/>')
+    for i, (label, g, low, high, planted) in enumerate(rows):
+        y = top + i * band + band / 2
+        colour = "--s2" if planted else "--s1"
+        tip = (f"{label}: gap {pct(g)}, 95% interval {pct(low)} to {pct(high)}; "
+               + ("caused by the planted mechanisms" if planted else "flagged without them too"))
+        body.append(f'<text x="{left - 12}" y="{y + 4}" text-anchor="end" class="val">{escape(label)}</text>')
+        body.append(f'<line x1="{X(low):.1f}" y1="{y}" x2="{X(high):.1f}" y2="{y}" stroke="var({colour})" '
+                    'stroke-width="3" stroke-linecap="round" opacity=".45"/>')
+        body.append(f'<circle cx="{X(g):.1f}" cy="{y}" r="6" fill="var({colour})" stroke="var(--surface)" '
+                    f'stroke-width="2"><title>{escape(tip)}</title></circle>')
+    body.append(f'<text x="24" y="{base + 40}" class="muted">Dashed: the {threshold * 100:.0f}% threshold of Article '
+                '10(1)(a), in either direction. A negative gap means men are paid less.</text>')
+    body.append(f'<text x="24" y="{base + 56}" class="muted">† Flagged on annual pay only: the annual gap is shown.'
+                '</text>')
+    return _svg(W, H, "".join(body), "Flagged categories with bootstrap intervals against the 5% threshold")

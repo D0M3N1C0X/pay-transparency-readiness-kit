@@ -134,6 +134,21 @@ representatives, the labour inspectorate and the equality body. The Directive se
 five matches the confidentiality threshold in
 [engagement-survey-analytics](https://github.com/D0M3N1C0X/engagement-survey-analytics).
 
+## How far the screen can be trusted
+
+The Directive's test reads the number; an interval does not change the duty. Section 6 of the report adds what
+the number cannot say, in `src/certainty.py`:
+
+| Question | Method | Choice made |
+|---|---|---|
+| Would the flag survive another year? | Bootstrap: women and men in the category resampled separately with replacement, 2,000 times, seed 2026; 95% percentile interval | Uncertainty is about the workers in post, the population the next report will be drawn from. A flag is *solid* when the whole interval is past 5% in the gap's direction, a *close call* otherwise; below 5%, *could cross* when the interval reaches ±5% |
+| What is the gap made of? | One least-squares fit per category of log pay on a female indicator, role, rating (dummies) and part-time, pooled over both sexes | With an intercept and the female indicator, residuals average zero for each sex, so the gap in mean log pay splits exactly into role mix, rating and part-time, and the female coefficient; the parts are scaled to the Directive's gap so they add up to it. HC1 robust interval on the same-role part. Rating is neutral only if the ratings are; tenure is not in the extract |
+| Is there a gap between women and men in the same role? | The same fit over each whole employer | Role fixes the category, so the role terms absorb every category's pay level |
+| Does the method find what is there? | The payroll rebuilt from the same random draws without the planted mechanisms (`build_extract.build(planted=False)`): women's base pay given back the 2.1% of band midpoint the source took off, Sales territories drawn around the same mean for both sexes | A flag is *caused by the planted mechanisms* when it disappears in the rebuilt payroll, *structural* when it stays; a within-role finding on the rebuilt payroll is a false alarm |
+
+The rebuilt salaries can sit up to 25 euro away from the ones the source would have drawn, because the source
+rounded salaries to 50 after taking the residual off.
+
 ## Two engines, one answer
 
 Every figure is computed twice:

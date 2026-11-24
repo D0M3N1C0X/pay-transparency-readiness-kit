@@ -32,6 +32,9 @@ COLUMNS = ["worker_id", "entity", "country", "site", "department", "job_level", 
 
 # Mean territory potential by sex in Sales (1.0 = average territory). The planted effect.
 TERRITORY_MEAN = {"M": 1.0, "F": 0.82}
+# The residual gender effect planted in hr-people-analytics: women's salary is set 2.1% of the band midpoint
+# lower within level and country (src/generate_data.py there). Only the counterfactual below uses it.
+SOURCE_GENDER_RESIDUAL = 0.021
 
 
 def verify_source() -> None:
@@ -46,7 +49,15 @@ def round_to(x: float, step: int = 10) -> int:
     return int(round(x / step)) * step
 
 
-def build() -> list[dict]:
+def build(planted: bool = True) -> list[dict]:
+    """The extract. planted=False rebuilds it without either planted mechanism, with the same random draws.
+
+    That counterfactual is the ground truth the screen is checked against (src/certainty.py): women's base pay
+    is given back the source's residual effect and Sales territories are drawn around the same mean for both
+    sexes. Only women's rows change, and their components follow from the restored base pay. The source
+    salaries were rounded to 50 after the effect was applied, so a restored salary can sit up to 25 euro away
+    from the one the source would have drawn.
+    """
     verify_source()
     with SOURCE_EMPLOYEES.open(newline="") as f:
         active = [r for r in csv.DictReader(f) if not r["exit_date"]]
@@ -61,7 +72,10 @@ def build() -> list[dict]:
 
         country, level, dept, gender = e["country"], e["job_level"], e["department"], e["gender"]
         fte = float(e["fte"])
-        base = round(float(e["base_salary_eur"]) * fte)   # the source salary is full-time equivalent
+        salary = float(e["base_salary_eur"])
+        if not planted and gender == "F":
+            salary += SOURCE_GENDER_RESIDUAL * float(e["salary_band_mid_eur"])
+        base = round(salary * fte)   # the source salary is full-time equivalent
         rating = int(e["performance_rating"])
 
         bonus = 0
@@ -71,7 +85,8 @@ def build() -> list[dict]:
 
         commission = 0
         if dept == "Sales":
-            potential = min(1.8, max(0.3, TERRITORY_MEAN[gender] + 0.18 * territory_draw))
+            mean = TERRITORY_MEAN[gender] if planted else TERRITORY_MEAN["M"]
+            potential = min(1.8, max(0.3, mean + 0.18 * territory_draw))
             commission = round_to(base * COMMISSION_RATE * potential
                                   * max(0.0, 1 + 0.10 * commission_noise))
 
