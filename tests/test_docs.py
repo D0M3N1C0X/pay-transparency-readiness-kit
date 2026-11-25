@@ -4,7 +4,8 @@ import csv
 from config import DATA
 
 DOC = (DATA / "README.md").read_text(encoding="utf-8")
-FILES = ["payroll_extract.csv", "job_evaluation.csv", "transposition.csv", "readiness_checklist.csv"]
+FILES = ["payroll_extract.csv", "payroll_reference_year.csv", "job_evaluation.csv", "transposition.csv",
+         "readiness_checklist.csv"]
 
 
 def test_every_column_is_documented() -> None:

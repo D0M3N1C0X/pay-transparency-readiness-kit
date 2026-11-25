@@ -3,7 +3,7 @@ The whole kit in one command:
 
     python src/run_all.py
 
-payroll extract -> job evaluation -> Article 9 and 10 -> report and figures -> Excel model
+payroll extract and reference year -> job evaluation -> Article 9 and 10 -> report and figures -> Excel model
 -> board deck -> Tableau extracts. Deterministic: the same inputs give the same outputs.
 """
 import time
@@ -11,6 +11,7 @@ import time
 import build_catalogue
 import build_deck
 import build_extract
+import build_period
 import build_report
 import build_tableau
 import build_web
@@ -22,6 +23,7 @@ from workers import load_workers
 def main() -> None:
     start = time.perf_counter()
     build_extract.main()
+    build_period.main()
     workers = load_workers()
     build_report.write(workers)
     report_html.build()

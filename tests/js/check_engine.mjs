@@ -12,7 +12,8 @@ const roles = evaluate(V.grid, V.cfg);
 const comps = V.cfg.components;
 const fixed = comps.map((x) => V.cfg.fixed_components.includes(x));
 V.cases.forEach((c, k) => {
-  const rows = (c.rows ? c.rows.map((i) => ({ ...V.base[i] })) : V.base.map((r) => ({ ...r })));
+  const rows = c.data ? c.data.map((r) => ({ ...r }))
+    : (c.rows ? c.rows.map((i) => ({ ...V.base[i] })) : V.base.map((r) => ({ ...r })));
   for (const [i, f, v] of c.patch) rows[i][f] = v;
   const w = derive(rows.map((r) => ({ worker_id: r.worker_id, country: r.country, gender: r.gender,
     category: roles.get(r.role).category, base_pay: r.base_pay, components: comps.map((x) => r[x]), fixed,

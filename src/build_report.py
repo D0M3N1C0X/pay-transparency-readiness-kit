@@ -11,7 +11,20 @@ import article10
 import certainty
 import charts
 import obligations
-from config import BANDS, EIGE_WEIGHTS, ENTITIES, FIXED_COMPONENTS, JPA_THRESHOLD, MIN_CELL, REPORTS, SNAPSHOT
+import reference_year
+from config import (
+    BANDS,
+    BONUS_PAYDAY,
+    EIGE_WEIGHTS,
+    ENTITIES,
+    FIXED_COMPONENTS,
+    JPA_THRESHOLD,
+    MIN_CELL,
+    REFERENCE_END,
+    REFERENCE_START,
+    REPORTS,
+    SNAPSHOT,
+)
 from workers import load_job_evaluation, load_workers
 
 FIG = REPORTS / "figures"
@@ -232,6 +245,73 @@ def certainty_section(add, w) -> dict:
     return a
 
 
+def reference_section(add, w) -> dict:
+    """Section 7: the same figures on pay actually paid over a year, leavers and joiners included."""
+    r = reference_year.compare(w)
+    codes = list(ENTITIES)
+    s_ind, p_ind, scr_p = r["ind_s"], r["ind_p"], r["scr_p"]
+    cells = {(ENTITIES[x.country], x.category): (x.gap_hourly, x.gap_annual, x.status == article10.STATUS_FLAG,
+                                                 bool(x.small_cell))
+             for x in scr_p.itertuples() if x.status != article10.STATUS_ONE_SEX}
+    (FIG / "05_reference_year_screen.svg").write_text(charts.category_grid(
+        [ENTITIES[c] for c in codes], [b for _, b in BANDS], cells, JPA_THRESHOLD))
+    n = r["counts"]
+    total = sum(n.values())
+    name = lambda pair: f"{ENTITIES[pair[0]]} {pair[1]}"
+    n_flags = len(r["kept"]) + len(r["new"])
+    could = sum(v == certainty.NEAR for v in r["new_verdicts"].values())
+    clear = sum(v == certainty.CLEAR for v in r["new_verdicts"].values())
+    first, last = REFERENCE_START, REFERENCE_END
+
+    add("## 7. The reference year: leavers and joiners")
+    add("")
+    add("The statutory report does not look at the people on the payroll on one day: it covers pay paid over the "
+        "previous calendar year to everyone who was paid in it, the worker who left in March and the one who "
+        "joined in October. hr-people-analytics records exits from "
+        f"{day(first)} to {day(last)}, so those twelve months are the only full year the data can show; the "
+        "mechanics are the calendar year's. The payroll for them, "
+        "[data/payroll_reference_year.csv](../data/payroll_reference_year.csv), has the amounts actually paid and "
+        "each worker's own contractual hours for the period, in the browser tool's actual-pay layout; the page gives "
+        "the same answer on it as pandas.")
+    add("")
+    add(f"**{total:,} workers were paid in the period**: {n.get('whole period', 0):,} for all of it, "
+        f"{n.get('joined', 0):,} who joined, {n.get('left', 0):,} who left and {n.get('joined and left', 0):,} who did "
+        "both. Base pay, commission and allowances are paid for the days employed; the 2025 bonus is paid on "
+        f"{day(BONUS_PAYDAY)} to the workers still there, pro rata to their service in 2025.")
+    add("")
+    keys = [("a_mean_gap_hourly", "(a) Mean gap, hourly pay"), ("a_mean_gap_annual", "(a) Mean gap, annual pay"),
+            ("c_median_gap_hourly", "(c) Median gap, hourly pay"), ("c_median_gap_annual", "(c) Median gap, annual pay")]
+    add(md_table(["Item", *[f"{c} snapshot / year" for c in codes], "Group snapshot / year"],
+                 [[label, *[f"{pct(s_ind.loc[k, c])} / {pct(p_ind.loc[k, c])}" for c in [*codes, "Group"]]]
+                  for k, label in keys], "lrrrrr"))
+    add("")
+    add(f"- **The hourly gap is {pct(p_ind.loc['a_mean_gap_hourly', 'Group'])} over the year against "
+        f"{pct(s_ind.loc['a_mean_gap_hourly', 'Group'])} at the snapshot.** The people who left had a smaller gap "
+        f"between them ({pct(r['gap_leavers'])}) than the people who stayed or joined ({pct(r['gap_stayers'])}).")
+    add(f"- **{n_flags} categories are flagged instead of {len(r['kept']) + len(r['dropped'])}, and only "
+        f"{len(r['kept'])} are the same.** {', '.join(map(name, r['dropped']))} drop out; "
+        f"{', '.join(map(name, r['new']))} come in. "
+        + (f"All {len(r['new'])} newcomers" if could == len(r["new"]) else f"{could} of the {len(r['new'])} newcomers")
+        + " were marked *could cross* in section 6"
+        + (", and none was clearly below 5%: the interval says which categories to watch." if clear == 0 else
+           f"; {clear} {'was' if clear == 1 else 'were'} clearly below 5%."))
+    add(f"- **{len(r['annual_only'])} of the {n_flags} flags come from annual pay alone.** Someone paid for four "
+        "months has a low annual total whatever their rate, so where women and men joined or left in different "
+        "numbers, the annual gap moves with turnover, not with pay: the median annual gap falls from "
+        f"{pct(s_ind.loc['c_median_gap_annual', 'Group'])} to {pct(p_ind.loc['c_median_gap_annual', 'Group'])}. "
+        "The Directive defines pay level as annual and hourly pay but does not say how to count a part-year "
+        "worker's annual pay. The kit reports it as paid, as the browser's actual-pay mode does, and reads an "
+        "annual-only flag as a question of time worked to explain, not a rate to remedy; national guidance may "
+        "settle it otherwise.")
+    m2 = lambda x: f"€{x / 1e6:.2f} million"
+    add(f"- **The cost ceiling is {m2(r['cost_p'])} a year instead of {m2(r['cost_s'])}.** The {len(r['kept'])} "
+        f"flags that stay carry {pct(r['kept_cost_share'], 0)} of it: the expensive categories are the stable ones.")
+    add("")
+    add("![The category screen on the reference year](figures/05_reference_year_screen.svg)")
+    add("")
+    return r
+
+
 def write(w: pd.DataFrame) -> dict:
     f = facts(w)
     codes, ind, cats, obl, ready, flagged = (f[k] for k in ("codes", "ind", "cats", "obl", "ready", "flagged"))
@@ -271,8 +351,9 @@ def write(w: pd.DataFrame) -> dict:
     add("**Data:** synthetic, built on the organisation analysed in "
         "[hr-people-analytics](https://github.com/D0M3N1C0X/hr-people-analytics)")
     add("")
-    add("> This is a dry run, not a statutory report. It uses annualised pay of the workers present at the "
-        "snapshot; the real report covers pay in the previous calendar year, under rules each Member State "
+    add("> This is a dry run, not a statutory report. Sections 1 to 6 use annualised pay of the workers present "
+        "at the snapshot; section 7 reruns the figures on pay actually paid over twelve months, leavers and "
+        "joiners included, as the real report will on the previous calendar year, under rules each Member State "
         "sets in its own transposition.")
     add("")
     add("## The answer")
@@ -422,8 +503,9 @@ def write(w: pd.DataFrame) -> dict:
         italy(add, w, ind, nat, cats, ncats)
 
     f["certainty"] = certainty_section(add, w)
+    f["reference"] = reference_section(add, w)
 
-    add("## 7. Readiness: what has to be in place")
+    add("## 8. Readiness: what has to be in place")
     add("")
     add(md_table(["Ref", "Article", "Requirement", "Status", "Owner"],
                  [[r.ref, r.article, r.requirement, r.status, r.owner] for r in ready.itertuples()],
@@ -433,7 +515,7 @@ def write(w: pd.DataFrame) -> dict:
         "the workbook's Readiness sheet.*")
     add("")
 
-    add("## 8. The next 90 days")
+    add("## 9. The next 90 days")
     add("")
     add("1. **Agree the job evaluation with workers' representatives** in each country, starting from the Italian "
         "collective agreement's classification. Categories decide every later number.")
@@ -447,7 +529,7 @@ def write(w: pd.DataFrame) -> dict:
         "management confirm the figures after consulting workers' representatives (Article 9(6)).")
     add("")
 
-    add("## 9. Method, choices and limits")
+    add("## 10. Method, choices and limits")
     add("")
     add("- **Two engines, one answer.** Every figure is computed in pandas and again by live formulas in "
         "[the workbook](../deliverables/pay_transparency_model.xlsx); its Reconciliation sheet checks "
@@ -459,7 +541,8 @@ def write(w: pd.DataFrame) -> dict:
         "[docs/method.md](../docs/method.md).")
     add("- **Legal claims carry their source** and a status in [docs/verification.md](../docs/verification.md). "
         "Items marked *[to verify]* need the final national text.")
-    add("- **Limits.** Synthetic data; a snapshot rather than a calendar year; leavers, leave-related pay "
+    add("- **Limits.** Synthetic data; the reference year is the twelve months to the snapshot rather than a "
+        "calendar year, with each worker's current pay rate applied to the whole of it; leave-related pay "
         "(Article 10(2)(e)) and pay in kind beyond a car allowance are not modelled; not legal advice.")
     add("")
     (REPORTS / "readiness_report.md").write_text("\n".join(L) + "\n", encoding="utf-8")

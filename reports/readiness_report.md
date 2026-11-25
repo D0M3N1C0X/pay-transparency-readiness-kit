@@ -4,7 +4,7 @@
 **Method:** Article 9 reporting items and the Article 10 screen, computed twice - in pandas and in a live Excel model - and reconciled figure by figure
 **Data:** synthetic, built on the organisation analysed in [hr-people-analytics](https://github.com/D0M3N1C0X/hr-people-analytics)
 
-> This is a dry run, not a statutory report. It uses annualised pay of the workers present at the snapshot; the real report covers pay in the previous calendar year, under rules each Member State sets in its own transposition.
+> This is a dry run, not a statutory report. Sections 1 to 6 use annualised pay of the workers present at the snapshot; section 7 reruns the figures on pay actually paid over twelve months, leavers and joiners included, as the real report will on the previous calendar year, under rules each Member State sets in its own transposition.
 
 ## The answer
 
@@ -150,7 +150,27 @@ The 5% test reads a number, and the duty follows from the number: an interval do
 
 *Gap and interval: the measure that triggered the flag (hourly, or annual where marked †). Role mix, rating and part-time, and same role: the split of the hourly gap, from one least-squares fit per category of log pay on sex, role, rating and part-time, scaled to the gap shown so the three add up to it; the same-role interval is heteroskedasticity-robust. Rating counts as gender-neutral only if the ratings are; tenure is not in the extract, so differences in it sit in the same-role part. Gap without planted mechanisms: the same measure, on the payroll rebuilt from the same random draws without them. \* Fewer than 5 of one sex: for workers' representatives and the authorities only (Article 12(3)). Code: src/certainty.py.*
 
-## 7. Readiness: what has to be in place
+## 7. The reference year: leavers and joiners
+
+The statutory report does not look at the people on the payroll on one day: it covers pay paid over the previous calendar year to everyone who was paid in it, the worker who left in March and the one who joined in October. hr-people-analytics records exits from 1 July 2025 to 30 June 2026, so those twelve months are the only full year the data can show; the mechanics are the calendar year's. The payroll for them, [data/payroll_reference_year.csv](../data/payroll_reference_year.csv), has the amounts actually paid and each worker's own contractual hours for the period, in the browser tool's actual-pay layout; the page gives the same answer on it as pandas.
+
+**4,000 workers were paid in the period**: 2,740 for all of it, 703 who joined, 403 who left and 154 who did both. Base pay, commission and allowances are paid for the days employed; the 2025 bonus is paid on 31 March 2026 to the workers still there, pro rata to their service in 2025.
+
+| Item | IT snapshot / year | PL snapshot / year | DE snapshot / year | ES snapshot / year | Group snapshot / year |
+|---|---:|---:|---:|---:|---:|
+| (a) Mean gap, hourly pay | 19.7% / 18.5% | 15.2% / 14.5% | 14.5% / 14.0% | 21.5% / 20.9% | 17.6% / 16.8% |
+| (a) Mean gap, annual pay | 20.4% / 20.8% | 15.1% / 15.3% | 15.0% / 11.6% | 21.6% / 21.9% | 17.9% / 17.3% |
+| (c) Median gap, hourly pay | 16.9% / 16.0% | 12.5% / 11.7% | 11.3% / 11.2% | 18.9% / 20.2% | 15.6% / 16.6% |
+| (c) Median gap, annual pay | 19.7% / 17.5% | 13.7% / 10.0% | 13.2% / 6.2% | 19.4% / 10.9% | 16.7% / 12.9% |
+
+- **The hourly gap is 16.8% over the year against 17.6% at the snapshot.** The people who left had a smaller gap between them (14.2%) than the people who stayed or joined (17.1%).
+- **15 categories are flagged instead of 12, and only 8 are the same.** DE · Munich Cat E, ES · Barcelona Cat B, ES · Barcelona Cat E, ES · Barcelona Cat G drop out; DE · Munich Cat A, DE · Munich Cat G, ES · Barcelona Cat C, IT · Milan Cat C, IT · Milan Cat E, PL · Kraków Cat C, PL · Kraków Cat G come in. All 7 newcomers were marked *could cross* in section 6, and none was clearly below 5%: the interval says which categories to watch.
+- **7 of the 15 flags come from annual pay alone.** Someone paid for four months has a low annual total whatever their rate, so where women and men joined or left in different numbers, the annual gap moves with turnover, not with pay: the median annual gap falls from 16.7% to 12.9%. The Directive defines pay level as annual and hourly pay but does not say how to count a part-year worker's annual pay. The kit reports it as paid, as the browser's actual-pay mode does, and reads an annual-only flag as a question of time worked to explain, not a rate to remedy; national guidance may settle it otherwise.
+- **The cost ceiling is €1.85 million a year instead of €1.91 million.** The 8 flags that stay carry 68% of it: the expensive categories are the stable ones.
+
+![The category screen on the reference year](figures/05_reference_year_screen.svg)
+
+## 8. Readiness: what has to be in place
 
 | Ref | Article | Requirement | Status | Owner |
 |---|---|---|---|---|
@@ -171,7 +191,7 @@ The 5% test reads a number, and the duty follows from the number: an interval do
 
 *Statuses are illustrative for the demonstration organisation. Evidence expected for each item is in the workbook's Readiness sheet.*
 
-## 8. The next 90 days
+## 9. The next 90 days
 
 1. **Agree the job evaluation with workers' representatives** in each country, starting from the Italian collective agreement's classification. Categories decide every later number.
 2. **Write or rule out a justification for each flagged category**, beginning with the most expensive, and budget the remedy for the rest before the first report is filed.
@@ -180,10 +200,10 @@ The 5% test reads a number, and the duty follows from the number: an interval do
 5. **Build the information-request route** (two-month answer) and the annual notice to workers.
 6. **Rerun this model on calendar-year 2026 payroll** once each country's rules are final, and have management confirm the figures after consulting workers' representatives (Article 9(6)).
 
-## 9. Method, choices and limits
+## 10. Method, choices and limits
 
 - **Two engines, one answer.** Every figure is computed in pandas and again by live formulas in [the workbook](../deliverables/pay_transparency_model.xlsx); its Reconciliation sheet checks each pair, and CI recalculates the workbook with LibreOffice and fails on any mismatch.
 - **Where the Directive leaves a choice, the choice is stated.** Pay includes base, bonus, commission and allowances; hourly pay uses contractual hours; components gaps (b) and (d) are among recipients; quartile bands are four equal groups by hourly pay with ties broken by row order; a category is flagged at 5% in either direction on hourly or annual pay. Full list in [docs/method.md](../docs/method.md).
 - **Legal claims carry their source** and a status in [docs/verification.md](../docs/verification.md). Items marked *[to verify]* need the final national text.
-- **Limits.** Synthetic data; a snapshot rather than a calendar year; leavers, leave-related pay (Article 10(2)(e)) and pay in kind beyond a car allowance are not modelled; not legal advice.
+- **Limits.** Synthetic data; the reference year is the twelve months to the snapshot rather than a calendar year, with each worker's current pay rate applied to the whole of it; leave-related pay (Article 10(2)(e)) and pay in kind beyond a car allowance are not modelled; not legal advice.
 

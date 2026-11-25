@@ -8,6 +8,7 @@ All synthetic. No real person's pay is in this repository.
 |---|---|---|
 | `source/employees.csv` | copied from [hr-people-analytics](https://github.com/D0M3N1C0X/hr-people-analytics) at commit `201495b` | The 4,000-employee organisation analysed there, seed 42. SHA-256 `3727232…7da79c`, pinned in `src/config.py` and checked on every build. |
 | `payroll_extract.csv` | `src/build_extract.py`, seed 2026 | The payroll extract a client would send: the 3,443 workers active on 30 June 2026, with four pay components added. |
+| `payroll_reference_year.csv` | `src/build_period.py`, seed 2026 + 1 for the leavers | Pay actually paid from 1 July 2025 to 30 June 2026 to the 4,000 workers employed in it, leavers and joiners included, in the browser tool's actual-pay layout. |
 | `job_evaluation.csv` | written by hand | The scored role grid: 36 roles × the four Article 4(4) criteria, with a rationale per role. |
 | `transposition.csv` | written by hand from the sources in [docs/verification.md](../docs/verification.md) | National status, 16 September 2026. |
 | `readiness_checklist.csv` | written by hand | Fourteen obligations from Articles 4 to 12, with illustrative statuses. |
@@ -34,6 +35,25 @@ kit adds them, and its test suite checks that the base-pay gap still comes out a
 | `car_allowance` | Annual car allowance, EUR (complementary) |
 
 Every amount is in EUR, the Polish entity included; a real Polish extract would be in PLN.
+
+## `payroll_reference_year.csv`, one row per worker paid in the period
+
+The statutory report covers pay paid over the previous calendar year. hr-people-analytics records exits from
+1 July 2025 to its 30 June 2026 snapshot, so the twelve months to the snapshot are the only full year these data
+can show. Each worker's current pay rate is applied to the whole period: the source has no pay history.
+
+| Column | Description |
+|---|---|
+| `worker_id`, `country`, `role`, `gender` | As in `payroll_extract.csv` |
+| `weekly_hours` | Contractual weekly hours, context only |
+| `annual_hours` | Contractual hours in the period: weekly hours × 52 × the share of the period employed. The denominator of hourly pay |
+| `base_pay`, `commission`, `shift_allowance`, `car_allowance` | The annual rate × the share of the period employed, EUR, rounded to the euro |
+| `bonus` | The 2025 bonus, paid on 31 March 2026 to workers employed that day, pro rata to their days of service in 2025, rounded to €10 |
+| `payroll_total` | Everything paid in the period: base pay plus the four components |
+| `period_status` | `whole period`, `joined`, `left` or `joined and left` |
+
+The 3,443 workers of the snapshot keep their rates from `payroll_extract.csv`; the 557 leavers get theirs from the
+same rules with a random stream of their own (seed + 1), so the snapshot extract does not change.
 
 ## `job_evaluation.csv`, one row per role
 
