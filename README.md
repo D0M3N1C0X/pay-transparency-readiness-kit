@@ -73,6 +73,8 @@ with the exact numeric column headings; HR completes and confirms it locally bef
 | [Browser tool](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/) | the consultant, on the client's own file | Locally reads the payroll export and optional pay-code dictionary, requires actual prior-year pay totals and worker-specific annual contractual hours for an actual-pay run, and exports an Excel assessment with the map used. Annualized contract amounts are labelled as simulation only. Data and notes stay in page memory until cleared or reloaded; the downloaded workbook remains confidential. English and Italian. |
 | [`board_briefing.pptx`](deliverables/board_briefing.pptx) | the board | Eleven slides, answer first, native charts, three decisions to take. |
 | [`readiness_report.md`](reports/readiness_report.md) | HR and Legal | The written read-out: obligations, the seven items, where the gap comes from, flagged categories with their main driver and cost, how much they depend on the job evaluation weights, how far each flag can be trusted against a known ground truth, the figures again on a full year of pay with leavers and joiners, the employer against Eurostat's national and sector figures, Italy's narrower measure, a 90-day plan. |
+| [`justification_register.csv`](reports/justification_register.csv) | HR, Reward and Legal | One row per flagged category: what drives the gap, the evidence it needs, who owns it, the review date and the deadline, how solid the flag is. Status and decision left for the employer. |
+| [`article7-response.md`](docs/article7-response.md) | HR | The written answer to a worker's Article 7 request, generated from the same categories, in Italian and English, with the case where averages must be held back. |
 | [`tableau/`](tableau/) | a live dashboard | Tidy extracts and a build sheet for Tableau Public. |
 | [`docs/method.md`](docs/method.md) · [`docs/verification.md`](docs/verification.md) | reviewers | Every choice the Directive leaves open, and the source and status of every legal statement. |
 | [`docs/catalogue.md`](docs/catalogue.md) | reviewers | One card per reporting item: result per employer, the workbook formula, the choice made, what a statutory report adds. |
@@ -157,6 +159,8 @@ The reconciliation check, the LibreOffice recalculation and the byte-stable work
 │   ├── reference_year.py        the items and the screen on the reference year
 │   ├── fetch_eurostat.py        refreshes the Eurostat file (network; never run by the pipeline)
 │   ├── benchmark.py             the employer against the official figures
+│   ├── register.py              the justification register
+│   ├── article7.py              the reply to a worker's request for pay information
 │   ├── workers.py               hourly pay, categories, quartile bands
 │   ├── article9.py              the seven reporting items
 │   ├── article10.py             category gaps, the 5% screen, remediation cost

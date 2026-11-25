@@ -8,6 +8,7 @@ payroll extract and reference year -> job evaluation -> Article 9 and 10 -> repo
 """
 import time
 
+import article7
 import build_catalogue
 import build_deck
 import build_extract
@@ -34,6 +35,8 @@ def main() -> None:
     print("deck -> deliverables/board_briefing.pptx")
     build_tableau.write(workers)
     print("tableau -> tableau/*.csv")
+    article7.write_examples(workers)
+    print("article 7 reply -> docs/article7-response.md; register -> reports/justification_register.csv")
     build_catalogue.write()
     print("catalogue -> docs/catalogue.md")
     build_web.write_inputs()

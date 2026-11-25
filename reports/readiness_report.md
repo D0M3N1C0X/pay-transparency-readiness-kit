@@ -191,7 +191,31 @@ Once the report is published, the employer's gap will be set against the nationa
 
 *Sections: J information and communication (the technology staff), M professional, scientific and technical activities (finance, HR, sales), N administrative and support services (customer service, operations). The employer has no single activity code; the three are a reading aid, not its classification. The synthetic organisation's segregation was not set country by country, so read the comparison as the method a real employer would apply, not as a finding about Milan or Barcelona.*
 
-## 9. Readiness: what has to be in place
+## 9. The justification register and the right to information
+
+Each flagged category needs a justification on objective, gender-neutral criteria or a remedy within six months of the report. [reports/justification_register.csv](justification_register.csv) gives each one a reference, what drives its gap (from the split in section 6), the evidence that kind of gap needs, the function that holds it, a review date halfway to the deadline, and how solid the flag is. Status, evidence held and decision are left for the employer: the register prepares a justification, it does not decide one.
+
+| Ref | Employer | Category | Gap | Driver | Pay element | Owner | Stays flagged on the year | Cost ceiling |
+|---|---|---|---:|---|---|---|---|---|
+| J01 | IT · Milan | Cat B | 7.4% | Role mix | Base pay | Reward | Yes | €331,912 |
+| J02 | PL · Kraków | Cat D | 5.7% | Role mix | Base pay | Reward | Yes | €262,744 |
+| J03 | DE · Munich | Cat E | 6.0% | Role mix | Base pay | Reward | No | €254,265 |
+| J04 | PL · Kraków | Cat F | 8.0% | Role mix | Base pay | Reward | Yes | €222,454 |
+| J05 | PL · Kraków | Cat E | 7.9% | Role mix | Base pay | Reward | Yes | €188,889 |
+| J06 | ES · Barcelona | Cat D | 6.9% | Role mix | Base pay | Reward | Yes | €173,333 |
+| J07 | ES · Barcelona | Cat F | -5.2% | Role mix | Base pay | Reward | Yes | €107,053 |
+| J08 | ES · Barcelona | Cat B | 5.3% | Same role | Base pay | Reward with line managers | No | €97,880 |
+| J09 | IT · Milan | Cat G | 10.5% | Rating and part-time | Components | HR business partners, Sales operations, Reward | Yes | €95,319 |
+| J10 | IT · Milan | Cat A | 5.4% † | Time worked | Base pay | HR operations | Yes | €85,246 |
+| J11 | ES · Barcelona | Cat E | 5.1% | Role mix | Components | Reward, Sales operations | No | €82,584 |
+| J12 | ES · Barcelona | Cat G | 7.1% † | Time worked | Components | HR operations | No | €12,024 |
+
+- **8 of the 12 justifications are about role mix**: why roles of equal value are paid differently, and how women and men came to hold them. Market data alone will not carry it; the hiring and promotion record has to show the allocation was neutral.
+- **1 is about the same role**, the hardest kind: each pay decision and the criterion behind it.
+- **4 flags do not survive the reference year** (J03, J08, J11, J12). Prepare them all the same: the statutory year decides, and section 6 says they are close calls either way.
+- **The right to information comes first in practice.** It applies as soon as national law does, a year before the first report and in Italy already: any worker can ask in writing for their own pay level and the average pay levels by sex of their category, answered within two months (Article 7). The categories here are those workers, so the answer comes from the same data: [docs/article7-response.md](../docs/article7-response.md) has a generated reply in Italian and English, and one for a category too small to show averages.
+
+## 10. Readiness: what has to be in place
 
 | Ref | Article | Requirement | Status | Owner |
 |---|---|---|---|---|
@@ -212,16 +236,16 @@ Once the report is published, the employer's gap will be set against the nationa
 
 *Statuses are illustrative for the demonstration organisation. Evidence expected for each item is in the workbook's Readiness sheet.*
 
-## 10. The next 90 days
+## 11. The next 90 days
 
 1. **Agree the job evaluation with workers' representatives** in each country, starting from the Italian collective agreement's classification. Categories decide every later number.
-2. **Write or rule out a justification for each flagged category**, beginning with the most expensive, and budget the remedy for the rest before the first report is filed.
+2. **Write or rule out a justification for each flagged category**, beginning with the most expensive, and budget the remedy for the rest before the first report is filed: the register in section 9 has an owner and a review date for each.
 3. **Review the Sales territory allocation** and any other rule that decides who can earn a component.
 4. **Close the recruitment gaps now**: pay ranges in vacancies, no pay-history questions, gender-neutral titles - already law in Italy and Poland.
-5. **Build the information-request route** (two-month answer) and the annual notice to workers.
+5. **Build the information-request route** (two-month answer, from the reply in section 9) and the annual notice to workers.
 6. **Rerun this model on calendar-year 2026 payroll** once each country's rules are final, and have management confirm the figures after consulting workers' representatives (Article 9(6)).
 
-## 11. Method, choices and limits
+## 12. Method, choices and limits
 
 - **Two engines, one answer.** Every figure is computed in pandas and again by live formulas in [the workbook](../deliverables/pay_transparency_model.xlsx); its Reconciliation sheet checks each pair, and CI recalculates the workbook with LibreOffice and fails on any mismatch.
 - **Where the Directive leaves a choice, the choice is stated.** Pay includes base, bonus, commission and allowances; hourly pay uses contractual hours; components gaps (b) and (d) are among recipients; quartile bands are four equal groups by hourly pay with ties broken by row order; a category is flagged at 5% in either direction on hourly or annual pay. Full list in [docs/method.md](../docs/method.md).

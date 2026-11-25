@@ -7,6 +7,13 @@ in [docs/roadmap.md](docs/roadmap.md).
 
 ### Added
 
+- **Justification register and right to information** (report section 9): `reports/justification_register.csv`
+  gives each flagged category a reference, its main driver (role mix, same role, rating and part-time, or time
+  worked) and pay element, the evidence that kind of gap needs, an owner, a review date halfway to the remedy
+  deadline, its interval and whether it stays flagged on the reference year; status and decision are left blank.
+  `src/article7.py` answers a worker's Article 7 request from the same categories, in Italian and English, and
+  holds averages back where one sex has fewer than five workers ([docs/article7-response.md](docs/article7-response.md)).
+
 - **Against the official figures** (report section 8, `src/benchmark.py`, `src/fetch_eurostat.py`): each
   employer's gap on regular pay set against Eurostat's 2024 gender pay gap for its country's business economy and
   for sections J, M and N, real data with the date they were read. Milan and Kraków are 3.4 and 3.5 times their
