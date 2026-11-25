@@ -4,7 +4,8 @@ import csv
 from config import DATA
 
 DOC = (DATA / "README.md").read_text(encoding="utf-8")
-FILES = ["payroll_extract.csv", "payroll_reference_year.csv", "job_evaluation.csv", "transposition.csv",
+FILES = ["payroll_extract.csv", "payroll_reference_year.csv", "eurostat_gpg.csv",
+         "job_evaluation.csv", "transposition.csv",
          "readiness_checklist.csv"]
 
 

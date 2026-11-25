@@ -9,6 +9,7 @@ All synthetic. No real person's pay is in this repository.
 | `source/employees.csv` | copied from [hr-people-analytics](https://github.com/D0M3N1C0X/hr-people-analytics) at commit `201495b` | The 4,000-employee organisation analysed there, seed 42. SHA-256 `3727232…7da79c`, pinned in `src/config.py` and checked on every build. |
 | `payroll_extract.csv` | `src/build_extract.py`, seed 2026 | The payroll extract a client would send: the 3,443 workers active on 30 June 2026, with four pay components added. |
 | `payroll_reference_year.csv` | `src/build_period.py`, seed 2026 + 1 for the leavers | Pay actually paid from 1 July 2025 to 30 June 2026 to the 4,000 workers employed in it, leavers and joiners included, in the browser tool's actual-pay layout. |
+| `eurostat_gpg.csv` | `src/fetch_eurostat.py` from Eurostat [earn_gr_gpgr2](https://ec.europa.eu/eurostat/databrowser/view/earn_gr_gpgr2/default/table) | The official unadjusted gender pay gap, 2018 onwards, for the EU and the four countries: the business economy and sections J, M and N. Real data, read on the date in the file. |
 | `job_evaluation.csv` | written by hand | The scored role grid: 36 roles × the four Article 4(4) criteria, with a rationale per role. |
 | `transposition.csv` | written by hand from the sources in [docs/verification.md](../docs/verification.md) | National status, 16 September 2026. |
 | `readiness_checklist.csv` | written by hand | Fourteen obligations from Articles 4 to 12, with illustrative statuses. |
@@ -54,6 +55,20 @@ can show. Each worker's current pay rate is applied to the whole period: the sou
 
 The 3,443 workers of the snapshot keep their rates from `payroll_extract.csv`; the 557 leavers get theirs from the
 same rules with a random stream of their own (seed + 1), so the snapshot extract does not change.
+
+## `eurostat_gpg.csv`, one row per country, activity and year
+
+Real, published figures: the only file here that is not synthetic.
+
+| Column | Description |
+|---|---|
+| `geo` | `EU27_2020`, `IT`, `PL`, `DE`, `ES` |
+| `nace_r2` | `B-S_X_O` (industry, construction and services except public administration), `J`, `M` or `N` |
+| `year` | Reference year; the structure of earnings survey is four-yearly and the years between are national estimates |
+| `gap_pct` | Unadjusted gender pay gap, % of men's mean gross hourly earnings |
+| `flag` | Eurostat's status flag: `p` provisional, `b` break in series, empty otherwise |
+| `dataset_updated` | When Eurostat last updated the dataset |
+| `read_on` | When this file was fetched |
 
 ## `job_evaluation.csv`, one row per role
 

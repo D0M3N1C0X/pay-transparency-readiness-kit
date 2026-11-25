@@ -149,6 +149,19 @@ section 7 of the report reruns every item and the screen on it (`src/reference_y
   workers still employed, pro rata to their 2025 service; leavers before payday forfeit it.
 - **One limit:** the source has no pay history, so each worker's current rate is applied to the whole period.
 
+## Against the official figures
+
+Section 8 of the report sets each employer's gap against Eurostat's (`src/benchmark.py`, data in
+`data/eurostat_gpg.csv`, refreshed by `src/fetch_eurostat.py`, which the pipeline never calls):
+
+- **The same formula, different pay.** Eurostat leaves non-regular payments out, so the employer's figure is
+  recomputed without the annual bonus; commission and allowances are paid monthly here and stay in.
+- **Two yardsticks.** The business economy figure is the one that will be quoted; sections J, M and N are the
+  closest to this employer's functions. The employer has no single activity code, so the sections are a reading
+  aid, not a classification.
+- **Latest year only**, flagged provisional where Eurostat says so; the survey is four-yearly (2022 the last) and the
+  years between are national estimates.
+
 ## How far the screen can be trusted
 
 The Directive's test reads the number; an interval does not change the duty. Section 6 of the report adds what

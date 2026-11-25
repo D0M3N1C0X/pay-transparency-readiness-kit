@@ -215,3 +215,49 @@ def flag_intervals(rows, threshold) -> str:
     body.append(f'<text x="24" y="{base + 56}" class="muted">† Flagged on annual pay only: the annual gap is shown.'
                 '</text>')
     return _svg(W, H, "".join(body), "Flagged categories with bootstrap intervals against the 5% threshold")
+
+
+def benchmark(rows, year) -> str:
+    """rows: [(label, employer gap, national gap, sector low, sector high)] -> one track per employer."""
+    W, left, right, top = 720, 150, 40, 112
+    band = 56
+    H = top + band * len(rows) + 72
+    hi = max(0.30, max(max(r[1:]) for r in rows))
+    hi = (int(hi * 20) + 1) / 20
+    scale = (W - left - right) / hi
+    X = lambda v: left + v * scale
+    above = sum(1 for _, own, nat, _, _ in rows if own > nat)
+    inside = sum(1 for _, own, _, low, high in rows if low <= own <= high)
+    headline = (f"Above the national figure in {WORDS[above].lower()} countries of {WORDS[len(rows)].lower()}, "
+                f"inside its sectors in {WORDS[inside].lower()}")
+    body = [
+        f'<text x="24" y="34" class="title">{escape(headline)}</text>',
+        f'<text x="24" y="54" class="sub">Gender pay gap on regular hourly earnings: the employer against Eurostat, '
+        f'{year}.</text>',
+        f'<rect x="{left}" y="70" width="22" height="10" rx="3" fill="var(--s1)" opacity=".25"/>'
+        f'<text x="{left + 28}" y="79">Sectors J, M, N</text>',
+        f'<rect x="{left + 140}" y="68" width="3" height="14" fill="var(--muted)"/>'
+        f'<text x="{left + 150}" y="79">National, business economy</text>',
+        f'<circle cx="{left + 345}" cy="75" r="6" fill="var(--s2)"/><text x="{left + 356}" y="79">This employer</text>',
+    ]
+    base = top + band * len(rows)
+    t = 0.0
+    while t <= hi + 1e-9:
+        body.append(f'<line x1="{X(t):.1f}" y1="{top - 10}" x2="{X(t):.1f}" y2="{base}" stroke="var(--grid)"/>')
+        body.append(f'<text x="{X(t):.1f}" y="{base + 18}" text-anchor="middle" class="muted num">{t * 100:.0f}%</text>')
+        t = round(t + 0.05, 10)
+    for i, (label, own, nat, low, high) in enumerate(rows):
+        y = top + i * band + band / 2
+        body.append(f'<text x="{left - 12}" y="{y + 4}" text-anchor="end" class="val">{escape(label)}</text>')
+        body.append(f'<rect x="{X(low):.1f}" y="{y - 9}" width="{(high - low) * scale:.1f}" height="18" rx="4" '
+                    f'fill="var(--s1)" opacity=".25"><title>{escape(label)}: sectors J, M, N from {pct(low)} to '
+                    f'{pct(high)}</title></rect>')
+        body.append(f'<rect x="{X(nat) - 1.5:.1f}" y="{y - 13}" width="3" height="26" fill="var(--muted)">'
+                    f'<title>{escape(label)}: national {pct(nat)}</title></rect>')
+        body.append(f'<circle cx="{X(own):.1f}" cy="{y}" r="7" fill="var(--s2)" stroke="var(--surface)" '
+                    f'stroke-width="2"><title>{escape(label)}: this employer {pct(own)}</title></circle>')
+        body.append(f'<text x="{X(own):.1f}" y="{y - 14}" text-anchor="middle" class="val">{pct(own)}</text>')
+    body.append(f'<text x="24" y="{base + 40}" class="muted">Eurostat earn_gr_gpgr2: enterprises with 10 or more '
+                'employees, non-regular payments excluded.</text>')
+    body.append(f'<text x="24" y="{base + 56}" class="muted">The employer\'s annual bonus is left out to match.</text>')
+    return _svg(W, H, "".join(body), "The employer's gender pay gap against Eurostat national and sector figures")

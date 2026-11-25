@@ -72,7 +72,7 @@ with the exact numeric column headings; HR completes and confirms it locally bef
 | [`pay_transparency_model.xlsx`](deliverables/pay_transparency_model.xlsx) | the client team | Eleven sheets: summary, the seven Article 9 items per employer, the Article 10 screen with space for justifications, Italy's report on livello retributivo, obligations and deadlines, readiness checklist, job evaluation, payroll, settings, and a reconciliation sheet. **Every figure is a live formula**: change a salary, a score or a threshold and the model recalculates. |
 | [Browser tool](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/) | the consultant, on the client's own file | Locally reads the payroll export and optional pay-code dictionary, requires actual prior-year pay totals and worker-specific annual contractual hours for an actual-pay run, and exports an Excel assessment with the map used. Annualized contract amounts are labelled as simulation only. Data and notes stay in page memory until cleared or reloaded; the downloaded workbook remains confidential. English and Italian. |
 | [`board_briefing.pptx`](deliverables/board_briefing.pptx) | the board | Eleven slides, answer first, native charts, three decisions to take. |
-| [`readiness_report.md`](reports/readiness_report.md) | HR and Legal | The written read-out: obligations, the seven items, where the gap comes from, flagged categories with their main driver and cost, how much they depend on the job evaluation weights, how far each flag can be trusted against a known ground truth, the figures again on a full year of pay with leavers and joiners, Italy's narrower measure, a 90-day plan. |
+| [`readiness_report.md`](reports/readiness_report.md) | HR and Legal | The written read-out: obligations, the seven items, where the gap comes from, flagged categories with their main driver and cost, how much they depend on the job evaluation weights, how far each flag can be trusted against a known ground truth, the figures again on a full year of pay with leavers and joiners, the employer against Eurostat's national and sector figures, Italy's narrower measure, a 90-day plan. |
 | [`tableau/`](tableau/) | a live dashboard | Tidy extracts and a build sheet for Tableau Public. |
 | [`docs/method.md`](docs/method.md) · [`docs/verification.md`](docs/verification.md) | reviewers | Every choice the Directive leaves open, and the source and status of every legal statement. |
 | [`docs/catalogue.md`](docs/catalogue.md) | reviewers | One card per reporting item: result per employer, the workbook formula, the choice made, what a statutory report adds. |
@@ -147,6 +147,7 @@ The reconciliation check, the LibreOffice recalculation and the byte-stable work
 │   ├── payroll_extract.csv      3,443 workers with four pay components
 │   ├── payroll_reference_year.csv  pay actually paid over twelve months, leavers and joiners in
 │   ├── job_evaluation.csv       36 roles scored on the Article 4(4) criteria
+│   ├── eurostat_gpg.csv         the official gender pay gap, by country and sector (real data)
 │   ├── transposition.csv        national status, with sources
 │   └── readiness_checklist.csv  14 obligations from Articles 4 to 12
 ├── src/
@@ -154,6 +155,8 @@ The reconciliation check, the LibreOffice recalculation and the byte-stable work
 │   ├── build_extract.py         the payroll extract (standard library, byte-stable)
 │   ├── build_period.py          the reference-year payroll (standard library, byte-stable)
 │   ├── reference_year.py        the items and the screen on the reference year
+│   ├── fetch_eurostat.py        refreshes the Eurostat file (network; never run by the pipeline)
+│   ├── benchmark.py             the employer against the official figures
 │   ├── workers.py               hourly pay, categories, quartile bands
 │   ├── article9.py              the seven reporting items
 │   ├── article10.py             category gaps, the 5% screen, remediation cost

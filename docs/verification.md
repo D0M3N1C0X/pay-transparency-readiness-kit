@@ -78,6 +78,13 @@ the 9 October recheck; it now carries this date. Source:
 |---|---|---|---|
 | G01 | The European Commission and EIGE published EU-wide guidelines on gender-neutral job evaluation and classification as a step-by-step toolkit (March 2026): voluntary, three pathways by size (micro, small and medium, standard point-factor for 250+), four factors split into 14 subfactors scored 0-5, preset weights of 40/35/15/10 given as illustrative | [EC and EIGE (2026), doi:10.2839/7400453](https://eige.europa.eu/sites/default/files/documents/gender-neutral-job-evaluation-and-classification-step-by-step-toolkit.pdf), sections 1.2 and 4, Table 5 | Verified |
 
+## Official statistics
+
+| # | Statement used in the kit | Source | Status |
+|---|---|---|---|
+| E01 | Eurostat's unadjusted gender pay gap is the difference between men's and women's average gross hourly earnings as a share of men's, from the structure of earnings survey: enterprises with 10 employees or more, NACE B to S (O optional), part-timers included, paid overtime included, non-regular payments excluded | [Eurostat metadata earn_grgpg2_esms](https://ec.europa.eu/eurostat/cache/metadata/en/earn_grgpg2_esms.htm), sections 3.1-3.4, read 25 November 2026 | Verified |
+| E02 | The 2024 figures for the EU, Italy, Poland, Germany and Spain, business economy and sections J, M, N, as in `data/eurostat_gpg.csv` (provisional where flagged `p`) | Eurostat API, dataset earn_gr_gpgr2, updated 27 October 2026, read 25 November 2026 | Verified |
+
 ## What this kit is not
 
 - **Not legal advice**, and not a statutory report: it is a dry run on synthetic data.
