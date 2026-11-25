@@ -35,7 +35,7 @@ weights, band limits) live in `src/config.py`.
 
 | Check | Where | What it guarantees |
 |---|---|---|
-| Excel against pandas | Reconciliation sheet, `src/check_workbook.py` | 511 figures equal in both engines: in pure Python with [excel-twin](https://github.com/D0M3N1C0X/excel-twin) in the tests, recalculated by LibreOffice in CI |
+| Excel against pandas | Reconciliation sheet, `src/check_workbook.py` | 547 figures equal in both engines: in pure Python with [excel-twin](https://github.com/D0M3N1C0X/excel-twin) in the tests, recalculated by LibreOffice in CI |
 | Browser against pandas | `tests/js/check_engine.mjs` | 5,009 values equal on the sample employer, six random variants, two edge cases for the Italian measure (an employer without Italian workers, an Italian entity of nine) and the reference-year payroll read as an actual-pay file (a seven-worker employer, small and one-sex categories, every size band, changed pay and hours) |
 | Rebuilt files | CI, `src/deterministic.py` | Rebuilding from scratch gives the same text outputs and workbooks with the same content |
 | Known structure | `tests/test_pipeline.py`, `tests/test_articles.py` | The planted commission effect is there; the base-pay gap of the source organisation is reproduced; each Directive rule behaves as written |

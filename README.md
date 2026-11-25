@@ -1,6 +1,6 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="site-assets/cover-dark.png">
-  <img alt="Ready for the EU Pay Transparency Directive? 17.6% hourly gender pay gap, 12 of 28 categories to justify or remedy, at most €1.9M a year to close them." src="site-assets/cover-light.png">
+  <img alt="Ready for the EU Pay Transparency Directive? 12 of 28 categories to justify or remedy, none clear of the 5% line; 8 of 12 still flagged on a full year of pay; Milan's gap 3.4 times Italy's national figure, yet inside its sectors." src="site-assets/cover-light.png">
 </picture>
 
 <p align="center">
@@ -41,6 +41,8 @@ gaps and why, and what would closing them cost.
 | **Base pay alone gives 15.4%** - the same figure hr-people-analytics found. Bonus, commission and allowances add 2.2 points. | **12 of 28 categories of workers** are at 5% or more: each needs a gender-neutral justification or a remedy by **7 December 2027**, or a joint pay assessment follows. |
 | In Sales, commission is **12.6% of base pay for women and 15.1% for men** under identical rules: territories are allocated unequally. | Closing every flagged gap outright would cost **at most €1.9 million a year**. Of 14 obligations, **1 is in place, 6 partly, 7 missing**. |
 | **Italy measures the gap on fixed pay only** (livello retributivo, D.lgs. 96/2026): Milan's gap is **18.0%** on that measure against 19.7% on total pay. The same categories are flagged; what each has to justify changes. | **The categories depend on the job evaluation weights.** With the EU guidelines' illustrative weights (EC and EIGE, March 2026), 4 of 36 roles change category and 11 categories are flagged instead of 12. |
+| **None of the 12 flags is clear of the 5% line.** Against a known ground truth, 6 are caused by the two discriminatory mechanisms planted in the data and 6 would be there without them; the same-role gap is about 2% in every employer and indistinguishable from zero once the mechanisms are removed. | **On a full year of pay, leavers and joiners in, 15 categories are flagged and only 8 are the same.** All 7 newcomers were marked as close to the line; 7 of the 15 flags come from annual pay alone, which moves with turnover. |
+| **Against Eurostat, Milan's and Kraków's gaps are 3.4 and 3.5 times the national figure**, yet inside the range of the sectors they resemble; Barcelona is above every one of them. | **Every flag has a register row**: what drives it, the evidence it needs, who owns it, a review date; and a worker's Article 7 request has a generated answer in Italian and English. |
 
 <img alt="Hourly pay gap by employer and category" src="reports/figures/03_category_screen.svg" width="100%">
 
@@ -63,13 +65,13 @@ unmatched likely component columns before running. After uploading payroll, the 
 with the exact numeric column headings; HR completes and confirms it locally before upload. Start from
 [the CSV template](web/template_pay_code_map.csv).
 
-<p align="center"><a href="https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/"><img alt="The browser tool on the sample employer: obligations by country, the seven reporting items and the category screen." src="site-assets/tool.webp" width="100%"></a></p>
+<p align="center"><a href="https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/"><img alt="The browser tool on a full year of actual pay: the payroll, role grid and pay-code map loaded, 4,000 rows reconciled to the cent, then the Milan results and the category screen." src="site-assets/tool.webp" width="100%"></a></p>
 
 ## What you get
 
 | Deliverable | For | What is in it |
 |---|---|---|
-| [`pay_transparency_model.xlsx`](deliverables/pay_transparency_model.xlsx) | the client team | Eleven sheets: summary, the seven Article 9 items per employer, the Article 10 screen with space for justifications, Italy's report on livello retributivo, obligations and deadlines, readiness checklist, job evaluation, payroll, settings, and a reconciliation sheet. **Every figure is a live formula**: change a salary, a score or a threshold and the model recalculates. |
+| [`pay_transparency_model.xlsx`](deliverables/pay_transparency_model.xlsx) | the client team | Thirteen sheets: summary, the seven Article 9 items per employer, the Article 10 screen with space for justifications, Italy's report on livello retributivo, the justification register, the employer against Eurostat, obligations and deadlines, readiness checklist, job evaluation, payroll, settings, and a reconciliation sheet. **Every figure is a live formula**: change a salary, a score or a threshold and the model recalculates. |
 | [Browser tool](https://d0m3n1c0x.github.io/pay-transparency-readiness-kit/tool/) | the consultant, on the client's own file | Locally reads the payroll export and optional pay-code dictionary, requires actual prior-year pay totals and worker-specific annual contractual hours for an actual-pay run, and exports an Excel assessment with the map used. Annualized contract amounts are labelled as simulation only. Data and notes stay in page memory until cleared or reloaded; the downloaded workbook remains confidential. English and Italian. |
 | [`board_briefing.pptx`](deliverables/board_briefing.pptx) | the board | Eleven slides, answer first, native charts, three decisions to take. |
 | [`readiness_report.md`](reports/readiness_report.md) | HR and Legal | The written read-out: obligations, the seven items, where the gap comes from, flagged categories with their main driver and cost, how much they depend on the job evaluation weights, how far each flag can be trusted against a known ground truth, the figures again on a full year of pay with leavers and joiners, the employer against Eurostat's national and sector figures, Italy's narrower measure, a 90-day plan. |
@@ -108,7 +110,7 @@ The full reasoning is in [docs/method.md](docs/method.md); how an engagement run
 
 | | |
 |---|---|
-| **Three engines, one answer** | pandas, the Excel model's live formulas (reconciled on 511 checks, recalculated by LibreOffice in CI) and the browser tool (checked against pandas on 5,009 values) |
+| **Three engines, one answer** | pandas, the Excel model's live formulas (reconciled on 547 checks, recalculated by LibreOffice in CI) and the browser tool (checked against pandas on 5,009 values) |
 | **Every legal statement sourced** | a [verification register](docs/verification.md) with the source, its status and the date each one was read |
 | **Reproducible** | one command rebuilds every output; CI fails if a rebuilt file differs from the committed one |
 | **Documented like a deliverable** | a [catalogue](docs/catalogue.md) of the reporting items, a [data dictionary](data/README.md) kept complete by a test, an [architecture](docs/architecture.md) note, a [roadmap](docs/roadmap.md) and a [changelog](CHANGELOG.md) |

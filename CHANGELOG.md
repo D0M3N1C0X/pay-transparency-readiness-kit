@@ -7,6 +7,11 @@ in [docs/roadmap.md](docs/roadmap.md).
 
 ### Added
 
+- **The workbook gets two sheets**: Register (the justification register, its gaps and costs linked to Categories,
+  its dates to Obligations, status, evidence and decision for the employer to fill in) and Benchmark (each
+  employer's gap on regular pay, live from a new Payroll column, against Eurostat's figures). Reconciliation
+  checks: 511 → 547, all matching after a LibreOffice recalculation. New cover with the results of this release.
+
 - **Justification register and right to information** (report section 9): `reports/justification_register.csv`
   gives each flagged category a reference, its main driver (role mix, same role, rating and part-time, or time
   worked) and pay element, the evidence that kind of gap needs, an owner, a review date halfway to the remedy
