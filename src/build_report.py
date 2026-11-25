@@ -13,6 +13,7 @@ import certainty
 import charts
 import obligations
 import reference_year
+import register
 from config import (
     BANDS,
     BONUS_PAYDAY,
@@ -374,6 +375,43 @@ def benchmark_section(add, w) -> dict:
     return b
 
 
+def register_section(add, w) -> pd.DataFrame:
+    """Section 9: what each flag has to be justified with, by whom and by when; and the answer to a worker."""
+    reg = register.write(w)
+    drivers = reg["main_driver"].value_counts()
+    unstable = reg[reg["flagged_on_reference_year"] == "No"]
+    add("## 9. The justification register and the right to information")
+    add("")
+    add("Each flagged category needs a justification on objective, gender-neutral criteria or a remedy within six "
+        "months of the report. [reports/justification_register.csv](justification_register.csv) gives each one a "
+        "reference, what drives its gap (from the split in section 6), the evidence that kind of gap needs, the "
+        "function that holds it, a review date halfway to the deadline, and how solid the flag is. Status, evidence "
+        "held and decision are left for the employer: the register prepares a justification, it does not decide one.")
+    add("")
+    add(md_table(["Ref", "Employer", "Category", "Gap", "Driver", "Pay element", "Owner", "Stays flagged on the year",
+                  "Cost ceiling"],
+                 [[r.ref, r.employer, r.category, pct(r.gap) + (" †" if r.measure == "annual" else ""),
+                   r.main_driver, r.pay_element, r.owner, r.flagged_on_reference_year, eur(r.cost_ceiling_eur)]
+                  for r in reg.itertuples()], "lllrlllll"))
+    add("")
+    add(f"- **{drivers.get('Role mix', 0)} of the {len(reg)} justifications are about role mix**: why roles of "
+        "equal value are paid differently, and how women and men came to hold them. Market data alone will not "
+        "carry it; the hiring and promotion record has to show the allocation was neutral.")
+    add(f"- **{drivers.get('Same role', 0)} {'is' if drivers.get('Same role', 0) == 1 else 'are'} about the same "
+        "role**, the hardest kind: each pay decision and the criterion behind it.")
+    if len(unstable):
+        add(f"- **{len(unstable)} flags do not survive the reference year** ({', '.join(unstable['ref'])}). Prepare "
+            "them all the same: the statutory year decides, and section 6 says they are close calls either way.")
+    add("- **The right to information comes first in practice.** It applies as soon as national law does, a year "
+        "before the first report and in Italy already: any worker can ask in "
+        "writing for their own pay level and the average pay levels by sex of their category, answered within two "
+        "months (Article 7). The categories here are those workers, so the answer comes from the same data: "
+        "[docs/article7-response.md](../docs/article7-response.md) has a generated reply in Italian and English, "
+        "and one for a category too small to show averages.")
+    add("")
+    return reg
+
+
 def write(w: pd.DataFrame) -> dict:
     f = facts(w)
     codes, ind, cats, obl, ready, flagged = (f[k] for k in ("codes", "ind", "cats", "obl", "ready", "flagged"))
@@ -567,8 +605,9 @@ def write(w: pd.DataFrame) -> dict:
     f["certainty"] = certainty_section(add, w)
     f["reference"] = reference_section(add, w)
     f["benchmark"] = benchmark_section(add, w)
+    f["register"] = register_section(add, w)
 
-    add("## 9. Readiness: what has to be in place")
+    add("## 10. Readiness: what has to be in place")
     add("")
     add(md_table(["Ref", "Article", "Requirement", "Status", "Owner"],
                  [[r.ref, r.article, r.requirement, r.status, r.owner] for r in ready.itertuples()],
@@ -578,21 +617,23 @@ def write(w: pd.DataFrame) -> dict:
         "the workbook's Readiness sheet.*")
     add("")
 
-    add("## 10. The next 90 days")
+    add("## 11. The next 90 days")
     add("")
     add("1. **Agree the job evaluation with workers' representatives** in each country, starting from the Italian "
         "collective agreement's classification. Categories decide every later number.")
     add("2. **Write or rule out a justification for each flagged category**, beginning with the most expensive, "
-        "and budget the remedy for the rest before the first report is filed.")
+        "and budget the remedy for the rest before the first report is filed: the register in section 9 has an owner "
+        "and a review date for each.")
     add("3. **Review the Sales territory allocation** and any other rule that decides who can earn a component.")
     add("4. **Close the recruitment gaps now**: pay ranges in vacancies, no pay-history questions, "
         "gender-neutral titles - already law in Italy and Poland.")
-    add("5. **Build the information-request route** (two-month answer) and the annual notice to workers.")
+    add("5. **Build the information-request route** (two-month answer, from the reply in section 9) and the annual "
+        "notice to workers.")
     add("6. **Rerun this model on calendar-year 2026 payroll** once each country's rules are final, and have "
         "management confirm the figures after consulting workers' representatives (Article 9(6)).")
     add("")
 
-    add("## 11. Method, choices and limits")
+    add("## 12. Method, choices and limits")
     add("")
     add("- **Two engines, one answer.** Every figure is computed in pandas and again by live formulas in "
         "[the workbook](../deliverables/pay_transparency_model.xlsx); its Reconciliation sheet checks "
