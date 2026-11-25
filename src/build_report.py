@@ -8,6 +8,7 @@ import pandas as pd
 
 import article9
 import article10
+import benchmark
 import certainty
 import charts
 import obligations
@@ -312,6 +313,67 @@ def reference_section(add, w) -> dict:
     return r
 
 
+def benchmark_section(add, w) -> dict:
+    """Section 8: the employer against the official figures it will be read against."""
+    b = benchmark.compare(w)
+    t, year = b["table"], b["year"]
+    (FIG / "06_benchmark.svg").write_text(charts.benchmark(
+        [(ENTITIES[r.country], r.regular, r.economy, r.sec_low, r.sec_high) for r in t.itertuples()], year))
+    above = t[t["regular"] > t["sec_high"]]
+    below = t[t["regular"] < t["sec_low"]]
+    inside = t[t["inside_sections"]]
+    worst = t.loc[t["times_economy"].idxmax()]
+    name = lambda c: ENTITIES[c]
+    low_nat = t[t["economy"] < b["eu"]]
+    ratios = pd.concat([low_nat["sec_J"] / low_nat["economy"], low_nat["sec_M"] / low_nat["economy"]])
+    add("## 8. Against the official figures")
+    add("")
+    add("Once the report is published, the employer's gap will be set against the national one. Eurostat publishes "
+        "it from the structure of earnings survey with the same formula as item (a): the difference between men's "
+        "and women's mean gross hourly earnings, as a share of men's. The pay counted differs: the survey leaves "
+        "non-regular payments out, so the employer's figure is shown here without its annual bonus. Values for "
+        f"{year} (provisional where Eurostat marks them so), dataset updated {day(pd.Timestamp(b['updated']))}, read on "
+        f"{day(pd.Timestamp(b['read_on']))}; [data/eurostat_gpg.csv](../data/eurostat_gpg.csv), refreshed by "
+        "src/fetch_eurostat.py.")
+    add("")
+    add("![The employer against Eurostat](figures/06_benchmark.svg)")
+    add("")
+    add(md_table(["Employer", "Item (a), hourly", "Regular pay only", f"National {year}",
+                  *[f"{k}: {v}" for k, v in benchmark.SECTIONS.items()]],
+                 [[ENTITIES[r.country], pct(r.article9), pct(r.regular), pct(r.economy),
+                   *[pct(getattr(r, f"sec_{k}")) for k in benchmark.SECTIONS]] for r in t.itertuples()], "lrrrrrr"))
+    add("")
+    add(f"- **Against the national figure the employer looks bad**: in {name(worst.country)} its gap is "
+        f"{worst.times_economy:.1f} times the national {pct(worst.economy)}. That is the comparison a journalist or a "
+        "works council will make first.")
+    add(f"- **Against the sectors it resembles it is ordinary in {len(inside)} of 4 countries** "
+        f"({', '.join(map(name, inside['country']))}). National figures average over sectors that pay women and men "
+        "very differently and employ them in different numbers: where the national figure is below the EU's "
+        f"{pct(b['eu'])} ({', '.join(map(name, low_nat['country']))}), the gap inside information and communication "
+        f"and professional services is {ratios.min():.1f} to {ratios.max():.1f} times the national one. "
+        "[where-pay-transparency-bites](https://github.com/D0M3N1C0X/where-pay-transparency-bites) shows the same "
+        "for all 27 Member States: the published figure understates the gap inside sectors, most of all where it "
+        "looks small.")
+    if len(above):
+        add(f"- **{', '.join(map(name, above['country']))} is above every sector it resembles** "
+            f"({pct(above['regular'].iloc[0])} against at most {pct(above['sec_high'].iloc[0])}): the one employer "
+            "whose gap the sector cannot explain, and the one to prepare the strongest narrative for.")
+    if len(below):
+        add(f"- **{', '.join(map(name, below['country']))} is below both** its national figure and its sectors, so "
+            "a good number there is still worth explaining: it is where the reasons are easiest to show.")
+    add("- **Put both comparisons in the report's narrative.** The Directive asks for the figures, not a benchmark; "
+        "but the first question after publication will be how they compare, and an answer prepared in advance "
+        "reads better than one given afterwards.")
+    add("")
+    add("*Sections: J information and communication (the technology staff), M professional, scientific and "
+        "technical activities (finance, HR, sales), N administrative and support services (customer service, "
+        "operations). The employer has no single activity code; the three are a reading aid, not its "
+        "classification. The synthetic organisation's segregation was not set country by country, so read the "
+        "comparison as the method a real employer would apply, not as a finding about Milan or Barcelona.*")
+    add("")
+    return b
+
+
 def write(w: pd.DataFrame) -> dict:
     f = facts(w)
     codes, ind, cats, obl, ready, flagged = (f[k] for k in ("codes", "ind", "cats", "obl", "ready", "flagged"))
@@ -504,8 +566,9 @@ def write(w: pd.DataFrame) -> dict:
 
     f["certainty"] = certainty_section(add, w)
     f["reference"] = reference_section(add, w)
+    f["benchmark"] = benchmark_section(add, w)
 
-    add("## 8. Readiness: what has to be in place")
+    add("## 9. Readiness: what has to be in place")
     add("")
     add(md_table(["Ref", "Article", "Requirement", "Status", "Owner"],
                  [[r.ref, r.article, r.requirement, r.status, r.owner] for r in ready.itertuples()],
@@ -515,7 +578,7 @@ def write(w: pd.DataFrame) -> dict:
         "the workbook's Readiness sheet.*")
     add("")
 
-    add("## 9. The next 90 days")
+    add("## 10. The next 90 days")
     add("")
     add("1. **Agree the job evaluation with workers' representatives** in each country, starting from the Italian "
         "collective agreement's classification. Categories decide every later number.")
@@ -529,7 +592,7 @@ def write(w: pd.DataFrame) -> dict:
         "management confirm the figures after consulting workers' representatives (Article 9(6)).")
     add("")
 
-    add("## 10. Method, choices and limits")
+    add("## 11. Method, choices and limits")
     add("")
     add("- **Two engines, one answer.** Every figure is computed in pandas and again by live formulas in "
         "[the workbook](../deliverables/pay_transparency_model.xlsx); its Reconciliation sheet checks "

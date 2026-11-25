@@ -7,6 +7,12 @@ in [docs/roadmap.md](docs/roadmap.md).
 
 ### Added
 
+- **Against the official figures** (report section 8, `src/benchmark.py`, `src/fetch_eurostat.py`): each
+  employer's gap on regular pay set against Eurostat's 2024 gender pay gap for its country's business economy and
+  for sections J, M and N, real data with the date they were read. Milan and Kraków are 3.4 and 3.5 times their
+  national figure and inside their sectors' range; Barcelona is above every sector it resembles; Munich is below
+  both. Two entries in the verification register (E01, E02).
+
 - **The reference year** (report section 7, `src/build_period.py`, `src/reference_year.py`): pay actually paid
   from 1 July 2025 to 30 June 2026 to the 4,000 workers employed in it, leavers and joiners included, in
   `data/payroll_reference_year.csv`, in the browser tool's actual-pay layout. 15 categories are flagged instead of

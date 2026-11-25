@@ -170,7 +170,28 @@ The statutory report does not look at the people on the payroll on one day: it c
 
 ![The category screen on the reference year](figures/05_reference_year_screen.svg)
 
-## 8. Readiness: what has to be in place
+## 8. Against the official figures
+
+Once the report is published, the employer's gap will be set against the national one. Eurostat publishes it from the structure of earnings survey with the same formula as item (a): the difference between men's and women's mean gross hourly earnings, as a share of men's. The pay counted differs: the survey leaves non-regular payments out, so the employer's figure is shown here without its annual bonus. Values for 2024 (provisional where Eurostat marks them so), dataset updated 27 October 2026, read on 25 November 2026; [data/eurostat_gpg.csv](../data/eurostat_gpg.csv), refreshed by src/fetch_eurostat.py.
+
+![The employer against Eurostat](figures/06_benchmark.svg)
+
+| Employer | Item (a), hourly | Regular pay only | National 2024 | J: Information and communication | M: Professional, scientific and technical | N: Administrative and support services |
+|---|---:|---:|---:|---:|---:|---:|
+| IT · Milan | 19.7% | 17.9% | 5.3% | 15.5% | 23.4% | 9.3% |
+| PL · Kraków | 15.2% | 14.1% | 4.0% | 24.0% | 16.2% | 1.5% |
+| DE · Munich | 14.5% | 12.8% | 15.6% | 19.3% | 25.2% | 13.3% |
+| ES · Barcelona | 21.5% | 19.9% | 7.3% | 9.5% | 15.5% | 14.0% |
+
+- **Against the national figure the employer looks bad**: in PL · Kraków its gap is 3.5 times the national 4.0%. That is the comparison a journalist or a works council will make first.
+- **Against the sectors it resembles it is ordinary in 2 of 4 countries** (IT · Milan, PL · Kraków). National figures average over sectors that pay women and men very differently and employ them in different numbers: where the national figure is below the EU's 11.1% (IT · Milan, PL · Kraków, ES · Barcelona), the gap inside information and communication and professional services is 1.3 to 6.0 times the national one. [where-pay-transparency-bites](https://github.com/D0M3N1C0X/where-pay-transparency-bites) shows the same for all 27 Member States: the published figure understates the gap inside sectors, most of all where it looks small.
+- **ES · Barcelona is above every sector it resembles** (19.9% against at most 15.5%): the one employer whose gap the sector cannot explain, and the one to prepare the strongest narrative for.
+- **DE · Munich is below both** its national figure and its sectors, so a good number there is still worth explaining: it is where the reasons are easiest to show.
+- **Put both comparisons in the report's narrative.** The Directive asks for the figures, not a benchmark; but the first question after publication will be how they compare, and an answer prepared in advance reads better than one given afterwards.
+
+*Sections: J information and communication (the technology staff), M professional, scientific and technical activities (finance, HR, sales), N administrative and support services (customer service, operations). The employer has no single activity code; the three are a reading aid, not its classification. The synthetic organisation's segregation was not set country by country, so read the comparison as the method a real employer would apply, not as a finding about Milan or Barcelona.*
+
+## 9. Readiness: what has to be in place
 
 | Ref | Article | Requirement | Status | Owner |
 |---|---|---|---|---|
@@ -191,7 +212,7 @@ The statutory report does not look at the people on the payroll on one day: it c
 
 *Statuses are illustrative for the demonstration organisation. Evidence expected for each item is in the workbook's Readiness sheet.*
 
-## 9. The next 90 days
+## 10. The next 90 days
 
 1. **Agree the job evaluation with workers' representatives** in each country, starting from the Italian collective agreement's classification. Categories decide every later number.
 2. **Write or rule out a justification for each flagged category**, beginning with the most expensive, and budget the remedy for the rest before the first report is filed.
@@ -200,7 +221,7 @@ The statutory report does not look at the people on the payroll on one day: it c
 5. **Build the information-request route** (two-month answer) and the annual notice to workers.
 6. **Rerun this model on calendar-year 2026 payroll** once each country's rules are final, and have management confirm the figures after consulting workers' representatives (Article 9(6)).
 
-## 10. Method, choices and limits
+## 11. Method, choices and limits
 
 - **Two engines, one answer.** Every figure is computed in pandas and again by live formulas in [the workbook](../deliverables/pay_transparency_model.xlsx); its Reconciliation sheet checks each pair, and CI recalculates the workbook with LibreOffice and fails on any mismatch.
 - **Where the Directive leaves a choice, the choice is stated.** Pay includes base, bonus, commission and allowances; hourly pay uses contractual hours; components gaps (b) and (d) are among recipients; quartile bands are four equal groups by hourly pay with ties broken by row order; a category is flagged at 5% in either direction on hourly or annual pay. Full list in [docs/method.md](../docs/method.md).
