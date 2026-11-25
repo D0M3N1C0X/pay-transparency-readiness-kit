@@ -187,7 +187,7 @@ Every figure is computed twice:
    change.
 
 `src/build_workbook.py` writes the pandas value next to each formula on the Reconciliation
-sheet, and the sheet checks every pair to one part in a billion (511 checks). Two engines then
+sheet, and the sheet checks every pair to one part in a billion (547 checks). Two engines then
 evaluate the formulas:
 
 - **LibreOffice**, in CI, on the full workbook (`src/check_workbook.py`);

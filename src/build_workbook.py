@@ -27,7 +27,9 @@ from openpyxl.worksheet.hyperlink import Hyperlink
 
 import article9
 import article10
+import benchmark
 import obligations
+import register
 from build_extract import COLUMNS as INPUT_COLUMNS
 from config import (
     ASSESSMENT_DATE,
@@ -155,8 +157,13 @@ class Model:
     def build(self, path: Path) -> None:
         wb = self.wb
         self.italy = "IT" in self.countries and "IT" in NATIONAL_MEASURE
-        names = ["Cover", "Summary", "Article 9", "Categories", *(["Italy"] if self.italy else []), "Obligations",
-                 "Readiness", "Job Evaluation", "Payroll", "Settings", "Reconciliation"]
+        # The register and the benchmark describe the full payroll: every employer, each with a reporting date.
+        duties = obligations.by_entity(self.w)
+        self.with_register = (set(self.w["country"]) == set(ENTITIES)
+                              and duties["first_report"].notna().all())
+        extra = ["Register", "Benchmark"] if self.with_register else []
+        names = ["Cover", "Summary", "Article 9", "Categories", *(["Italy"] if self.italy else []), *extra,
+                 "Obligations", "Readiness", "Job Evaluation", "Payroll", "Settings", "Reconciliation"]
         wb.active.title = names[0]
         for n in names[1:]:
             wb.create_sheet(n)
@@ -169,6 +176,9 @@ class Model:
         if self.italy:
             self.italy_sheet(wb["Italy"])
         self.obligations(wb["Obligations"])
+        if self.with_register:
+            self.register_sheet(wb["Register"])
+            self.benchmark_sheet(wb["Benchmark"])
         self.readiness(wb["Readiness"])
         self.summary(wb["Summary"])
         self.reconciliation(wb["Reconciliation"])
@@ -302,7 +312,7 @@ class Model:
         self.last = n + 1
         derived = ["annual_hours", "components", "total_pay", "hourly_base", "hourly_components",
                    "hourly_total", "receives_components", "category", "rank_in_entity", "quartile",
-                   "fixed_pay", "hourly_fixed", "rank_fixed_in_entity", "quartile_fixed"]
+                   "fixed_pay", "hourly_fixed", "rank_fixed_in_entity", "quartile_fixed", "hourly_regular"]
         names = INPUT_COLUMNS + derived
         self.payroll_cols = {name: get_column_letter(i) for i, name in enumerate(names, start=1)}
         c = self.payroll_cols
@@ -350,9 +360,12 @@ class Model:
                                          f"*(${c['hourly_fixed']}$2:{L['hourly_fixed']}={L['hourly_fixed']}))"),
                 "quartile_fixed": (f"=MIN(4,INT(({L['rank_fixed_in_entity']}-1)*4"
                                    f"/COUNTIF(${c['country']}$2:${c['country']}${last},{L['country']}))+1)"),
+                # Regular pay, as Eurostat counts it: everything but the annual bonus (Benchmark sheet)
+                "hourly_regular": f"=({L['total_pay']}-{L['bonus']})/{L['annual_hours']}",
             }
             fmts = {"annual_hours": COUNT, "components": EUR, "total_pay": EUR, "hourly_base": EUR_H,
-                    "hourly_components": EUR_H, "hourly_total": EUR_H, "fixed_pay": EUR, "hourly_fixed": EUR_H}
+                    "hourly_components": EUR_H, "hourly_total": EUR_H, "fixed_pay": EUR, "hourly_fixed": EUR_H,
+                    "hourly_regular": EUR_H}
             for name, formula in formulas.items():
                 cell = ws[f"{c[name]}{r}"]
                 cell.value = formula
@@ -847,6 +860,89 @@ class Model:
         chart2.height, chart2.width = 7.5, 16
         ws.add_chart(chart2, "I20")
 
+    def register_sheet(self, ws) -> None:
+        """The justification register: one row per flagged category, its figures linked to Categories."""
+        title(ws, "Justification register: what each flag has to be justified with, by whom and by when",
+              "Gap, status and cost link to Categories; the dates to Obligations. Driver, evidence and owner come from "
+              "the pipeline's split of each gap (report section 6). Status, evidence held and decision are yours.")
+        heads = ["Ref", "Employer", "Category", "Measure", "Gap", "Screen result", "Cost ceiling (€ a year)",
+                 "Flag strength (95% interval)", "Stays flagged on the reference year", "Main driver", "Pay element",
+                 "Evidence needed", "Owner", "Review by", "Remedy by", "Status", "Evidence held", "Decision"]
+        header(ws, 4, heads, height=44)
+        widths(ws, {get_column_letter(i): w for i, w in enumerate(
+            [6, 8, 8, 9, 9, 16, 14, 22, 12, 18, 12, 70, 26, 12, 12, 12, 40, 30], start=1)})
+        reg = register.build(self.w)
+        screen = article10.screen(self.w, self.countries, [b for _, b in BANDS]).set_index(["country", "category"])
+        dv = DataValidation(type="list", formula1='"Open,Justified,Remedied,Joint pay assessment"', allow_blank=True)
+        ws.add_data_validation(dv)
+        for r, x in enumerate(reg.itertuples(index=False), start=5):
+            code = next(k for k, v in ENTITIES.items() if v == x.employer)
+            cat_row, obl_row = self.cat_rows[(code, x.category)], self.obl_rows[code]
+            put(ws, f"A{r}", x.ref, bold=True)
+            put(ws, f"B{r}", code, color=BLUE)
+            put(ws, f"C{r}", x.category, color=BLUE)
+            put(ws, f"D{r}", x.measure, color=BLUE)
+            put(ws, f"E{r}", f'=IF(D{r}="annual",Categories!P{cat_row},Categories!M{cat_row})', color=GREEN, fmt=PCT,
+                bold=True)
+            put(ws, f"F{r}", f"=Categories!R{cat_row}", color=GREEN)
+            put(ws, f"G{r}", f"=Categories!V{cat_row}", color=GREEN, fmt=EUR)
+            put(ws, f"H{r}", f"{x.flag_strength} ({x.interval_95})", color=BLUE)
+            put(ws, f"I{r}", x.flagged_on_reference_year, color=BLUE)
+            put(ws, f"J{r}", x.main_driver, color=BLUE)
+            put(ws, f"K{r}", x.pay_element, color=BLUE)
+            put(ws, f"L{r}", x.evidence_needed, color=BLUE, wrap=True)
+            put(ws, f"M{r}", x.owner, color=BLUE, wrap=True)
+            put(ws, f"N{r}", f"=EDATE(Obligations!F{obl_row},3)", fmt=DATE)
+            put(ws, f"O{r}", f"=Obligations!G{obl_row}", color=GREEN, fmt=DATE)
+            put(ws, f"P{r}", x.status, color=BLUE)
+            dv.add(f"P{r}")
+            put(ws, f"Q{r}", None, color=BLUE)
+            put(ws, f"R{r}", None, color=BLUE)
+            ws.row_dimensions[r].height = 64
+            exact = float(screen.loc[(code, x.category), f"gap_{x.measure}"])
+            self.check("Register", code, f"{x.ref} {x.category}: gap", exact, f"Register!E{r}")
+            self.check("Register", code, f"{x.ref} {x.category}: cost ceiling", float(x.cost_ceiling_eur),
+                       f"ROUND(Register!G{r},0)")
+        last = 4 + len(reg)
+        r = last + 2
+        put(ws, f"B{r}", "Total", bold=True)
+        put(ws, f"G{r}", f"=SUM(G5:G{last})", bold=True, fmt=EUR)
+        ws.freeze_panes = "D5"
+        ws.auto_filter.ref = f"A4:R{last}"
+
+    def benchmark_sheet(self, ws) -> None:
+        """Each employer's gap on regular pay, live from Payroll, against Eurostat's published figures."""
+        c = self.col
+        b = benchmark.compare(self.w)
+        t = b["table"].set_index("country")
+        title(ws, f"Against the official figures: Eurostat's gender pay gap, {b['year']}",
+              "Eurostat leaves non-regular payments out, so the employer's gap is computed here without the annual "
+              f"bonus. Eurostat earn_gr_gpgr2, updated {b['updated']}, read {b['read_on']}; the blue cells are "
+              "published figures.")
+        heads = ["Employer", "Gap on regular pay (live)", f"National {b['year']}",
+                 *[f"{k}: {v}" for k, v in benchmark.SECTIONS.items()], "Times the national figure",
+                 "Against the sectors"]
+        header(ws, 4, heads, height=44)
+        widths(ws, {"A": 12, "B": 16, "C": 13, "D": 18, "E": 18, "F": 18, "G": 14, "H": 14})
+        for r, code in enumerate(self.countries, start=5):
+            x = t.loc[code]
+            mean = lambda sex, r=r: f'AVERAGEIFS({c("hourly_regular")},{c("country")},$A{r},{c("gender")},"{sex}")'
+            put(ws, f"A{r}", code, color=BLUE)
+            put(ws, f"B{r}", f"=({mean('M')}-{mean('F')})/{mean('M')}", fmt=PCT, bold=True)
+            put(ws, f"C{r}", float(x["economy"]), color=BLUE, fmt=PCT)
+            for col_, sec in zip("DEF", benchmark.SECTIONS, strict=True):
+                put(ws, f"{col_}{r}", float(x[f"sec_{sec}"]), color=BLUE, fmt=PCT)
+            put(ws, f"G{r}", f"=B{r}/C{r}", fmt='0.0"x"')
+            put(ws, f"H{r}", f'=IF(B{r}>MAX(D{r}:F{r}),"Above",IF(B{r}<MIN(D{r}:F{r}),"Below","Inside"))')
+            position = "Above" if x["regular"] > x["sec_high"] else "Below" if x["regular"] < x["sec_low"] else "Inside"
+            self.check("Benchmark", code, "gap on regular pay", float(x["regular"]), f"Benchmark!B{r}")
+            self.check("Benchmark", code, "times the national figure", float(x["times_economy"]), f"Benchmark!G{r}")
+            self.check("Benchmark", code, "against the sectors", position, f"Benchmark!H{r}")
+        r = 6 + len(self.countries)
+        put(ws, f"A{r}", "Sections: J the technology staff, M finance, HR and sales, N customer service and operations. "
+                         "The employer has no single activity code; the sections are a reading aid.", color=MUTED,
+            italic=True)
+
     def reconciliation(self, ws) -> None:
         title(ws, "Reconciliation: workbook formulas against the Python pipeline",
               "Column D was written by src/build_workbook.py from the pandas results; column E is the live formula. "
@@ -902,6 +998,8 @@ class Model:
             "Article 9": "The seven reporting items for each employer, with the workings underneath.",
             "Categories": "Pay gaps by category of workers and the Article 10 screen, with space for justifications.",
             "Italy": "Italy's narrower measure (livello retributivo): the gaps and the Article 10 screen again.",
+            "Register": "One row per flagged category: driver, evidence, owner, review date and deadline, your decision.",
+            "Benchmark": "Each employer's gap on regular pay against Eurostat's national and sector figures.",
             "Obligations": "Size band, deadlines and national transposition status for each employer.",
             "Readiness": "Fourteen obligations from Articles 4 to 12, with evidence, owner and status.",
             "Job Evaluation": "The scored role grid that defines the categories of workers.",
@@ -913,21 +1011,24 @@ class Model:
             cell = put(ws, f"B{i}", n, color="1F5FA8")
             cell.hyperlink = Hyperlink(ref=cell.coordinate, location=f"'{n}'!A1")
             put(ws, f"C{i}", purpose[n])
-        put(ws, "B28", "Check", bold=True, size=11)
-        put(ws, "C28", f"={self.recon_result}", color=GREEN, bold=True)
-        put(ws, "B30", "Data", bold=True, size=11)
-        put(ws, "C30", "Synthetic. The organisation is the one analysed in hr-people-analytics; the pay components were "
-                       "added by this kit with rules stated in data/README.md. No real person's pay is in this file.", wrap=True)
-        ws.row_dimensions[30].height = 28
-        put(ws, "B31", "Your own data", bold=True, size=11)
-        put(ws, "C31", "Paste an extract with the same columns into Payroll A:R, extend the black columns to the last row, "
+        k = 18 + len(names) - 1 + 1       # the first free row after the sheet list, plus one blank
+        put(ws, f"B{k}", "Check", bold=True, size=11)
+        put(ws, f"C{k}", f"={self.recon_result}", color=GREEN, bold=True)
+        k += 2
+        put(ws, f"B{k}", "Data", bold=True, size=11)
+        put(ws, f"C{k}", "Synthetic. The organisation is the one analysed in hr-people-analytics; the pay components were "
+                       "added by this kit with rules stated in data/README.md. No real person's pay is in this file. The "
+                       "Benchmark sheet holds Eurostat's published figures.", wrap=True)
+        ws.row_dimensions[k].height = 28
+        put(ws, f"B{k + 1}", "Your own data", bold=True, size=11)
+        put(ws, f"C{k + 1}", "Paste an extract with the same columns into Payroll A:R, extend the black columns to the last row, "
                        "and rerun the Python pipeline so the Reconciliation sheet compares against your numbers.", wrap=True)
-        ws.row_dimensions[31].height = 28
-        put(ws, "B32", "Limits", bold=True, size=11)
-        put(ws, "C32", "Not legal advice. National transposition decides the final method and filing; see Obligations "
+        ws.row_dimensions[k + 1].height = 28
+        put(ws, f"B{k + 2}", "Limits", bold=True, size=11)
+        put(ws, f"C{k + 2}", "Not legal advice. National transposition decides the final method and filing; see Obligations "
                        "and docs/verification.md in the repository.", wrap=True)
-        put(ws, "B34", "Domenico Perroni", color=MUTED)
-        cell = put(ws, "C34", REPO, color="1F5FA8")
+        put(ws, f"B{k + 4}", "Domenico Perroni", color=MUTED)
+        cell = put(ws, f"C{k + 4}", REPO, color="1F5FA8")
         cell.hyperlink = REPO
 
 
