@@ -24,6 +24,7 @@ from config import (
     MIN_CELL,
     NATIONAL_MEASURE,
     PAYROLL_EXTRACT,
+    PAYROLL_PERIOD,
     REMEDY_MONTHS,
     ROOT,
     SIZE_BANDS,
@@ -142,6 +143,11 @@ def write_vectors(n: int = 6, seed: int = 9) -> int:
                      + [i for i in range(len(base)) if base.loc[i, "country"] == "PL"][:200])
     for rows in (no_it, nine_it):
         cases.append({"rows": rows, "patch": [], **expected(base.loc[rows].reset_index(drop=True))})
+    # The reference-year payroll, read as the page reads an actual-pay file: annual hours / 52 as weekly hours.
+    period = pd.read_csv(PAYROLL_PERIOD)
+    period["weekly_hours"] = period["annual_hours"] / WEEKS_PER_YEAR
+    period = period[COLUMNS]
+    cases.append({"rows": None, "data": period.to_dict("records"), "patch": [], **expected(period)})
     VECTORS.parent.mkdir(exist_ok=True)
     VECTORS.write_text(json.dumps({"cfg": cfg(), "grid": load_job_evaluation()[["role", *FACTORS]].to_dict("records"),
                                    "base": base.to_dict("records"), "cases": cases},

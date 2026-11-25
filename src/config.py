@@ -24,6 +24,14 @@ SOURCE_SHA256 = "372723241e92aa3d233c9298f8a0d2e713e72ff8f0c989e24a7bf743fc7da79
 
 SEED = 2026
 SNAPSHOT = date(2026, 6, 30)          # population: workers active on this date
+# The reference year: pay actually paid over twelve months, leavers and joiners included (src/build_period.py).
+# The statutory report covers a calendar year; hr-people-analytics records exits from 1 July 2025 to its 30 June
+# 2026 snapshot, so these twelve months are the only full year the data can show. The mechanics are the same.
+REFERENCE_START = date(2025, 7, 1)
+REFERENCE_END = date(2026, 6, 30)
+# The annual bonus for 2025 is paid on this date to workers still employed, pro rata to their service in 2025.
+BONUS_PAYDAY = date(2026, 3, 31)
+PAYROLL_PERIOD = DATA / "payroll_reference_year.csv"
 ASSESSMENT_DATE = date(2026, 9, 16)   # date of this dry run and of the legal status notes
 
 # Legal entities, one per Member State. Pay is reported per employer.

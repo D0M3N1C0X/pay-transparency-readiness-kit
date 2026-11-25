@@ -134,6 +134,21 @@ representatives, the labour inspectorate and the equality body. The Directive se
 five matches the confidentiality threshold in
 [engagement-survey-analytics](https://github.com/D0M3N1C0X/engagement-survey-analytics).
 
+## The reference year
+
+The statutory report covers pay paid in the previous calendar year to everyone paid in it. `src/build_period.py`
+builds that payroll for the twelve months to the snapshot, the only full year the data record exits for, and
+section 7 of the report reruns every item and the screen on it (`src/reference_year.py`):
+
+- **Hourly pay** is pay actually paid over each worker's own contractual hours in the period, the denominator the
+  browser's actual-pay mode uses. A part-year worker's hourly pay is their rate.
+- **Annual pay** is what was actually paid. A part-year worker's annual pay is low by construction, so a category
+  flagged on annual pay alone is read as a question of time worked, not of rates. The Directive does not say how
+  to count a part-year worker's annual pay; national guidance may settle it otherwise.
+- **The bonus** follows a common rule with a gender angle worth checking on real data: paid on 31 March 2026 to
+  workers still employed, pro rata to their 2025 service; leavers before payday forfeit it.
+- **One limit:** the source has no pay history, so each worker's current rate is applied to the whole period.
+
 ## How far the screen can be trusted
 
 The Directive's test reads the number; an interval does not change the duty. Section 6 of the report adds what

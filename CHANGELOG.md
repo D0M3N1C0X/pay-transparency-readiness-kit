@@ -7,6 +7,13 @@ in [docs/roadmap.md](docs/roadmap.md).
 
 ### Added
 
+- **The reference year** (report section 7, `src/build_period.py`, `src/reference_year.py`): pay actually paid
+  from 1 July 2025 to 30 June 2026 to the 4,000 workers employed in it, leavers and joiners included, in
+  `data/payroll_reference_year.csv`, in the browser tool's actual-pay layout. 15 categories are flagged instead of
+  12 and only 8 are the same; all 7 newcomers were marked *could cross* in section 6. 7 of the 15 flags come from
+  annual pay alone, which moves with turnover. The browser engine is checked on the file too (4,457 → 5,009
+  values).
+
 - **How far the flags can be trusted** (report section 6, `src/certainty.py`): a bootstrap interval for every
   category's gap; an exact split of each gap into role mix, rating and part-time, and what remains between women
   and men in the same role; and both scored against the ground truth, the payroll rebuilt from the same random

@@ -64,60 +64,62 @@ def build(planted: bool = True) -> list[dict]:
     active.sort(key=lambda r: r["employee_id"])
 
     rng = random.Random(SEED)
-    rows = []
-    for e in active:
-        # Three draws per worker whatever their role, so adding a rule never shifts the
-        # random stream of everyone after them.
-        bonus_noise, territory_draw, commission_noise = rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1)
+    return [annual_row(e, rng, planted) for e in active]
 
-        country, level, dept, gender = e["country"], e["job_level"], e["department"], e["gender"]
-        fte = float(e["fte"])
-        salary = float(e["base_salary_eur"])
-        if not planted and gender == "F":
-            salary += SOURCE_GENDER_RESIDUAL * float(e["salary_band_mid_eur"])
-        base = round(salary * fte)   # the source salary is full-time equivalent
-        rating = int(e["performance_rating"])
 
-        bonus = 0
-        if BONUS_TARGET[level] > 0:
-            bonus = round_to(base * BONUS_TARGET[level] * BONUS_PAYOUT[rating]
-                             * max(0.0, 1 + 0.06 * bonus_noise))
+def annual_row(e: dict, rng: random.Random, planted: bool = True) -> dict:
+    """One worker's annual pay at their contractual rate: the rules in data/README.md."""
+    # Three draws per worker whatever their role, so adding a rule never shifts the
+    # random stream of everyone after them.
+    bonus_noise, territory_draw, commission_noise = rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1)
 
-        commission = 0
-        if dept == "Sales":
-            mean = TERRITORY_MEAN[gender] if planted else TERRITORY_MEAN["M"]
-            potential = min(1.8, max(0.3, mean + 0.18 * territory_draw))
-            commission = round_to(base * COMMISSION_RATE * potential
-                                  * max(0.0, 1 + 0.10 * commission_noise))
+    country, level, dept, gender = e["country"], e["job_level"], e["department"], e["gender"]
+    fte = float(e["fte"])
+    salary = float(e["base_salary_eur"])
+    if not planted and gender == "F":
+        salary += SOURCE_GENDER_RESIDUAL * float(e["salary_band_mid_eur"])
+    base = round(salary * fte)   # the source salary is full-time equivalent
+    rating = int(e["performance_rating"])
 
-        shift = 0
-        if dept in ("Operations", "Customer Service") and level in ("L1", "L2", "L3") \
-                and e["work_model"] == "Onsite":
-            shift = round(SHIFT_ALLOWANCE_MONTHLY[country] * 12 * fte)
+    bonus = 0
+    if BONUS_TARGET[level] > 0:
+        bonus = round_to(base * BONUS_TARGET[level] * BONUS_PAYOUT[rating]
+                         * max(0.0, 1 + 0.06 * bonus_noise))
 
-        car = CAR_ALLOWANCE_ANNUAL[country] if level in ("L5", "L6") else 0
+    commission = 0
+    if dept == "Sales":
+        mean = TERRITORY_MEAN[gender] if planted else TERRITORY_MEAN["M"]
+        potential = min(1.8, max(0.3, mean + 0.18 * territory_draw))
+        commission = round_to(base * COMMISSION_RATE * potential
+                              * max(0.0, 1 + 0.10 * commission_noise))
 
-        rows.append({
-            "worker_id": e["employee_id"].replace("E", "W"),
-            "entity": ENTITIES[country],
-            "country": country,
-            "site": e["site"],
-            "department": dept,
-            "job_level": level,
-            "role": f"{dept} {level}",
-            "gender": gender,
-            "contract_type": e["contract_type"],
-            "work_model": e["work_model"],
-            "fte": e["fte"],
-            "weekly_hours": round(FULL_TIME_WEEKLY_HOURS * fte),
-            "performance_rating": rating,
-            "base_pay": base,
-            "bonus": bonus,
-            "commission": commission,
-            "shift_allowance": shift,
-            "car_allowance": car,
-        })
-    return rows
+    shift = 0
+    if dept in ("Operations", "Customer Service") and level in ("L1", "L2", "L3") \
+            and e["work_model"] == "Onsite":
+        shift = round(SHIFT_ALLOWANCE_MONTHLY[country] * 12 * fte)
+
+    car = CAR_ALLOWANCE_ANNUAL[country] if level in ("L5", "L6") else 0
+
+    return {
+        "worker_id": e["employee_id"].replace("E", "W"),
+        "entity": ENTITIES[country],
+        "country": country,
+        "site": e["site"],
+        "department": dept,
+        "job_level": level,
+        "role": f"{dept} {level}",
+        "gender": gender,
+        "contract_type": e["contract_type"],
+        "work_model": e["work_model"],
+        "fte": e["fte"],
+        "weekly_hours": round(FULL_TIME_WEEKLY_HOURS * fte),
+        "performance_rating": rating,
+        "base_pay": base,
+        "bonus": bonus,
+        "commission": commission,
+        "shift_allowance": shift,
+        "car_allowance": car,
+    }
 
 
 def main() -> None:
